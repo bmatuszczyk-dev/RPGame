@@ -3,7 +3,7 @@ using UnityEngine.Scripting.APIUpdating;
 
 namespace RPGame.Core.Statuses
 {
-    [CreateAssetMenu(fileName = "StunEffect", menuName = "RPGame/Progression/Statuses/Stun")]
+    [CreateAssetMenu(fileName = "StunEffect", menuName = "RPGame/Statuses/Stun")]
     [MovedFrom(true, null, null, "StunEffectDefinition")]
     public sealed class StunStatusDefinition : StatusDefinition
     {

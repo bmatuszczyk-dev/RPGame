@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 456ea65bef62b2245b44ec68510bffb9, type: 3}
   m_Name: LightningZoneSpell
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.LightningZoneSpell
+  id: lightning_zone
   spellPrefab: {fileID: 87066479312398948, guid: 1f244e391bf41ee449252f0afd0d5705, type: 3}
   manaCost: 50
   indicatorPrefab: {fileID: 6677925063829107495, guid: a0f186078d3faaf40a871d0d748fe51d, type: 3}

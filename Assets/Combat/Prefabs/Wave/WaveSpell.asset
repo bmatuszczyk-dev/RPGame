@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d43052d06e7dcc34c868784d44686217, type: 3}
   m_Name: WaveSpell
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.WaveSpell
+  id: wave
   spellPrefab: {fileID: 1798735657913157548, guid: bd24336edfffbd24d8d592522224ded6, type: 3}
   manaCost: 20
   baseDamageRange:

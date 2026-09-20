@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca9f2cbf4ed9681468ab7fcde5790030, type: 3}
   m_Name: EarthZoneSpell
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.EarthZoneSpell
+  id: earth_zone
   spellPrefab: {fileID: 5460642511362255792, guid: ab605abc29575c848bd3ccb7e7e84618, type: 3}
   manaCost: 30
   indicatorPrefab: {fileID: 2880531073305098832, guid: 17fc1037b31966844adb87fec594022c, type: 3}

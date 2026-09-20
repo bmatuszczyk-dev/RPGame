@@ -4,7 +4,7 @@ using UnityEngine.Scripting.APIUpdating;
 
 namespace RPGame.Core.Statuses
 {
-    [CreateAssetMenu(fileName = "BurningEffect", menuName = "RPGame/Progression/Statuses/Burning")]
+    [CreateAssetMenu(fileName = "BurningEffect", menuName = "RPGame/Statuses/Burning")]
     [MovedFrom(true, null, null, "BurningEffectDefinition")]
     public sealed class BurningStatusDefinition : StatusDefinition, IPeriodicStatus
     {

@@ -4,7 +4,7 @@ using UnityEngine.Scripting.APIUpdating;
 
 namespace RPGame.Core.Statuses
 {
-    [CreateAssetMenu(fileName = "RestoreHealthEffect", menuName = "RPGame/Progression/Statuses/Restore Health")]
+    [CreateAssetMenu(fileName = "RestoreHealthEffect", menuName = "RPGame/Statuses/Restore Health")]
     [MovedFrom(true, null, null, "RestoreHealthEffectDefinition")]
     public sealed class RestoreHealthStatusDefinition : RestoreResourceStatusDefinition
     {

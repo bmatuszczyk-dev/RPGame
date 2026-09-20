@@ -4,7 +4,7 @@ using UnityEngine.Scripting.APIUpdating;
 
 namespace RPGame.Core.Statuses
 {
-    [CreateAssetMenu(fileName = "RestoreManaEffect", menuName = "RPGame/Progression/Statuses/Restore Mana")]
+    [CreateAssetMenu(fileName = "RestoreManaEffect", menuName = "RPGame/Statuses/Restore Mana")]
     [MovedFrom(true, null, null, "RestoreManaEffectDefinition")]
     public sealed class RestoreManaStatusDefinition : RestoreResourceStatusDefinition
     {

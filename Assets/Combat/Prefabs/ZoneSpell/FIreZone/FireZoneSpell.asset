@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d6001e159be4644594c3027ea99727c, type: 3}
   m_Name: FireZoneSpell
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.FireZoneSpell
+  id: fire_zone
   spellPrefab: {fileID: 7891503961636652376, guid: 997aca49728cd7044821ded853905d56, type: 3}
   manaCost: 40
   indicatorPrefab: {fileID: 4868209179822422569, guid: 3290b290bf0f7384b8f93e5013c4147a, type: 3}

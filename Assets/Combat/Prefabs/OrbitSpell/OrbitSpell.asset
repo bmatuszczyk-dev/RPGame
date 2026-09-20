@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1afc34aa7161f04090542193f6cd60f, type: 3}
   m_Name: OrbitSpell
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.OrbitSpell
+  id: orbit
   spellPrefab: {fileID: 7247531648856008980, guid: 994dc57359d85e44f9f9db1bee8ecc51, type: 3}
   manaCost: 50
   baseDamageRange:
