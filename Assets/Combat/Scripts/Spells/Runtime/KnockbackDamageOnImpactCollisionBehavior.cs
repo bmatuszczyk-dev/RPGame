@@ -15,6 +15,8 @@ namespace RPGame.Combat.Spells
             this.source = source;
         }
 
+        public RuntimeSpellBehaviorPhase Phase => RuntimeSpellBehaviorPhase.Aftermath;
+
         public void OnKnockbackCollision(GameObject target, Collider obstacle, Vector3 point)
         {
             if (target == null)

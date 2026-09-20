@@ -366,6 +366,7 @@ namespace RPGame.Player.Tests
 
         private sealed class TestRuntimeBehavior : IRuntimeSpellBehavior
         {
+            public RuntimeSpellBehaviorPhase Phase => RuntimeSpellBehaviorPhase.PrimaryEffect;
         }
     }
 }

@@ -126,6 +126,7 @@ namespace RPGame.Core.Tests
 
         private sealed class TestRuntimeSpellBehavior : IRuntimeSpellBehavior
         {
+            public RuntimeSpellBehaviorPhase Phase => RuntimeSpellBehaviorPhase.PrimaryEffect;
         }
 
         private sealed class TestAoESpell : Spell, IAoECapability

@@ -48,6 +48,14 @@ namespace RPGame.Combat.Tests
         }
 
         [Test]
+        public void Phase_IsAftermath()
+        {
+            KnockbackDamageOnImpactCollisionBehavior behavior = new(17f);
+
+            Assert.AreEqual(RuntimeSpellBehaviorPhase.Aftermath, behavior.Phase);
+        }
+
+        [Test]
         public void WaveImpactDefinition_ForWaveSpell_CreatesBehaviorWithCaster()
         {
             WaveDamageOnImpactDefinition definition = new();

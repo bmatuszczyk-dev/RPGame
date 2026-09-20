@@ -114,6 +114,7 @@ namespace RPGame.Core.Tests.Effects
                 Source = source;
             }
 
+            public RuntimeSpellBehaviorPhase Phase => RuntimeSpellBehaviorPhase.PrimaryEffect;
             public GameObject Source { get; }
         }
     }
