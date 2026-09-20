@@ -106,6 +106,19 @@ namespace RPGame.Combat.Tests
         }
 
         [Test]
+        public void TryConsumeStatus_WhenMarkExists_ConsumesItOnlyOnce()
+        {
+            statusReceiver.ApplyStatus(markDefinition, MarkProgressTracker.MarkDuration, context);
+
+            bool firstConsume = statusReceiver.TryConsumeStatus(markDefinition);
+            bool secondConsume = statusReceiver.TryConsumeStatus(markDefinition);
+
+            Assert.IsTrue(firstConsume);
+            Assert.IsFalse(secondConsume);
+            Assert.IsFalse(statusReceiver.HasStatus(markDefinition));
+        }
+
+        [Test]
         public void RecordSuccessfulSpell_WhenMarkIsActive_DoesNotStartNextProgressCycle()
         {
             tracker.RecordSuccessfulSpell(new SpellId("wave"), context);
