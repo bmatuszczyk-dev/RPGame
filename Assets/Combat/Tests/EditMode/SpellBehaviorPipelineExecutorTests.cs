@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
 using RPGame.Combat.Spells;
+using RPGame.Core.Damage;
 using RPGame.Core.Spells;
 using RPGame.Core.Statuses;
 using UnityEditor;
@@ -50,7 +51,8 @@ namespace RPGame.Combat.Tests
             {
                 new RecordingBehavior("Effect", SpellBehaviorPhase.Effect, executed),
                 new RecordingBehavior("PreResolve", SpellBehaviorPhase.PreResolve, executed),
-                new RecordingBehavior("MarkConsumption", SpellBehaviorPhase.MarkConsumption, executed)
+                new RecordingBehavior("MarkConsumption", SpellBehaviorPhase.MarkConsumption, executed),
+                new RecordingBehavior("PostResolve", SpellBehaviorPhase.PostResolve, executed)
             };
             RecordingResolveBehavior resolve = new("Resolve", executed, true);
 
@@ -59,7 +61,7 @@ namespace RPGame.Combat.Tests
             ExecuteSpell(new SpellId("fire_zone"));
 
             CollectionAssert.AreEqual(
-                new[] { "PreResolve", "MarkConsumption", "Resolve", "Effect" },
+                new[] { "PreResolve", "MarkConsumption", "Resolve", "PostResolve", "Effect" },
                 executed);
             Assert.IsTrue(statusReceiver.HasStatus(markDefinition));
         }
@@ -72,6 +74,7 @@ namespace RPGame.Combat.Tests
             {
                 new RecordingBehavior("PreResolve", SpellBehaviorPhase.PreResolve, executed),
                 new RecordingBehavior("MarkConsumption", SpellBehaviorPhase.MarkConsumption, executed),
+                new RecordingBehavior("PostResolve", SpellBehaviorPhase.PostResolve, executed),
                 new RecordingBehavior("Effect", SpellBehaviorPhase.Effect, executed)
             };
             RecordingResolveBehavior resolve = new("Resolve", executed, false);
@@ -88,6 +91,63 @@ namespace RPGame.Combat.Tests
             ExecuteSpell(new SpellId("magic_missile"));
 
             Assert.IsTrue(statusReceiver.HasStatus(markDefinition));
+        }
+
+        [Test]
+        public void Resolve_WhenPostResolveRuns_CanReadAndAppendResolveResults()
+        {
+            List<string> postResolveObservedResults = new();
+            List<string> effectObservedResults = new();
+            IRuntimeSpellBehavior[] behaviors =
+            {
+                new ResultReadingBehavior(
+                    SpellBehaviorPhase.PostResolve,
+                    "post_resolve",
+                    postResolveObservedResults),
+                new ResultReadingBehavior(
+                    SpellBehaviorPhase.Effect,
+                    null,
+                    effectObservedResults)
+            };
+
+            ExecuteSpell(
+                new SpellId("wave"),
+                behaviors,
+                new ResultRecordingResolveBehavior(new TestResolveResult("resolve")));
+
+            CollectionAssert.AreEqual(new[] { "resolve" }, postResolveObservedResults);
+            CollectionAssert.AreEqual(new[] { "resolve", "post_resolve" }, effectObservedResults);
+        }
+
+        [Test]
+        public void Resolve_WhenDamageResolveSucceeds_EffectCanReadDamageResult()
+        {
+            DamageResult expectedResult = DamageResult.Applied(
+                new DamageData(new[]
+                {
+                    new PartialDamage(40f, DamageType.Magical, DamageElement.None)
+                }),
+                10f,
+                10f,
+                0f,
+                true);
+            DamageResultCaptureBehavior capture = new();
+            CasterData casterData = CreateCasterData(
+                new SpellId("wave"),
+                new IRuntimeSpellBehavior[] { capture },
+                new[]
+                {
+                    new PartialDamageRange(40f, 40f, DamageType.Magical, DamageElement.None)
+                });
+
+            SpellBehaviorPipelineExecutor.Resolve(
+                casterData,
+                target,
+                new DamageResolveBehavior(new TestDamageable(expectedResult), casterData));
+
+            Assert.IsTrue(capture.HasResult);
+            Assert.AreEqual(10f, capture.Result.AppliedAmount);
+            Assert.IsTrue(capture.Result.WasFatal);
         }
 
         [Test]
@@ -262,9 +322,18 @@ namespace RPGame.Combat.Tests
             SpellId spellId,
             IReadOnlyList<IRuntimeSpellBehavior> behaviors)
         {
+            return CreateCasterData(spellId, behaviors, null);
+        }
+
+        private CasterData CreateCasterData(
+            SpellId spellId,
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors,
+            IReadOnlyList<PartialDamageRange> damageRanges)
+        {
             return new CasterDataBuilder(source, source.transform, target.transform)
                 .WithSpellId(spellId)
                 .WithRuntimeBehaviors(behaviors)
+                .WithDamageRanges(damageRanges)
                 .Build();
         }
 
@@ -431,6 +500,101 @@ namespace RPGame.Combat.Tests
             {
                 return context.StatusReceiver != null
                     && context.StatusReceiver.ApplyStatus(status, 5f, statusContext);
+            }
+        }
+
+        private sealed class ResultRecordingResolveBehavior : ISpellResolveBehavior
+        {
+            private readonly TestResolveResult result;
+
+            public ResultRecordingResolveBehavior(TestResolveResult result)
+            {
+                this.result = result;
+            }
+
+            public SpellBehaviorPhase Phase => SpellBehaviorPhase.Resolve;
+
+            public bool Resolve(SpellBehaviorContext context)
+            {
+                context.AddResolveResult(result);
+                return true;
+            }
+        }
+
+        private sealed class ResultReadingBehavior : ISpellBehavior
+        {
+            private readonly SpellBehaviorPhase phase;
+            private readonly TestResolveResult resultToAppend;
+            private readonly List<string> observedResults;
+
+            public ResultReadingBehavior(
+                SpellBehaviorPhase phase,
+                string resultToAppend,
+                List<string> observedResults)
+            {
+                this.phase = phase;
+                this.resultToAppend = resultToAppend != null
+                    ? new TestResolveResult(resultToAppend)
+                    : default;
+                this.observedResults = observedResults;
+            }
+
+            public SpellBehaviorPhase Phase => phase;
+
+            public void Execute(SpellBehaviorContext context)
+            {
+                if (context.TryGetResolveResults(out IReadOnlyList<TestResolveResult> results))
+                {
+                    for (int resultIndex = 0; resultIndex < results.Count; resultIndex++)
+                    {
+                        observedResults.Add(results[resultIndex].Value);
+                    }
+                }
+
+                if (resultToAppend.Value != null)
+                {
+                    context.AddResolveResult(resultToAppend);
+                }
+            }
+        }
+
+        private readonly struct TestResolveResult : IResolveResult
+        {
+            public TestResolveResult(string value)
+            {
+                Value = value;
+            }
+
+            public string Value { get; }
+        }
+
+        private sealed class DamageResultCaptureBehavior : ISpellBehavior
+        {
+            public SpellBehaviorPhase Phase => SpellBehaviorPhase.Effect;
+            public bool HasResult { get; private set; }
+            public DamageResult Result { get; private set; }
+
+            public void Execute(SpellBehaviorContext context)
+            {
+                HasResult = context.TryGetResolveResult(out DamageResult result);
+                Result = result;
+            }
+        }
+
+        private sealed class TestDamageable : IDamageable
+        {
+            private readonly DamageResult result;
+
+            public TestDamageable(DamageResult result)
+            {
+                this.result = result;
+            }
+
+            public bool CanReceiveDamage => true;
+
+            public DamageResult ApplyDamage(DamageData data)
+            {
+                return result;
             }
         }
 

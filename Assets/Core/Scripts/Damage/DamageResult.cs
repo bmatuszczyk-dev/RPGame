@@ -1,6 +1,8 @@
+using RPGame.Core.Spells;
+
 namespace RPGame.Core.Damage
 {
-    public readonly struct DamageResult
+    public readonly struct DamageResult : IResolveResult
     {
         private DamageResult(
             DamageData data,

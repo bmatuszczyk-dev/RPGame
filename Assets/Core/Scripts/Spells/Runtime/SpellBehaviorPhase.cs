@@ -5,6 +5,7 @@ namespace RPGame.Core.Spells
         PreResolve,
         MarkConsumption,
         Resolve,
+        PostResolve,
         Effect
     }
 }

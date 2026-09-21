@@ -289,6 +289,7 @@ namespace RPGame.Combat.Spells
                     new DamageData(
                         DamageRangeRoller.Roll(wave.casterData.DamageRanges),
                         wave.casterData.CasterObject));
+                context.AddResolveResult(result);
 
                 wave.ApplyKnockback(targetCollider, targetPosition, targetObject);
                 return result.WasApplied;

@@ -34,6 +34,7 @@ namespace RPGame.Combat.Spells
                 return false;
             }
 
+            ExecuteTargetPhase(casterData, SpellBehaviorPhase.PostResolve, context);
             ExecuteTargetPhase(casterData, SpellBehaviorPhase.Effect, context);
             RecordMarkProgress(context);
             return true;
