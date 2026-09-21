@@ -1,4 +1,3 @@
-using RPGame.Core.Damage;
 using RPGame.Core.Spells;
 using RPGame.Core.Statuses;
 using UnityEngine;
@@ -6,10 +5,10 @@ using UnityEngine;
 namespace RPGame.Combat.Spells
 {
     [System.Serializable]
-    public sealed class HuntersMarkBehaviorDefinition : RuntimeSpellBehaviorDefinition
+    public sealed class FinisherBehaviorDefinition : RuntimeSpellBehaviorDefinition
     {
         [SerializeField] private MarkStatusDefinition markDefinition;
-        [SerializeField, Min(0f)] private float bonusDamage = 1f;
+        [SerializeField, Range(0f, 1f)] private float healthThreshold = 0.2f;
 
         public override bool TryCreate(
             Spell spell,
@@ -22,9 +21,9 @@ namespace RPGame.Combat.Spells
                 return false;
             }
 
-            behavior = new HuntersMarkBehavior(
+            behavior = new FinisherBehavior(
                 markDefinition,
-                new PartialDamage(bonusDamage, DamageType.Magical, DamageElement.None),
+                healthThreshold,
                 casterObject);
             return true;
         }

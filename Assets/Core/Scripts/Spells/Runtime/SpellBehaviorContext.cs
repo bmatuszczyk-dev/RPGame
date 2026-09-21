@@ -7,7 +7,7 @@ namespace RPGame.Core.Spells
     public readonly struct SpellBehaviorContext
     {
         private readonly List<IResolveResult> resolveResults;
-        private readonly List<IExecutionState> executionStates;
+        private readonly List<SpellExecutionFlag> executionFlags;
 
         public SpellBehaviorContext(
             GameObject target,
@@ -20,7 +20,7 @@ namespace RPGame.Core.Spells
             SpellId = spellId;
             StatusReceiver = statusReceiver;
             resolveResults = new List<IResolveResult>();
-            executionStates = new List<IExecutionState>();
+            executionFlags = new List<SpellExecutionFlag>();
         }
 
         public GameObject Target { get; }
@@ -80,34 +80,19 @@ namespace RPGame.Core.Spells
             return typedResults.Count > 0;
         }
 
-        public void AddExecutionState<T>(T state)
-            where T : IExecutionState
+        public void SetExecutionFlag(SpellExecutionFlag flag)
         {
-            if (executionStates == null)
+            if (executionFlags == null || executionFlags.Contains(flag))
             {
                 return;
             }
 
-            executionStates.Add(state);
+            executionFlags.Add(flag);
         }
 
-        public bool TryGetExecutionState<T>(out T state)
-            where T : IExecutionState
+        public bool HasExecutionFlag(SpellExecutionFlag flag)
         {
-            if (executionStates != null)
-            {
-                for (int stateIndex = executionStates.Count - 1; stateIndex >= 0; stateIndex--)
-                {
-                    if (executionStates[stateIndex] is T typedState)
-                    {
-                        state = typedState;
-                        return true;
-                    }
-                }
-            }
-
-            state = default;
-            return false;
+            return executionFlags != null && executionFlags.Contains(flag);
         }
     }
 }

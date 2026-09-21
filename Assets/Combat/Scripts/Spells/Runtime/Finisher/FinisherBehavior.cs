@@ -1,23 +1,24 @@
 using RPGame.Core.Damage;
 using RPGame.Core.Spells;
+using RPGame.Core.Statistics;
 using RPGame.Core.Statuses;
 using UnityEngine;
 
 namespace RPGame.Combat.Spells
 {
-    public sealed class HuntersMarkBehavior : ISpellBehavior, IMarkConsumer
+    public sealed class FinisherBehavior : ISpellBehavior, IMarkConsumer
     {
         private readonly MarkStatusDefinition markDefinition;
-        private readonly PartialDamage bonusDamage;
+        private readonly float healthThreshold;
         private readonly GameObject source;
 
-        public HuntersMarkBehavior(
+        public FinisherBehavior(
             MarkStatusDefinition markDefinition,
-            PartialDamage bonusDamage,
+            float healthThreshold,
             GameObject source)
         {
             this.markDefinition = markDefinition;
-            this.bonusDamage = bonusDamage;
+            this.healthThreshold = Mathf.Clamp01(healthThreshold);
             this.source = source;
         }
 
@@ -32,15 +33,24 @@ namespace RPGame.Combat.Spells
                 return false;
             }
 
-            context.AddExecutionState(new MarkActivationState());
+            context.SetExecutionFlag(SpellExecutionFlag.MarkConsumed);
             return true;
         }
 
         public void Execute(SpellBehaviorContext context)
         {
-            if (!context.TryGetExecutionState(out MarkActivationState state)
-                || !state.TryConsumePayoff()
+            if (!context.HasExecutionFlag(SpellExecutionFlag.MarkConsumed)
                 || context.Target == null)
+            {
+                return;
+            }
+
+            IStatisticsController statistics =
+                context.Target.GetComponentInParent<IStatisticsController>();
+            if (statistics == null
+                || statistics.CurrentHealth <= 0f
+                || statistics.MaxHealth <= 0f
+                || statistics.CurrentHealth / statistics.MaxHealth > healthThreshold)
             {
                 return;
             }
@@ -52,7 +62,13 @@ namespace RPGame.Combat.Spells
             }
 
             DamageResult result = damageable.ApplyDamage(new DamageData(
-                new[] { bonusDamage },
+                new[]
+                {
+                    new PartialDamage(
+                        statistics.CurrentHealth,
+                        DamageType.Magical,
+                        DamageElement.None)
+                },
                 source));
             context.AddResolveResult(result);
         }
