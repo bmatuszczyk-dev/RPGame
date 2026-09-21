@@ -26,7 +26,7 @@ namespace RPGame.Combat.Spells
                 statusReceiver);
 
             ExecuteTargetPhase(casterData, SpellBehaviorPhase.PreResolve, context);
-            ExecuteTargetPhase(casterData, SpellBehaviorPhase.MarkConsumption, context);
+            ExecuteMarkConsumers(casterData, context);
 
             if (resolveBehavior.Phase != SpellBehaviorPhase.Resolve
                 || !resolveBehavior.Resolve(context))
@@ -45,17 +45,35 @@ namespace RPGame.Combat.Spells
             SpellBehaviorPhase phase,
             SpellBehaviorContext context)
         {
-            ExecutePhase<ISpellBehavior>(
+            ExecutePhase(
                 casterData.RuntimeBehaviors,
                 phase,
                 behavior => behavior.Execute(context));
         }
 
-        private static void ExecutePhase<TBehavior>(
+        private static void ExecuteMarkConsumers(
+            CasterData casterData,
+            SpellBehaviorContext context)
+        {
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors = casterData.RuntimeBehaviors;
+            if (behaviors == null)
+            {
+                return;
+            }
+
+            for (int behaviorIndex = 0; behaviorIndex < behaviors.Count; behaviorIndex++)
+            {
+                if (behaviors[behaviorIndex] is IMarkConsumer markConsumer)
+                {
+                    markConsumer.TryConsumeMark(context);
+                }
+            }
+        }
+
+        private static void ExecutePhase(
             IReadOnlyList<IRuntimeSpellBehavior> behaviors,
             SpellBehaviorPhase phase,
-            Action<TBehavior> execute)
-            where TBehavior : class, IPhasedSpellBehavior
+            Action<ISpellBehavior> execute)
         {
             if (behaviors == null || execute == null)
             {
@@ -64,7 +82,8 @@ namespace RPGame.Combat.Spells
 
             for (int behaviorIndex = 0; behaviorIndex < behaviors.Count; behaviorIndex++)
             {
-                if (behaviors[behaviorIndex] is TBehavior behavior
+                IRuntimeSpellBehavior runtimeBehavior = behaviors[behaviorIndex];
+                if (runtimeBehavior is ISpellBehavior behavior
                     && behavior.Phase == phase)
                 {
                     execute(behavior);

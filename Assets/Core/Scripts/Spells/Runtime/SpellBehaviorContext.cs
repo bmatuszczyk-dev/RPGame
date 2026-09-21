@@ -7,6 +7,7 @@ namespace RPGame.Core.Spells
     public readonly struct SpellBehaviorContext
     {
         private readonly List<IResolveResult> resolveResults;
+        private readonly List<IExecutionState> executionStates;
 
         public SpellBehaviorContext(
             GameObject target,
@@ -19,6 +20,7 @@ namespace RPGame.Core.Spells
             SpellId = spellId;
             StatusReceiver = statusReceiver;
             resolveResults = new List<IResolveResult>();
+            executionStates = new List<IExecutionState>();
         }
 
         public GameObject Target { get; }
@@ -76,6 +78,36 @@ namespace RPGame.Core.Spells
 
             results = typedResults;
             return typedResults.Count > 0;
+        }
+
+        public void AddExecutionState<T>(T state)
+            where T : IExecutionState
+        {
+            if (executionStates == null)
+            {
+                return;
+            }
+
+            executionStates.Add(state);
+        }
+
+        public bool TryGetExecutionState<T>(out T state)
+            where T : IExecutionState
+        {
+            if (executionStates != null)
+            {
+                for (int stateIndex = executionStates.Count - 1; stateIndex >= 0; stateIndex--)
+                {
+                    if (executionStates[stateIndex] is T typedState)
+                    {
+                        state = typedState;
+                        return true;
+                    }
+                }
+            }
+
+            state = default;
+            return false;
         }
     }
 }

@@ -51,7 +51,7 @@ namespace RPGame.Combat.Tests
             {
                 new RecordingBehavior("Effect", SpellBehaviorPhase.Effect, executed),
                 new RecordingBehavior("PreResolve", SpellBehaviorPhase.PreResolve, executed),
-                new RecordingBehavior("MarkConsumption", SpellBehaviorPhase.MarkConsumption, executed),
+                new RecordingMarkConsumer("ConsumeMark", executed),
                 new RecordingBehavior("PostResolve", SpellBehaviorPhase.PostResolve, executed)
             };
             RecordingResolveBehavior resolve = new("Resolve", executed, true);
@@ -61,7 +61,7 @@ namespace RPGame.Combat.Tests
             ExecuteSpell(new SpellId("fire_zone"));
 
             CollectionAssert.AreEqual(
-                new[] { "PreResolve", "MarkConsumption", "Resolve", "PostResolve", "Effect" },
+                new[] { "PreResolve", "ConsumeMark", "Resolve", "PostResolve", "Effect" },
                 executed);
             Assert.IsTrue(statusReceiver.HasStatus(markDefinition));
         }
@@ -73,7 +73,7 @@ namespace RPGame.Combat.Tests
             IRuntimeSpellBehavior[] behaviors =
             {
                 new RecordingBehavior("PreResolve", SpellBehaviorPhase.PreResolve, executed),
-                new RecordingBehavior("MarkConsumption", SpellBehaviorPhase.MarkConsumption, executed),
+                new RecordingMarkConsumer("ConsumeMark", executed),
                 new RecordingBehavior("PostResolve", SpellBehaviorPhase.PostResolve, executed),
                 new RecordingBehavior("Effect", SpellBehaviorPhase.Effect, executed)
             };
@@ -84,7 +84,7 @@ namespace RPGame.Combat.Tests
             ExecuteSpell(new SpellId("fire_zone"));
 
             CollectionAssert.AreEqual(
-                new[] { "PreResolve", "MarkConsumption", "Resolve" },
+                new[] { "PreResolve", "ConsumeMark", "Resolve" },
                 executed);
             Assert.IsFalse(statusReceiver.HasStatus(markDefinition));
 
@@ -273,10 +273,7 @@ namespace RPGame.Combat.Tests
         public void TriggerStatusZone_WhenReapplying_DoesNotRunTargetBehaviorsOrMarkProgress()
         {
             List<string> executed = new();
-            RecordingBehavior behavior = new(
-                "MarkConsumption",
-                SpellBehaviorPhase.MarkConsumption,
-                executed);
+            RecordingMarkConsumer behavior = new("ConsumeMark", executed);
             GameObject zoneObject = CreateGameObject("Zone");
             TestTriggerStatusZoneBehaviour zone =
                 zoneObject.AddComponent<TestTriggerStatusZoneBehaviour>();
@@ -288,7 +285,7 @@ namespace RPGame.Combat.Tests
             zone.ApplyInitialForTest(statusReceiver, target);
             zone.ReapplyForTest(statusReceiver);
 
-            CollectionAssert.AreEqual(new[] { "MarkConsumption" }, executed);
+            CollectionAssert.AreEqual(new[] { "ConsumeMark" }, executed);
             Assert.IsFalse(statusReceiver.HasStatus(markDefinition));
         }
 
@@ -437,7 +434,7 @@ namespace RPGame.Combat.Tests
             }
         }
 
-        private sealed class ConsumeMarkBehavior : ISpellBehavior
+        private sealed class ConsumeMarkBehavior : IMarkConsumer
         {
             private readonly MarkStatusDefinition markDefinition;
 
@@ -446,13 +443,32 @@ namespace RPGame.Combat.Tests
                 this.markDefinition = markDefinition;
             }
 
-            public SpellBehaviorPhase Phase => SpellBehaviorPhase.MarkConsumption;
             public List<bool> Results { get; } = new();
 
-            public void Execute(SpellBehaviorContext context)
+            public bool TryConsumeMark(SpellBehaviorContext context)
             {
-                Results.Add(context.StatusReceiver != null
-                    && context.StatusReceiver.TryConsumeStatus(markDefinition));
+                bool consumed = context.StatusReceiver != null
+                    && context.StatusReceiver.TryConsumeStatus(markDefinition);
+                Results.Add(consumed);
+                return consumed;
+            }
+        }
+
+        private sealed class RecordingMarkConsumer : IMarkConsumer
+        {
+            private readonly string name;
+            private readonly List<string> executed;
+
+            public RecordingMarkConsumer(string name, List<string> executed)
+            {
+                this.name = name;
+                this.executed = executed;
+            }
+
+            public bool TryConsumeMark(SpellBehaviorContext context)
+            {
+                executed.Add(name);
+                return false;
             }
         }
 
