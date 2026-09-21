@@ -47,9 +47,9 @@ namespace RPGame.Core.Statuses
             statusContainer.Tick(Time.deltaTime);
         }
 
-        public void ApplyStatus(StatusDefinition status, float duration, StatusContext context)
+        public bool ApplyStatus(StatusDefinition status, float duration, StatusContext context)
         {
-            statusContainer.Add(status, duration, context);
+            return statusContainer.Add(status, duration, context);
         }
 
         public bool HasStatus(StatusDefinition status)

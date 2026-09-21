@@ -21,6 +21,7 @@ namespace RPGame.Core.Spells
         private ICharacterAttributes attributes;
         private IStatisticsController statistics;
         private Vector3? targetPosition;
+        private SpellId spellId;
 
         public CasterDataBuilder(GameObject casterObject, Transform castOrigin, Transform target)
         {
@@ -65,6 +66,12 @@ namespace RPGame.Core.Spells
             return this;
         }
 
+        public CasterDataBuilder WithSpellId(SpellId spellId)
+        {
+            this.spellId = spellId;
+            return this;
+        }
+
         public CasterData Build()
         {
             return new CasterData(
@@ -76,7 +83,8 @@ namespace RPGame.Core.Spells
                 damageRanges,
                 targetPosition,
                 runtimeBehaviors,
-                propertyModifiers);
+                propertyModifiers,
+                spellId);
         }
     }
 }

@@ -47,11 +47,14 @@ namespace RPGame.Combat.Spells
                 }
 
                 float delay = Random.Range(strikeDelayRange.x, strikeDelayRange.y);
+                GameObject targetObject = statusReceiver is Component receiverComponent
+                    ? receiverComponent.gameObject
+                    : zoneCollider.gameObject;
                 DelayedLightningStrike.Run(
-                    statusReceiver,
                     stunStatus,
                     stunDuration,
-                    casterData.CasterObject,
+                    casterData,
+                    targetObject,
                     lightningVfxPrefab,
                     zoneCollider.bounds.center + lightningVfxOffset,
                     delay);
@@ -82,29 +85,29 @@ namespace RPGame.Combat.Spells
 
     internal sealed class DelayedLightningStrike : MonoBehaviour
     {
-        private IStatusReceiver statusReceiver;
         private StunStatusDefinition stunStatus;
         private float stunDuration;
-        private GameObject statusSource;
+        private CasterData casterData;
+        private GameObject targetObject;
         private GameObject lightningVfxPrefab;
         private Vector3 strikePosition;
         private float delay;
 
         public static void Run(
-            IStatusReceiver statusReceiver,
             StunStatusDefinition stunStatus,
             float stunDuration,
-            GameObject statusSource,
+            CasterData casterData,
+            GameObject targetObject,
             GameObject lightningVfxPrefab,
             Vector3 strikePosition,
             float delay)
         {
             GameObject runnerObject = new($"{nameof(DelayedLightningStrike)}");
             DelayedLightningStrike runner = runnerObject.AddComponent<DelayedLightningStrike>();
-            runner.statusReceiver = statusReceiver;
             runner.stunStatus = stunStatus;
             runner.stunDuration = stunDuration;
-            runner.statusSource = statusSource;
+            runner.casterData = casterData;
+            runner.targetObject = targetObject;
             runner.lightningVfxPrefab = lightningVfxPrefab;
             runner.strikePosition = strikePosition;
             runner.delay = Mathf.Max(0f, delay);
@@ -117,15 +120,10 @@ namespace RPGame.Combat.Spells
                 yield return new WaitForSeconds(delay);
             }
 
-            if (stunStatus != null)
-            {
-                statusReceiver?.ApplyStatus(
-                    stunStatus,
-                    stunDuration,
-                    new StatusContext(
-                        new StatusSourceId(nameof(LightningZoneBehaviour)),
-                        statusSource));
-            }
+            SpellBehaviorPipelineExecutor.Resolve(
+                casterData,
+                targetObject,
+                new LightningZoneResolveBehavior(stunStatus, stunDuration, casterData.CasterObject));
 
             if (lightningVfxPrefab != null)
             {
@@ -133,6 +131,40 @@ namespace RPGame.Combat.Spells
             }
 
             Destroy(gameObject);
+        }
+
+        private sealed class LightningZoneResolveBehavior : ISpellResolveBehavior
+        {
+            private readonly StunStatusDefinition stunStatus;
+            private readonly float stunDuration;
+            private readonly GameObject statusSource;
+
+            public LightningZoneResolveBehavior(
+                StunStatusDefinition stunStatus,
+                float stunDuration,
+                GameObject statusSource)
+            {
+                this.stunStatus = stunStatus;
+                this.stunDuration = stunDuration;
+                this.statusSource = statusSource;
+            }
+
+            public SpellBehaviorPhase Phase => SpellBehaviorPhase.Resolve;
+
+            public bool Resolve(SpellBehaviorContext context)
+            {
+                if (stunStatus == null || context.StatusReceiver == null)
+                {
+                    return false;
+                }
+
+                return context.StatusReceiver.ApplyStatus(
+                    stunStatus,
+                    stunDuration,
+                    new StatusContext(
+                        new StatusSourceId(nameof(LightningZoneBehaviour)),
+                        statusSource));
+            }
         }
     }
 }

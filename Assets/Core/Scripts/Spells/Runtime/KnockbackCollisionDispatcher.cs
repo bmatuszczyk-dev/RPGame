@@ -16,9 +16,13 @@ namespace RPGame.Core.Spells
                 return;
             }
 
-            RuntimeSpellBehaviorExecutor.Execute<IKnockbackCollisionHandler>(
-                runtimeBehaviors,
-                handler => handler.OnKnockbackCollision(target, obstacle, point));
+            for (int i = 0; i < runtimeBehaviors.Count; i++)
+            {
+                if (runtimeBehaviors[i] is IKnockbackCollisionHandler handler)
+                {
+                    handler.OnKnockbackCollision(target, obstacle, point);
+                }
+            }
         }
     }
 }

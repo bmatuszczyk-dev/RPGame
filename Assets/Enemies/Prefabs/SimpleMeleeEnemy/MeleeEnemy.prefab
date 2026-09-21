@@ -27,6 +27,8 @@ GameObject:
   - component: {fileID: 8405724569605279724}
   - component: {fileID: 7414506123678943208}
   - component: {fileID: 800322458967628837}
+  - component: {fileID: 2422390360541412733}
+  - component: {fileID: 6890179125316842043}
   m_Layer: 6
   m_Name: MeleeEnemy
   m_TagString: Untagged
@@ -162,7 +164,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a228d74ae0d45788e3d884cac2b0c3d, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.StatisticsController
   config: {fileID: 11400000, guid: 2b12fbfccccb94e4e8a38d391c43e47a, type: 2}
   attributes: {fileID: 0}
@@ -180,7 +182,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 42bba49cff584ae8adf9654d6a96da47, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.Controller
   config: {fileID: 11400000, guid: ed08f6085c824b2a8b77efbd58d79cee, type: 2}
   behaviourCreator: {fileID: 918000000000000001}
@@ -311,6 +313,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2dbfd3740605de4faf2c301c5ad9c81, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.StatusEffectAggregator
+--- !u!114 &2422390360541412733
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3977383957096067067}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c10d6b62f2f845639483ccd39c3c7f4e, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.DestroyOnDeath
+  deathSource: {fileID: 1754915428058411402}
+--- !u!114 &6890179125316842043
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3977383957096067067}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbaf3e26c8d0429e83a7630284f17e38, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.MarkProgressReceiver
+  markDefinition: {fileID: 11400000, guid: 7f81cd55cb4041cca13fbd9df5de24f6, type: 2}
 --- !u!114 &8405724569605279724
 MonoBehaviour:
   m_ObjectHideFlags: 0

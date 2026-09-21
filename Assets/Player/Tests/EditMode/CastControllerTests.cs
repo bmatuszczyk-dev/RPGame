@@ -181,6 +181,18 @@ namespace RPGame.Player.Tests
         }
 
         [Test]
+        public void CastSpell_IncludesSpellId()
+        {
+            SerializedObject serializedSpell = new(spell);
+            serializedSpell.FindProperty("id").stringValue = "wave";
+            serializedSpell.ApplyModifiedPropertiesWithoutUndo();
+
+            InvokeCastSpell(spell);
+
+            Assert.AreEqual(new SpellId("wave"), spell.LastCasterData.SpellId);
+        }
+
+        [Test]
         public void CastSpell_IncludesPropertyModifiersFromEffectAggregator()
         {
             EffectAggregator aggregator = playerObject.AddComponent<EffectAggregator>();
@@ -366,7 +378,6 @@ namespace RPGame.Player.Tests
 
         private sealed class TestRuntimeBehavior : IRuntimeSpellBehavior
         {
-            public RuntimeSpellBehaviorPhase Phase => RuntimeSpellBehaviorPhase.PrimaryEffect;
         }
     }
 }

@@ -19,9 +19,11 @@ namespace RPGame.Combat.Spells
 
         protected abstract float ReapplyInterval { get; }
 
+        protected CasterData CasterData => casterData;
         protected GameObject StatusSource => casterData.CasterObject;
 
-        protected abstract void ApplyTo(IStatusReceiver target);
+        protected abstract void ApplyInitialTo(IStatusReceiver target, GameObject targetObject);
+        protected abstract void ReapplyTo(IStatusReceiver target);
 
         private void Awake()
         {
@@ -80,7 +82,7 @@ namespace RPGame.Combat.Spells
                 }
 
                 targetState.ReapplyTimer = 0f;
-                ApplyTo(targetState.StatusReceiver);
+                ReapplyTo(targetState.StatusReceiver);
             }
         }
 
@@ -103,10 +105,11 @@ namespace RPGame.Combat.Spells
                 return;
             }
 
+            GameObject targetObject = ((Component)statusReceiver).gameObject;
             targetState = new TargetZoneState(statusReceiver);
             targetState.Colliders.Add(other);
             targetsInside.Add(statusReceiver, targetState);
-            ApplyTo(statusReceiver);
+            ApplyInitialTo(statusReceiver, targetObject);
         }
 
         private void OnTriggerExit(Collider other)

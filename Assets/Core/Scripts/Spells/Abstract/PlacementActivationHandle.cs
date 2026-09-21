@@ -50,7 +50,8 @@ namespace RPGame.Core.Spells
                 casterData.DamageRanges,
                 position,
                 casterData.RuntimeBehaviors,
-                casterData.PropertyModifiers);
+                casterData.PropertyModifiers,
+                casterData.SpellId);
             return true;
         }
     }

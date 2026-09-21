@@ -186,20 +186,15 @@ namespace RPGame.Combat.Spells
                     continue;
                 }
 
-                Component targetComponent = damageable as Component;
-
-                GameObject targetObject = targetComponent != null
-                    ? targetComponent.gameObject
-                    : targetCollider.transform.root.gameObject;
+                Component targetComponent = (Component)damageable;
+                GameObject targetObject = targetComponent.gameObject;
 
                 if (hitTargets.Contains(targetObject))
                 {
                     continue;
                 }
 
-                Vector3 targetPosition = targetComponent != null
-                    ? targetComponent.transform.position
-                    : targetCollider.transform.position;
+                Vector3 targetPosition = targetComponent.transform.position;
 
                 Vector3 offset = targetPosition - origin;
                 offset.y = 0f;
@@ -221,18 +216,22 @@ namespace RPGame.Combat.Spells
 
                 hitTargets.Add(targetObject);
 
-                damageable.ApplyDamage(
-                    new DamageData(
-                        DamageRangeRoller.Roll(casterData.DamageRanges),
-                        casterData.CasterObject));
-
-                ApplyKnockback(targetCollider, targetPosition);
+                SpellBehaviorPipelineExecutor.Resolve(
+                    casterData,
+                    targetObject,
+                    new WaveResolveBehavior(
+                        damageable,
+                        targetCollider,
+                        targetPosition,
+                        targetObject,
+                        this));
             }
         }
 
         private void ApplyKnockback(
             Collider targetCollider,
-            Vector3 targetPosition)
+            Vector3 targetPosition,
+            GameObject targetObject)
         {
             Vector3 direction = targetPosition - origin;
             direction.y = 0f;
@@ -255,9 +254,45 @@ namespace RPGame.Combat.Spells
                 knockbackDuration,
                 (obstacle, point) => KnockbackCollisionDispatcher.Dispatch(
                     casterData.RuntimeBehaviors,
-                    targetCollider.gameObject,
+                    targetObject,
                     obstacle,
                     point));
+        }
+
+        private sealed class WaveResolveBehavior : ISpellResolveBehavior
+        {
+            private readonly IDamageable damageable;
+            private readonly Collider targetCollider;
+            private readonly Vector3 targetPosition;
+            private readonly GameObject targetObject;
+            private readonly WaveController wave;
+
+            public WaveResolveBehavior(
+                IDamageable damageable,
+                Collider targetCollider,
+                Vector3 targetPosition,
+                GameObject targetObject,
+                WaveController wave)
+            {
+                this.damageable = damageable;
+                this.targetCollider = targetCollider;
+                this.targetPosition = targetPosition;
+                this.targetObject = targetObject;
+                this.wave = wave;
+            }
+
+            public SpellBehaviorPhase Phase => SpellBehaviorPhase.Resolve;
+
+            public bool Resolve(SpellBehaviorContext context)
+            {
+                DamageResult result = damageable.ApplyDamage(
+                    new DamageData(
+                        DamageRangeRoller.Roll(wave.casterData.DamageRanges),
+                        wave.casterData.CasterObject));
+
+                wave.ApplyKnockback(targetCollider, targetPosition, targetObject);
+                return result.WasApplied;
+            }
         }
 
         private bool ShouldIgnore(Collider targetCollider)

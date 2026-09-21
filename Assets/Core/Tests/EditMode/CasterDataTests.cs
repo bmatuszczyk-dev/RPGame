@@ -124,9 +124,20 @@ namespace RPGame.Core.Tests
             }
         }
 
+        [Test]
+        public void CasterDataBuilder_WithSpellId_BuildsCasterDataWithSpellId()
+        {
+            SpellId spellId = new("wave");
+
+            CasterData casterData = new CasterDataBuilder(null, null, null)
+                .WithSpellId(spellId)
+                .Build();
+
+            Assert.AreEqual(spellId, casterData.SpellId);
+        }
+
         private sealed class TestRuntimeSpellBehavior : IRuntimeSpellBehavior
         {
-            public RuntimeSpellBehaviorPhase Phase => RuntimeSpellBehaviorPhase.PrimaryEffect;
         }
 
         private sealed class TestAoESpell : Spell, IAoECapability

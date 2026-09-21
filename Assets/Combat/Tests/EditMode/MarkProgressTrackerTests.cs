@@ -162,9 +162,9 @@ namespace RPGame.Combat.Tests
         {
             private readonly StatusContainer container = new(new StatusTarget(null, null, null));
 
-            public void ApplyStatus(StatusDefinition status, float duration, StatusContext context)
+            public bool ApplyStatus(StatusDefinition status, float duration, StatusContext context)
             {
-                container.Add(status, duration, context);
+                return container.Add(status, duration, context);
             }
 
             public bool HasStatus(StatusDefinition status)

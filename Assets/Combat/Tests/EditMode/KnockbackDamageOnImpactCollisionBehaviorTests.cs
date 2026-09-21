@@ -48,11 +48,16 @@ namespace RPGame.Combat.Tests
         }
 
         [Test]
-        public void Phase_IsAftermath()
+        public void Dispatch_WithKnockbackCollisionHandler_ExecutesHandler()
         {
+            GameObject target = CreateObject("Target");
+            TestDamageable damageable = target.AddComponent<TestDamageable>();
             KnockbackDamageOnImpactCollisionBehavior behavior = new(17f);
+            List<IRuntimeSpellBehavior> behaviors = new() { behavior };
 
-            Assert.AreEqual(RuntimeSpellBehaviorPhase.Aftermath, behavior.Phase);
+            KnockbackCollisionDispatcher.Dispatch(behaviors, target, null, Vector3.zero);
+
+            Assert.AreEqual(1, damageable.CallCount);
         }
 
         [Test]
