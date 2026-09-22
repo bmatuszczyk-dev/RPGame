@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.RuntimeBehaviorEffectDefinition
   behavior:
     rid: 4430814552230461506
+  executionOrder: 0
   references:
     version: 2
     RefIds:
     - rid: 4430814552230461506
-      type: {class: WaveDamageOnImpactDefinition, ns: RPGame.Combat.Spells, asm: RPGame.Combat}
+      type: {class: KnockbackDamageOnImpactCollisionBehavior, ns: RPGame.Combat.Spells, asm: RPGame.Combat}
       data:
         impactDamage: 1

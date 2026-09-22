@@ -22,7 +22,7 @@ namespace RPGame.Progression.Tests
             progression = gameObject.AddComponent<CharacterProgression>();
             aggregator = gameObject.AddComponent<EffectAggregator>();
             effect = ScriptableObject.CreateInstance<RuntimeBehaviorEffectDefinition>();
-            SetBehavior(effect, new TestRuntimeSpellBehaviorDefinition());
+            SetBehavior(effect, new TestRuntimeBehavior());
             perk = CreatePerk();
             jobDefinition = CreateJobDefinition();
             progression.Jobs.UnlockJob(jobDefinition);
@@ -83,7 +83,7 @@ namespace RPGame.Progression.Tests
 
         private static void SetBehavior(
             RuntimeBehaviorEffectDefinition target,
-            RuntimeSpellBehaviorDefinition behavior)
+            IRuntimeSpellBehavior behavior)
         {
             SerializedObject serializedObject = new(target);
             serializedObject.FindProperty("behavior").managedReferenceValue = behavior;
@@ -91,20 +91,18 @@ namespace RPGame.Progression.Tests
         }
 
         [System.Serializable]
-        private sealed class TestRuntimeSpellBehaviorDefinition : RuntimeSpellBehaviorDefinition
+        private sealed class TestRuntimeBehavior :
+            IRuntimeSpellBehavior,
+            IInitializableRuntimeSpellBehavior
         {
-            public override bool TryCreate(
-                Spell spell,
-                GameObject casterObject,
-                out IRuntimeSpellBehavior behavior)
+            public bool Supports(Spell spell)
             {
-                behavior = new TestRuntimeBehavior();
                 return true;
             }
-        }
 
-        private sealed class TestRuntimeBehavior : IRuntimeSpellBehavior
-        {
+            public void Initialize(GameObject caster)
+            {
+            }
         }
     }
 }

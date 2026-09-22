@@ -80,9 +80,8 @@ namespace RPGame.Combat.Spells
                 return;
             }
 
-            for (int behaviorIndex = 0; behaviorIndex < behaviors.Count; behaviorIndex++)
+            foreach (IRuntimeSpellBehavior runtimeBehavior in behaviors)
             {
-                IRuntimeSpellBehavior runtimeBehavior = behaviors[behaviorIndex];
                 if (runtimeBehavior is ISpellBehavior behavior
                     && behavior.Phase == phase)
                 {

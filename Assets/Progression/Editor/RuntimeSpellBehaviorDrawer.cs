@@ -7,8 +7,8 @@ using RPGame.Core.Spells;
 
 namespace RPGame.Progression.Editor
 {
-    [CustomPropertyDrawer(typeof(RuntimeSpellBehaviorDefinition), true)]
-    public sealed class RuntimeSpellBehaviorDefinitionDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(IRuntimeSpellBehavior), true)]
+    public sealed class RuntimeSpellBehaviorDrawer : PropertyDrawer
     {
         private static readonly IReadOnlyList<Type> ConcreteTypes = GetConcreteTypes();
 
@@ -93,7 +93,7 @@ namespace RPGame.Progression.Editor
         private static IReadOnlyList<Type> GetConcreteTypes()
         {
             List<Type> types = new();
-            foreach (Type type in TypeCache.GetTypesDerivedFrom<RuntimeSpellBehaviorDefinition>())
+            foreach (Type type in TypeCache.GetTypesDerivedFrom<IRuntimeSpellBehavior>())
             {
                 if (type.IsSerializable
                     && !type.IsAbstract

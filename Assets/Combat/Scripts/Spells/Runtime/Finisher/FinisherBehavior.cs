@@ -1,3 +1,4 @@
+using System;
 using RPGame.Core.Damage;
 using RPGame.Core.Spells;
 using RPGame.Core.Statistics;
@@ -6,23 +7,43 @@ using UnityEngine;
 
 namespace RPGame.Combat.Spells
 {
-    public sealed class FinisherBehavior : ISpellBehavior, IMarkConsumer
+    [Serializable]
+    public sealed class FinisherBehavior :
+        ISpellBehavior,
+        IInitializableRuntimeSpellBehavior,
+        IMarkConsumer
     {
-        private readonly MarkStatusDefinition markDefinition;
-        private readonly float healthThreshold;
-        private readonly GameObject source;
+        [SerializeField] private MarkStatusDefinition markDefinition;
+        [SerializeField, Range(0f, 1f)] private float healthThreshold = 0.2f;
+
+        [NonSerialized] private GameObject caster;
+
+        public FinisherBehavior()
+        {
+        }
 
         public FinisherBehavior(
             MarkStatusDefinition markDefinition,
             float healthThreshold,
-            GameObject source)
+            GameObject caster)
         {
             this.markDefinition = markDefinition;
             this.healthThreshold = Mathf.Clamp01(healthThreshold);
-            this.source = source;
+            Initialize(caster);
         }
 
         public SpellBehaviorPhase Phase => SpellBehaviorPhase.PostResolve;
+
+        public bool Supports(Spell spell)
+        {
+            return spell is IProjectileCapability && markDefinition != null;
+        }
+
+        public void Initialize(GameObject caster)
+        {
+            this.caster = caster;
+            healthThreshold = Mathf.Clamp01(healthThreshold);
+        }
 
         public bool TryConsumeMark(SpellBehaviorContext context)
         {
@@ -69,7 +90,7 @@ namespace RPGame.Combat.Spells
                         DamageType.Magical,
                         DamageElement.None)
                 },
-                source));
+                caster));
             context.AddResolveResult(result);
         }
     }

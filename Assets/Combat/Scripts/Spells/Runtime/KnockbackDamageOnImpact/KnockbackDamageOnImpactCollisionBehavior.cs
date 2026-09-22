@@ -1,18 +1,38 @@
+using System;
 using RPGame.Core.Damage;
 using RPGame.Core.Spells;
 using UnityEngine;
 
 namespace RPGame.Combat.Spells
 {
-    public sealed class KnockbackDamageOnImpactCollisionBehavior : IKnockbackCollisionHandler
+    [Serializable]
+    public sealed class KnockbackDamageOnImpactCollisionBehavior :
+        IKnockbackCollisionHandler,
+        IInitializableRuntimeSpellBehavior
     {
-        private readonly float impactDamage;
-        private readonly GameObject source;
+        [SerializeField, Min(0f)] private float impactDamage = 1f;
+
+        [NonSerialized] private GameObject source;
+
+        public KnockbackDamageOnImpactCollisionBehavior()
+        {
+        }
 
         public KnockbackDamageOnImpactCollisionBehavior(float impactDamage, GameObject source = null)
         {
             this.impactDamage = Mathf.Max(0f, impactDamage);
-            this.source = source;
+            Initialize(source);
+        }
+
+        public bool Supports(Spell spell)
+        {
+            return spell is WaveSpell;
+        }
+
+        public void Initialize(GameObject caster)
+        {
+            source = caster;
+            impactDamage = Mathf.Max(0f, impactDamage);
         }
 
         public void OnKnockbackCollision(GameObject target, Collider obstacle, Vector3 point)

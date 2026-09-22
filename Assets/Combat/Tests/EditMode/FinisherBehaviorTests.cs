@@ -213,50 +213,28 @@ namespace RPGame.Combat.Tests
         }
 
         [Test]
-        public void Definition_ForProjectileSpell_CreatesFinisherBehavior()
+        public void Supports_ForProjectileSpell_ReturnsTrue()
         {
-            FinisherBehaviorDefinition definition = CreateDefinition(0.25f);
+            FinisherBehavior behavior = new(markDefinition, 0.25f, source);
             ProjectileSpell projectileSpell = ScriptableObject.CreateInstance<ProjectileSpell>();
             createdObjects.Add(projectileSpell);
 
-            bool created = definition.TryCreate(
-                projectileSpell,
-                source,
-                out IRuntimeSpellBehavior behavior);
-
-            Assert.IsTrue(created);
-            Assert.IsInstanceOf<FinisherBehavior>(behavior);
+            Assert.IsTrue(behavior.Supports(projectileSpell));
         }
 
         [Test]
-        public void Definition_ForNonProjectileSpell_DoesNotCreateBehavior()
+        public void Supports_ForNonProjectileSpell_ReturnsFalse()
         {
-            FinisherBehaviorDefinition definition = CreateDefinition(0.25f);
+            FinisherBehavior behavior = new(markDefinition, 0.25f, source);
             TestSpell spell = ScriptableObject.CreateInstance<TestSpell>();
             createdObjects.Add(spell);
 
-            bool created = definition.TryCreate(spell, source, out IRuntimeSpellBehavior behavior);
-
-            Assert.IsFalse(created);
-            Assert.IsNull(behavior);
+            Assert.IsFalse(behavior.Supports(spell));
         }
 
         private IRuntimeSpellBehavior CreateFinisherBehavior(float healthThreshold)
         {
-            FinisherBehaviorDefinition definition = CreateDefinition(healthThreshold);
-            ProjectileSpell spell = ScriptableObject.CreateInstance<ProjectileSpell>();
-            createdObjects.Add(spell);
-
-            definition.TryCreate(spell, source, out IRuntimeSpellBehavior behavior);
-            return behavior;
-        }
-
-        private FinisherBehaviorDefinition CreateDefinition(float healthThreshold)
-        {
-            FinisherBehaviorDefinition definition = new();
-            SetPrivateField(definition, "markDefinition", markDefinition);
-            SetPrivateField(definition, "healthThreshold", healthThreshold);
-            return definition;
+            return new FinisherBehavior(markDefinition, healthThreshold, source);
         }
 
         private void ExecuteProjectileHit(
@@ -313,17 +291,6 @@ namespace RPGame.Combat.Tests
                 "Awake",
                 BindingFlags.Instance | BindingFlags.NonPublic);
             awake.Invoke(statusReceiver, null);
-        }
-
-        private static void SetPrivateField<T>(
-            object target,
-            string fieldName,
-            T value)
-        {
-            FieldInfo field = target.GetType().GetField(
-                fieldName,
-                BindingFlags.Instance | BindingFlags.NonPublic);
-            field.SetValue(target, value);
         }
 
         private sealed class DamageResultCaptureBehavior : ISpellBehavior

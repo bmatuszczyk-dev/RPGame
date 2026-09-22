@@ -9,7 +9,7 @@ using UnityEngine.Scripting.APIUpdating;
 namespace RPGame.Core.Statuses
 {
     [MovedFrom(true, null, null, "StatusEffectAggregator")]
-    public sealed class StatusAggregator : MonoBehaviour, IStatusReceiver, IPooledEnemyResettable
+    public sealed class StatusAggregator : MonoBehaviour, IStatusReceiver, IStatusReader, IPooledEnemyResettable
     {
         private StatusContainer statusContainer;
         private IStatisticsController statisticsController;

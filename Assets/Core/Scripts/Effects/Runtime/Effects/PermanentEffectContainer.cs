@@ -101,22 +101,25 @@ namespace RPGame.Core.Effects
             Spell spell,
             UnityEngine.GameObject casterObject)
         {
-            List<IRuntimeSpellBehavior> behaviors = new();
+            List<RuntimeSpellBehaviorOrderEntry> behaviors = new();
             foreach (EffectInstance effect in effects)
             {
-                if (effect.Definition is not IRuntimeSpellBehaviorFactory factory)
+                if (effect.Definition is not RuntimeBehaviorEffectDefinition runtimeBehaviorEffect)
                 {
                     continue;
                 }
 
-                if (factory.TryCreateRuntimeBehavior(spell, casterObject, out IRuntimeSpellBehavior behavior)
-                    && behavior != null)
+                IRuntimeSpellBehavior behavior =
+                    runtimeBehaviorEffect.CreateRuntimeBehavior(spell, casterObject);
+                if (behavior != null)
                 {
-                    behaviors.Add(behavior);
+                    behaviors.Add(new RuntimeSpellBehaviorOrderEntry(
+                        behavior,
+                        runtimeBehaviorEffect.ExecutionOrder));
                 }
             }
 
-            return behaviors;
+            return RuntimeSpellBehaviorOrderer.Order(behaviors);
         }
 
         private IEnumerable<EffectInstance> GetEffects(

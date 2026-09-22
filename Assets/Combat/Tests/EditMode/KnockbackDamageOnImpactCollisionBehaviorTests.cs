@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection;
 using NUnit.Framework;
 using RPGame.Combat.Spells;
 using RPGame.Core.Damage;
@@ -61,44 +60,39 @@ namespace RPGame.Combat.Tests
         }
 
         [Test]
-        public void WaveImpactDefinition_ForWaveSpell_CreatesBehaviorWithCaster()
+        public void Supports_ForWaveSpell_ReturnsTrue()
         {
-            WaveDamageOnImpactDefinition definition = new();
+            KnockbackDamageOnImpactCollisionBehavior behavior = new(23f);
             WaveSpell spell = ScriptableObject.CreateInstance<WaveSpell>();
-            GameObject source = CreateObject("Source");
-            GameObject target = CreateObject("Target");
-            TestDamageable damageable = target.AddComponent<TestDamageable>();
-            SetImpactDamage(definition, 23f);
 
-            bool created = definition.TryCreate(spell, source, out IRuntimeSpellBehavior behavior);
-            ((IKnockbackCollisionHandler)behavior).OnKnockbackCollision(target, null, Vector3.zero);
-
-            Assert.IsTrue(created);
-            Assert.IsInstanceOf<KnockbackDamageOnImpactCollisionBehavior>(behavior);
-            Assert.AreEqual(23f, damageable.LastData.Amount);
-            Assert.AreSame(source, damageable.LastData.Source);
+            Assert.IsTrue(behavior.Supports(spell));
             Object.DestroyImmediate(spell);
         }
 
         [Test]
-        public void WaveImpactDefinition_ForOtherSpell_DoesNotCreateBehavior()
+        public void Supports_ForOtherSpell_ReturnsFalse()
         {
-            WaveDamageOnImpactDefinition definition = new();
+            KnockbackDamageOnImpactCollisionBehavior behavior = new(23f);
             Spell otherSpell = ScriptableObject.CreateInstance<TestSpell>();
 
-            bool created = definition.TryCreate(otherSpell, null, out IRuntimeSpellBehavior behavior);
+            Assert.IsFalse(behavior.Supports(otherSpell));
 
-            Assert.IsFalse(created);
-            Assert.IsNull(behavior);
             Object.DestroyImmediate(otherSpell);
         }
 
-        private static void SetImpactDamage(WaveDamageOnImpactDefinition definition, float value)
+        [Test]
+        public void Initialize_SetsDamageSource()
         {
-            FieldInfo field = typeof(WaveDamageOnImpactDefinition).GetField(
-                "impactDamage",
-                BindingFlags.Instance | BindingFlags.NonPublic);
-            field.SetValue(definition, value);
+            GameObject source = CreateObject("Source");
+            GameObject target = CreateObject("Target");
+            TestDamageable damageable = target.AddComponent<TestDamageable>();
+            KnockbackDamageOnImpactCollisionBehavior behavior = new(23f);
+
+            behavior.Initialize(source);
+            behavior.OnKnockbackCollision(target, null, Vector3.zero);
+
+            Assert.AreEqual(23f, damageable.LastData.Amount);
+            Assert.AreSame(source, damageable.LastData.Source);
         }
 
         private GameObject CreateObject(string objectName)
