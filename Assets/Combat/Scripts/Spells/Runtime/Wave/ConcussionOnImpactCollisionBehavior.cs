@@ -45,6 +45,19 @@ namespace RPGame.Combat.Spells
 
         public void OnKnockbackCollision(GameObject target, Collider obstacle, Vector3 point)
         {
+            ApplyStunOnImpact(
+                target,
+                stunStatus,
+                stunDuration,
+                new StatusContext(ConcussionSourceId, source));
+        }
+
+        internal static void ApplyStunOnImpact(
+            GameObject target,
+            StunStatusDefinition stunStatus,
+            float stunDuration,
+            StatusContext context)
+        {
             if (target == null || stunStatus == null)
             {
                 return;
@@ -58,8 +71,8 @@ namespace RPGame.Combat.Spells
 
             statusReceiver.ApplyStatus(
                 stunStatus,
-                stunDuration,
-                new StatusContext(ConcussionSourceId, source));
+                Mathf.Max(0f, stunDuration),
+                context);
         }
     }
 }

@@ -48,6 +48,7 @@ namespace RPGame.Core.Effects
 
                 if (entry.Behavior is not ISpellBehavior spellBehavior)
                 {
+                    ValidateCallbackBehavior(entries, entryIndex, entry);
                     continue;
                 }
 
@@ -96,7 +97,92 @@ namespace RPGame.Core.Effects
                 return 1;
             }
 
+            int callbackOrderComparison =
+                first.Entry.ExecutionOrder.CompareTo(second.Entry.ExecutionOrder);
+            if (callbackOrderComparison != 0)
+            {
+                return callbackOrderComparison;
+            }
+
             return first.Index.CompareTo(second.Index);
+        }
+
+        private static void ValidateCallbackBehavior(
+            IReadOnlyList<RuntimeSpellBehaviorOrderEntry> entries,
+            int entryIndex,
+            RuntimeSpellBehaviorOrderEntry entry)
+        {
+            Type[] callbackTypes = GetCallbackBehaviorTypes(entry.Behavior);
+            if (callbackTypes.Length == 0)
+            {
+                return;
+            }
+
+            for (int nextIndex = entryIndex + 1; nextIndex < entries.Count; nextIndex++)
+            {
+                RuntimeSpellBehaviorOrderEntry nextEntry = entries[nextIndex];
+                if (nextEntry.Behavior is ISpellBehavior)
+                {
+                    continue;
+                }
+
+                Type duplicateCallbackType = GetDuplicateCallbackType(
+                    callbackTypes,
+                    GetCallbackBehaviorTypes(nextEntry.Behavior));
+                if (duplicateCallbackType != null
+                    && nextEntry.ExecutionOrder == entry.ExecutionOrder)
+                {
+                    throw new InvalidOperationException(
+                        $"Duplicate runtime callback behavior execution order {entry.ExecutionOrder} for {duplicateCallbackType.Name}.");
+                }
+            }
+        }
+
+        private static Type[] GetCallbackBehaviorTypes(IRuntimeSpellBehavior behavior)
+        {
+            if (behavior == null)
+            {
+                return Type.EmptyTypes;
+            }
+
+            Type[] interfaces = behavior.GetType().GetInterfaces();
+            List<Type> callbackTypes = new();
+            for (int interfaceIndex = 0; interfaceIndex < interfaces.Length; interfaceIndex++)
+            {
+                Type interfaceType = interfaces[interfaceIndex];
+                if (interfaceType == typeof(IRuntimeSpellBehavior)
+                    || interfaceType == typeof(IInitializableRuntimeSpellBehavior)
+                    || interfaceType == typeof(IPhasedSpellBehavior)
+                    || interfaceType == typeof(ISpellBehavior)
+                    || !typeof(IRuntimeSpellBehavior).IsAssignableFrom(interfaceType))
+                {
+                    continue;
+                }
+
+                callbackTypes.Add(interfaceType);
+            }
+
+            return callbackTypes.Count > 0
+                ? callbackTypes.ToArray()
+                : Type.EmptyTypes;
+        }
+
+        private static Type GetDuplicateCallbackType(
+            IReadOnlyList<Type> firstTypes,
+            IReadOnlyList<Type> secondTypes)
+        {
+            for (int firstIndex = 0; firstIndex < firstTypes.Count; firstIndex++)
+            {
+                for (int secondIndex = 0; secondIndex < secondTypes.Count; secondIndex++)
+                {
+                    if (firstTypes[firstIndex] == secondTypes[secondIndex])
+                    {
+                        return firstTypes[firstIndex];
+                    }
+                }
+            }
+
+            return null;
         }
 
         private readonly struct IndexedRuntimeSpellBehaviorOrderEntry

@@ -34,7 +34,7 @@ namespace RPGame.Core.Statuses
             StatusInstance existingInstance = FindMatchingInstance(definition, context);
             if (existingInstance != null)
             {
-                ApplyReapplyPolicy(definition, existingInstance, duration);
+                ApplyExistingInstance(definition, existingInstance, duration, context);
                 return true;
             }
 
@@ -43,7 +43,7 @@ namespace RPGame.Core.Statuses
                 existingInstance = FindInstance(definition);
                 if (existingInstance != null)
                 {
-                    definition.ApplySingleInstanceReapply(target, existingInstance, duration, context);
+                    ApplySingleInstance(definition, existingInstance, duration, context);
                     return true;
                 }
             }
@@ -55,6 +55,36 @@ namespace RPGame.Core.Statuses
             }
 
             return true;
+        }
+
+        private void ApplyExistingInstance(
+            StatusDefinition definition,
+            StatusInstance existingInstance,
+            float duration,
+            StatusContext context)
+        {
+            ApplyReapplyPolicy(
+                context.ReapplyPolicyOverride ?? definition.ReapplyPolicy,
+                existingInstance,
+                duration);
+        }
+
+        private void ApplySingleInstance(
+            StatusDefinition definition,
+            StatusInstance existingInstance,
+            float duration,
+            StatusContext context)
+        {
+            if (context.ReapplyPolicyOverride.HasValue)
+            {
+                ApplyReapplyPolicy(
+                    context.ReapplyPolicyOverride.Value,
+                    existingInstance,
+                    duration);
+                return;
+            }
+
+            definition.ApplySingleInstanceReapply(target, existingInstance, duration, context);
         }
 
         public bool HasStatus(StatusDefinition definition)
@@ -139,11 +169,11 @@ namespace RPGame.Core.Statuses
         }
 
         private void ApplyReapplyPolicy(
-            StatusDefinition definition,
+            ReapplyPolicy reapplyPolicy,
             StatusInstance existingInstance,
             float duration)
         {
-            switch (definition.ReapplyPolicy)
+            switch (reapplyPolicy)
             {
                 case ReapplyPolicy.Refresh:
                     existingInstance.Refresh(target, duration);

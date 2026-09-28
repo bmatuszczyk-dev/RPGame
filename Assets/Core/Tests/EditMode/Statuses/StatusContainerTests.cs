@@ -189,6 +189,26 @@ namespace RPGame.Core.Tests.Statuses
         }
 
         [Test]
+        public void Add_WhenContextOverridesReapplyPolicyToStack_AddsIncomingDurationToSingleInstance()
+        {
+            StunStatusDefinition stun = ScriptableObject.CreateInstance<StunStatusDefinition>();
+            StatusContainer container = new(target);
+
+            container.Add(stun, 2f, new StatusContext(new StatusSourceId("Concussion"), firstSource));
+            container.Add(
+                stun,
+                3f,
+                new StatusContext(
+                    new StatusSourceId("HeavyConcussion"),
+                    firstSource,
+                    ReapplyPolicy.Stack));
+
+            Assert.AreEqual(1, container.CountStatusInstances(stun));
+            Assert.AreEqual(5f, container.GetFirstStatus(stun).RemainingDuration, 0.0001f);
+            Object.DestroyImmediate(stun);
+        }
+
+        [Test]
         public void Slow_WhenTwoIndependentStatusesAreActive_MultipliesMovementModifiers()
         {
             SlowStatusDefinition slow20 = CreateSlowStatus(0.8f);

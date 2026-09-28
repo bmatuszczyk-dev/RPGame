@@ -200,6 +200,51 @@ namespace RPGame.Core.Tests.Effects
         }
 
         [Test]
+        public void CreateRuntimeBehaviors_OrdersSpellBehaviorsByPhaseBeforeExecutionOrder()
+        {
+            RuntimeBehaviorEffectDefinition firstEffect =
+                ScriptableObject.CreateInstance<RuntimeBehaviorEffectDefinition>();
+            RuntimeBehaviorEffectDefinition secondEffect =
+                ScriptableObject.CreateInstance<RuntimeBehaviorEffectDefinition>();
+            RuntimeBehaviorEffectDefinition thirdEffect =
+                ScriptableObject.CreateInstance<RuntimeBehaviorEffectDefinition>();
+            SetBehavior(
+                firstEffect,
+                new TestRuntimeBehavior("PostResolve Order 0")
+                {
+                    TestPhase = SpellBehaviorPhase.PostResolve
+                },
+                0);
+            SetBehavior(
+                secondEffect,
+                new TestRuntimeBehavior("PreResolve Order 2")
+                {
+                    TestPhase = SpellBehaviorPhase.PreResolve
+                },
+                2);
+            SetBehavior(
+                thirdEffect,
+                new TestRuntimeBehavior("PreResolve Order 1")
+                {
+                    TestPhase = SpellBehaviorPhase.PreResolve
+                },
+                1);
+            aggregator.AddRange(new[] { firstEffect, secondEffect, thirdEffect });
+
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors =
+                aggregator.CreateRuntimeBehaviors(
+                    ScriptableObject.CreateInstance<TestSpell>(),
+                    new GameObject("Caster"));
+
+            Assert.AreEqual("PreResolve Order 1", ((TestRuntimeBehavior)behaviors[0]).Name);
+            Assert.AreEqual("PreResolve Order 2", ((TestRuntimeBehavior)behaviors[1]).Name);
+            Assert.AreEqual("PostResolve Order 0", ((TestRuntimeBehavior)behaviors[2]).Name);
+            Object.DestroyImmediate(firstEffect);
+            Object.DestroyImmediate(secondEffect);
+            Object.DestroyImmediate(thirdEffect);
+        }
+
+        [Test]
         public void CreateRuntimeBehaviors_WhenExecutionOrderHasGap_AllowsGap()
         {
             RuntimeBehaviorEffectDefinition firstEffect =
@@ -239,14 +284,88 @@ namespace RPGame.Core.Tests.Effects
         }
 
         [Test]
-        public void CreateRuntimeBehaviors_WhenSameOrderIsUsedByCollisionHandlers_AllowsOrder()
+        public void CreateRuntimeBehaviors_OrdersCollisionHandlersByExecutionOrder()
         {
             RuntimeBehaviorEffectDefinition firstEffect =
                 ScriptableObject.CreateInstance<RuntimeBehaviorEffectDefinition>();
             RuntimeBehaviorEffectDefinition secondEffect =
                 ScriptableObject.CreateInstance<RuntimeBehaviorEffectDefinition>();
-            SetBehavior(firstEffect, new TestCollisionBehavior(), 0);
-            SetBehavior(secondEffect, new TestCollisionBehavior(), 0);
+            SetBehavior(firstEffect, new TestCollisionBehavior("Heavy Concussion"), 1);
+            SetBehavior(secondEffect, new TestCollisionBehavior("Concussion"), 0);
+            aggregator.AddRange(new[] { firstEffect, secondEffect });
+
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors =
+                aggregator.CreateRuntimeBehaviors(
+                    ScriptableObject.CreateInstance<TestSpell>(),
+                    new GameObject("Caster"));
+
+            Assert.AreEqual("Concussion", ((TestCollisionBehavior)behaviors[0]).Name);
+            Assert.AreEqual("Heavy Concussion", ((TestCollisionBehavior)behaviors[1]).Name);
+            Object.DestroyImmediate(firstEffect);
+            Object.DestroyImmediate(secondEffect);
+        }
+
+        [Test]
+        public void CreateRuntimeBehaviors_OrdersCollisionHandlersIndependentlyOfInputOrder()
+        {
+            RuntimeBehaviorEffectDefinition firstEffect =
+                ScriptableObject.CreateInstance<RuntimeBehaviorEffectDefinition>();
+            RuntimeBehaviorEffectDefinition secondEffect =
+                ScriptableObject.CreateInstance<RuntimeBehaviorEffectDefinition>();
+            SetBehavior(firstEffect, new TestCollisionBehavior("Heavy Concussion"), 1);
+            SetBehavior(secondEffect, new TestCollisionBehavior("Concussion"), 0);
+            aggregator.AddRange(new[] { firstEffect, secondEffect });
+
+            IReadOnlyList<IRuntimeSpellBehavior> firstOrder =
+                aggregator.CreateRuntimeBehaviors(
+                    ScriptableObject.CreateInstance<TestSpell>(),
+                    new GameObject("Caster"));
+
+            aggregator = gameObject.AddComponent<EffectAggregator>();
+            aggregator.AddRange(new[] { secondEffect, firstEffect });
+
+            IReadOnlyList<IRuntimeSpellBehavior> secondOrder =
+                aggregator.CreateRuntimeBehaviors(
+                    ScriptableObject.CreateInstance<TestSpell>(),
+                    new GameObject("Caster"));
+
+            Assert.AreEqual("Concussion", ((TestCollisionBehavior)firstOrder[0]).Name);
+            Assert.AreEqual("Heavy Concussion", ((TestCollisionBehavior)firstOrder[1]).Name);
+            Assert.AreEqual("Concussion", ((TestCollisionBehavior)secondOrder[0]).Name);
+            Assert.AreEqual("Heavy Concussion", ((TestCollisionBehavior)secondOrder[1]).Name);
+            Object.DestroyImmediate(firstEffect);
+            Object.DestroyImmediate(secondEffect);
+        }
+
+        [Test]
+        public void CreateRuntimeBehaviors_WhenSameOrderIsUsedByCollisionHandlers_Throws()
+        {
+            RuntimeBehaviorEffectDefinition firstEffect =
+                ScriptableObject.CreateInstance<RuntimeBehaviorEffectDefinition>();
+            RuntimeBehaviorEffectDefinition secondEffect =
+                ScriptableObject.CreateInstance<RuntimeBehaviorEffectDefinition>();
+            SetBehavior(firstEffect, new TestCollisionBehavior("First"), 0);
+            SetBehavior(secondEffect, new TestCollisionBehavior("Second"), 0);
+            aggregator.AddRange(new[] { firstEffect, secondEffect });
+
+            Assert.Throws<InvalidOperationException>(
+                () => aggregator.CreateRuntimeBehaviors(
+                    ScriptableObject.CreateInstance<TestSpell>(),
+                    new GameObject("Caster")));
+
+            Object.DestroyImmediate(firstEffect);
+            Object.DestroyImmediate(secondEffect);
+        }
+
+        [Test]
+        public void CreateRuntimeBehaviors_WhenSameOrderIsUsedByDifferentCallbackCategories_AllowsOrder()
+        {
+            RuntimeBehaviorEffectDefinition firstEffect =
+                ScriptableObject.CreateInstance<RuntimeBehaviorEffectDefinition>();
+            RuntimeBehaviorEffectDefinition secondEffect =
+                ScriptableObject.CreateInstance<RuntimeBehaviorEffectDefinition>();
+            SetBehavior(firstEffect, new TestCollisionBehavior("Collision"), 0);
+            SetBehavior(secondEffect, new TestOtherCallbackBehavior(), 0);
             aggregator.AddRange(new[] { firstEffect, secondEffect });
 
             IReadOnlyList<IRuntimeSpellBehavior> behaviors =
@@ -551,6 +670,17 @@ namespace RPGame.Core.Tests.Effects
             IKnockbackCollisionHandler,
             IInitializableRuntimeSpellBehavior
         {
+            public string Name;
+
+            public TestCollisionBehavior()
+            {
+            }
+
+            public TestCollisionBehavior(string name)
+            {
+                Name = name;
+            }
+
             public bool Supports(Spell spell)
             {
                 return true;
@@ -561,6 +691,30 @@ namespace RPGame.Core.Tests.Effects
             }
 
             public void OnKnockbackCollision(GameObject target, Collider obstacle, Vector3 point)
+            {
+            }
+        }
+
+        private interface ITestRuntimeCallback : IRuntimeSpellBehavior
+        {
+            void OnTestCallback();
+        }
+
+        [Serializable]
+        private sealed class TestOtherCallbackBehavior :
+            ITestRuntimeCallback,
+            IInitializableRuntimeSpellBehavior
+        {
+            public bool Supports(Spell spell)
+            {
+                return true;
+            }
+
+            public void Initialize(GameObject caster)
+            {
+            }
+
+            public void OnTestCallback()
             {
             }
         }
