@@ -34,6 +34,8 @@ namespace RPGame.Combat.Tests
 
             Assert.AreEqual(1, damageable.CallCount);
             Assert.AreEqual(17f, damageable.LastData.Amount);
+            Assert.AreEqual(DamageType.Physical, damageable.LastData.Parts[0].DamageType);
+            Assert.AreEqual(DamageElement.None, damageable.LastData.Parts[0].DamageElement);
             Assert.AreSame(source, damageable.LastData.Source);
         }
 
