@@ -47,6 +47,11 @@ namespace RPGame.Combat.Spells
 
         public bool TryConsumeMark(SpellBehaviorContext context)
         {
+            if (context.HasExecutionFlag(SpellExecutionFlag.MarkConsumed))
+            {
+                return true;
+            }
+
             if (markDefinition == null
                 || context.StatusReceiver == null
                 || !context.StatusReceiver.TryConsumeStatus(markDefinition))
