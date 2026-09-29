@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using RPGame.Combat.Spells;
+using RPGame.Core.Movement;
 using RPGame.Core.Spells;
 using RPGame.Core.Statuses;
 using UnityEngine;
@@ -88,6 +89,39 @@ namespace RPGame.Combat.Tests
             Spell otherSpell = CreateAsset<TestSpell>();
 
             Assert.IsFalse(behavior.Supports(otherSpell));
+        }
+
+        [Test]
+        public void Dispatch_WhenKnockbackCollides_ExecutesConcussion()
+        {
+            GameObject target = CreateObject("Target");
+            Collider obstacle = CreateObject("Obstacle").AddComponent<BoxCollider>();
+            TestStatusReceiver statusReceiver = target.AddComponent<TestStatusReceiver>();
+            ConcussionOnImpactCollisionBehavior behavior = new(CreateStunStatus(), 2.5f);
+            List<IRuntimeSpellBehavior> behaviors = new() { behavior };
+
+            KnockbackEndDispatcher.Dispatch(
+                behaviors,
+                target,
+                new KnockbackEndContext(KnockbackEndReason.Collision, obstacle, Vector3.zero));
+
+            Assert.AreEqual(1, statusReceiver.CallCount);
+        }
+
+        [Test]
+        public void Dispatch_WhenKnockbackCompletes_DoesNotExecuteConcussion()
+        {
+            GameObject target = CreateObject("Target");
+            TestStatusReceiver statusReceiver = target.AddComponent<TestStatusReceiver>();
+            ConcussionOnImpactCollisionBehavior behavior = new(CreateStunStatus(), 2.5f);
+            List<IRuntimeSpellBehavior> behaviors = new() { behavior };
+
+            KnockbackEndDispatcher.Dispatch(
+                behaviors,
+                target,
+                new KnockbackEndContext(KnockbackEndReason.Completed));
+
+            Assert.AreEqual(0, statusReceiver.CallCount);
         }
 
         private GameObject CreateObject(string objectName)

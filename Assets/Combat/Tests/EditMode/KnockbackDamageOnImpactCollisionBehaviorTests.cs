@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using RPGame.Combat.Spells;
 using RPGame.Core.Damage;
+using RPGame.Core.Movement;
 using RPGame.Core.Spells;
 using UnityEngine;
 
@@ -52,13 +53,33 @@ namespace RPGame.Combat.Tests
         public void Dispatch_WithKnockbackCollisionHandler_ExecutesHandler()
         {
             GameObject target = CreateObject("Target");
+            Collider obstacle = CreateObject("Obstacle").AddComponent<BoxCollider>();
             TestDamageable damageable = target.AddComponent<TestDamageable>();
             KnockbackDamageOnImpactCollisionBehavior behavior = new(17f);
             List<IRuntimeSpellBehavior> behaviors = new() { behavior };
 
-            KnockbackCollisionDispatcher.Dispatch(behaviors, target, null, Vector3.zero);
+            KnockbackEndDispatcher.Dispatch(
+                behaviors,
+                target,
+                new KnockbackEndContext(KnockbackEndReason.Collision, obstacle, Vector3.zero));
 
             Assert.AreEqual(1, damageable.CallCount);
+        }
+
+        [Test]
+        public void Dispatch_WhenKnockbackCompletes_DoesNotExecuteHandler()
+        {
+            GameObject target = CreateObject("Target");
+            TestDamageable damageable = target.AddComponent<TestDamageable>();
+            KnockbackDamageOnImpactCollisionBehavior behavior = new(17f);
+            List<IRuntimeSpellBehavior> behaviors = new() { behavior };
+
+            KnockbackEndDispatcher.Dispatch(
+                behaviors,
+                target,
+                new KnockbackEndContext(KnockbackEndReason.Completed));
+
+            Assert.AreEqual(0, damageable.CallCount);
         }
 
         [Test]

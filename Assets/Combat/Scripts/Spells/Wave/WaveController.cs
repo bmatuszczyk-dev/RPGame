@@ -247,16 +247,17 @@ namespace RPGame.Combat.Spells
 
             IKnockbackable knockbackable =
                 targetCollider.GetComponentInParent<IKnockbackable>();
+            IReadOnlyList<IRuntimeSpellBehavior> runtimeBehaviors =
+                casterData.RuntimeBehaviors;
 
             knockbackable?.ApplyKnockback(
                 direction,
                 knockbackDistance,
                 knockbackDuration,
-                (obstacle, point) => KnockbackCollisionDispatcher.Dispatch(
-                    casterData.RuntimeBehaviors,
+                context => KnockbackEndDispatcher.Dispatch(
+                    runtimeBehaviors,
                     targetObject,
-                    obstacle,
-                    point));
+                    context));
         }
 
         private sealed class WaveResolveBehavior : ISpellResolveBehavior
