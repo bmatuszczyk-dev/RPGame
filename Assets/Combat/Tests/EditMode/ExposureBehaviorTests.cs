@@ -3,6 +3,7 @@ using NUnit.Framework;
 using RPGame.Combat.Damage;
 using RPGame.Combat.Spells;
 using RPGame.Core.Damage;
+using RPGame.Core.Effects;
 using RPGame.Core.Movement;
 using RPGame.Core.Spells;
 using RPGame.Core.Statistics;
@@ -150,20 +151,152 @@ namespace RPGame.Combat.Tests
             Assert.AreEqual(0.1f, GetWeakness().Value, 0.0001f);
         }
 
+        [Test]
+        public void DeepExposure_IncreasesExistingExposureDuration()
+        {
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors = CreateRuntimeBehaviors(
+                weaknessDuration: 3f,
+                weaknessDurationBonus: 2f);
+
+            ExposureBehavior exposure = GetExposureBehavior(behaviors);
+
+            Assert.AreEqual(5f, exposure.WeaknessDuration, 0.0001f);
+        }
+
+        [Test]
+        public void DeepExposure_DoesNotCreateSecondExposureBehavior()
+        {
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors = CreateRuntimeBehaviors(
+                weaknessDuration: 3f,
+                weaknessDurationBonus: 2f);
+
+            Assert.AreEqual(1, behaviors.Count);
+            Assert.AreEqual(1, CountExposureBehaviors(behaviors));
+        }
+
+        [Test]
+        public void DeepExposure_WeaknessStillStacksNormally()
+        {
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors = CreateRuntimeBehaviors(
+                weaknessDuration: 3f,
+                weaknessDurationBonus: 2f);
+
+            ExecuteSlowZoneResolve(firstCaster, behaviors);
+            ExecuteSlowZoneResolve(firstCaster, behaviors);
+
+            Assert.AreEqual(0.2f, GetWeakness().Value, 0.0001f);
+        }
+
+        [Test]
+        public void DeepExposure_WeaknessCapIsUnchanged()
+        {
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors = CreateRuntimeBehaviors(
+                weaknessDuration: 3f,
+                weaknessDurationBonus: 2f);
+
+            ExecuteSlowZoneResolve(firstCaster, behaviors);
+            ExecuteSlowZoneResolve(firstCaster, behaviors);
+            ExecuteSlowZoneResolve(firstCaster, behaviors);
+            ExecuteSlowZoneResolve(firstCaster, behaviors);
+
+            Assert.AreEqual(0.3f, GetWeakness().Value, 0.0001f);
+        }
+
+        [Test]
+        public void DeepExposure_ReapplyRefreshesExtendedDuration()
+        {
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors = CreateRuntimeBehaviors(
+                weaknessDuration: 3f,
+                weaknessDurationBonus: 2f);
+            ExecuteSlowZoneResolve(firstCaster, behaviors);
+            statusReceiver.Tick(2f);
+
+            ExecuteSlowZoneResolve(firstCaster, behaviors);
+
+            Assert.AreEqual(5f, GetWeakness().RemainingDuration, 0.0001f);
+        }
+
         private void ExecuteSlowZoneResolve(GameObject caster, float weaknessDuration = 3f)
+        {
+            ExecuteSlowZoneResolve(caster, new IRuntimeSpellBehavior[]
+            {
+                new ExposureBehavior(weaknessStatus, weaknessDuration)
+            });
+        }
+
+        private void ExecuteSlowZoneResolve(
+            GameObject caster,
+            IReadOnlyList<IRuntimeSpellBehavior> runtimeBehaviors)
         {
             CasterData casterData = new CasterDataBuilder(caster, caster.transform, target.transform)
                 .WithSpellId(new SpellId("earth_zone"))
-                .WithRuntimeBehaviors(new IRuntimeSpellBehavior[]
-                {
-                    new ExposureBehavior(weaknessStatus, weaknessDuration)
-                })
+                .WithRuntimeBehaviors(runtimeBehaviors)
                 .Build();
 
             SpellBehaviorPipelineExecutor.Resolve(
                 casterData,
                 target,
                 new SlowZoneResolveBehavior(slowStatus, 2.5f, caster));
+        }
+
+        private IReadOnlyList<IRuntimeSpellBehavior> CreateRuntimeBehaviors(
+            float weaknessDuration,
+            float weaknessDurationBonus)
+        {
+            RuntimeBehaviorEffectDefinition exposureEffect =
+                ScriptableObject.CreateInstance<RuntimeBehaviorEffectDefinition>();
+            DeepExposureEffectDefinition deepExposureEffect =
+                ScriptableObject.CreateInstance<DeepExposureEffectDefinition>();
+            EarthZoneSpell spell = ScriptableObject.CreateInstance<EarthZoneSpell>();
+            createdObjects.Add(exposureEffect);
+            createdObjects.Add(deepExposureEffect);
+            createdObjects.Add(spell);
+
+            SetBehavior(exposureEffect, new ExposureBehavior(weaknessStatus, weaknessDuration));
+            SerializedObject serializedDeepExposure = new(deepExposureEffect);
+            serializedDeepExposure.FindProperty("weaknessDurationBonus").floatValue = weaknessDurationBonus;
+            serializedDeepExposure.ApplyModifiedPropertiesWithoutUndo();
+
+            EffectAggregator aggregator = target.AddComponent<EffectAggregator>();
+            aggregator.AddRange(new PassiveEffectDefinition[] { exposureEffect, deepExposureEffect });
+            return aggregator.CreateRuntimeBehaviors(spell, firstCaster);
+        }
+
+        private static ExposureBehavior GetExposureBehavior(
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors)
+        {
+            for (int i = 0; i < behaviors.Count; i++)
+            {
+                if (behaviors[i] is ExposureBehavior exposure)
+                {
+                    return exposure;
+                }
+            }
+
+            return null;
+        }
+
+        private static int CountExposureBehaviors(IReadOnlyList<IRuntimeSpellBehavior> behaviors)
+        {
+            int count = 0;
+            for (int i = 0; i < behaviors.Count; i++)
+            {
+                if (behaviors[i] is ExposureBehavior)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private static void SetBehavior(
+            RuntimeBehaviorEffectDefinition target,
+            IRuntimeSpellBehavior behavior)
+        {
+            SerializedObject serializedObject = new(target);
+            serializedObject.FindProperty("behavior").managedReferenceValue = behavior;
+            serializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private StatusInstance GetWeakness()

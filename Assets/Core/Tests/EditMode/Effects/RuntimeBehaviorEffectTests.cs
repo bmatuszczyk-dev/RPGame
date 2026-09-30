@@ -178,6 +178,23 @@ namespace RPGame.Core.Tests.Effects
         }
 
         [Test]
+        public void CreateRuntimeBehaviors_RuntimeBehaviorModifierModifiesExistingBehavior()
+        {
+            TestRuntimeBehaviorModifierEffect secondEffect =
+                ScriptableObject.CreateInstance<TestRuntimeBehaviorModifierEffect>();
+            SetBehavior(effect, new TestRuntimeBehavior("Original"));
+            secondEffect.Initialize("Modified");
+            aggregator.AddRange(new PassiveEffectDefinition[] { effect, secondEffect });
+
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors =
+                aggregator.CreateRuntimeBehaviors(null, null);
+
+            Assert.AreEqual(1, behaviors.Count);
+            Assert.AreEqual("Modified", ((TestRuntimeBehavior)behaviors[0]).Name);
+            Object.DestroyImmediate(secondEffect);
+        }
+
+        [Test]
         public void CreateRuntimeBehaviors_OrdersSpellBehaviorsByPhaseAndExecutionOrder()
         {
             RuntimeBehaviorEffectDefinition firstEffect =
@@ -716,6 +733,43 @@ namespace RPGame.Core.Tests.Effects
 
             public void OnTestCallback()
             {
+            }
+        }
+
+        [Serializable]
+        private sealed class TestRuntimeBehaviorModifierEffect :
+            RuntimeBehaviorModifierEffectDefinition
+        {
+            [SerializeField]
+            private string behaviorName;
+
+            public void Initialize(string name)
+            {
+                behaviorName = name;
+            }
+
+            public override bool Supports(Spell spell)
+            {
+                return true;
+            }
+
+            public override void ModifyRuntimeBehaviors(
+                IReadOnlyList<IRuntimeSpellBehavior> behaviors,
+                Spell spell,
+                GameObject casterObject)
+            {
+                for (int i = 0; i < behaviors.Count; i++)
+                {
+                    if (behaviors[i] is TestRuntimeBehavior behavior)
+                    {
+                        behavior.Name = behaviorName;
+                    }
+                }
+            }
+
+            public override string ToString()
+            {
+                return behaviorName;
             }
         }
 

@@ -22,6 +22,12 @@ namespace RPGame.Combat.Spells
         }
 
         public SpellBehaviorPhase Phase => SpellBehaviorPhase.PostResolve;
+        public float WeaknessDuration => weaknessDuration;
+
+        public void AddWeaknessDuration(float durationBonus)
+        {
+            weaknessDuration = Mathf.Max(0f, weaknessDuration + Mathf.Max(0f, durationBonus));
+        }
 
         public bool Supports(Spell spell)
         {

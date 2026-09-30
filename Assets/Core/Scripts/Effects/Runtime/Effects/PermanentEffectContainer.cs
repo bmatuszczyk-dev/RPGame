@@ -119,7 +119,10 @@ namespace RPGame.Core.Effects
                 }
             }
 
-            return RuntimeSpellBehaviorOrderer.Order(behaviors);
+            IReadOnlyList<IRuntimeSpellBehavior> orderedBehaviors =
+                RuntimeSpellBehaviorOrderer.Order(behaviors);
+            ApplyRuntimeBehaviorModifiers(spell, casterObject, orderedBehaviors);
+            return orderedBehaviors;
         }
 
         private IEnumerable<EffectInstance> GetEffects(
@@ -147,6 +150,21 @@ namespace RPGame.Core.Effects
             }
 
             return new EffectInstance(definition);
+        }
+
+        private void ApplyRuntimeBehaviorModifiers(
+            Spell spell,
+            UnityEngine.GameObject casterObject,
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors)
+        {
+            foreach (EffectInstance effect in effects)
+            {
+                if (effect.Definition is RuntimeBehaviorModifierEffectDefinition modifier
+                    && modifier.Supports(spell))
+                {
+                    modifier.ModifyRuntimeBehaviors(behaviors, spell, casterObject);
+                }
+            }
         }
     }
 }
