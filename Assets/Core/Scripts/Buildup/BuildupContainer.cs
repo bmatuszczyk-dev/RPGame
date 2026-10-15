@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RPGame.Core.Statuses;
 
@@ -7,7 +8,28 @@ namespace RPGame.Core.Buildup
     {
         private readonly Dictionary<BuildupDefinition, BuildupInstance> instances = new();
         private readonly List<BuildupDefinition> emptyDefinitions = new();
+        private readonly List<BuildupSnapshot> activeBuildups = new();
         private readonly IStatusReceiver statusReceiver;
+
+        public event Action<BuildupDefinition, float, float> BuildupChanged;
+        public event Action BuildupsCleared;
+
+        public IReadOnlyList<BuildupSnapshot> ActiveBuildups
+        {
+            get
+            {
+                activeBuildups.Clear();
+                foreach (KeyValuePair<BuildupDefinition, BuildupInstance> entry in instances)
+                {
+                    activeBuildups.Add(new BuildupSnapshot(
+                        entry.Key,
+                        entry.Value.CurrentAmount,
+                        entry.Key.Threshold));
+                }
+
+                return activeBuildups;
+            }
+        }
 
         public BuildupContainer(IStatusReceiver statusReceiver)
         {
@@ -23,7 +45,11 @@ namespace RPGame.Core.Buildup
 
             if (statusReceiver.HasStatus(definition.TriggeredStatus))
             {
-                instances.Remove(definition);
+                if (instances.Remove(definition))
+                {
+                    BuildupChanged?.Invoke(definition, 0f, definition.Threshold);
+                }
+
                 return;
             }
 
@@ -36,10 +62,12 @@ namespace RPGame.Core.Buildup
             instance.Add(amount);
             if (instance.CurrentAmount < definition.Threshold)
             {
+                BuildupChanged?.Invoke(definition, instance.CurrentAmount, definition.Threshold);
                 return;
             }
 
             instances.Remove(definition);
+            BuildupChanged?.Invoke(definition, 0f, definition.Threshold);
             statusReceiver.ApplyStatus(
                 definition.TriggeredStatus,
                 definition.TriggeredStatusDuration,
@@ -51,7 +79,13 @@ namespace RPGame.Core.Buildup
             emptyDefinitions.Clear();
             foreach (KeyValuePair<BuildupDefinition, BuildupInstance> entry in instances)
             {
+                float currentAmount = entry.Value.CurrentAmount;
                 entry.Value.Tick(deltaTime);
+                if (entry.Value.CurrentAmount != currentAmount)
+                {
+                    BuildupChanged?.Invoke(entry.Key, entry.Value.CurrentAmount, entry.Key.Threshold);
+                }
+
                 if (entry.Value.CurrentAmount <= 0f)
                 {
                     emptyDefinitions.Add(entry.Key);
@@ -73,8 +107,14 @@ namespace RPGame.Core.Buildup
 
         public void Clear()
         {
+            if (instances.Count == 0)
+            {
+                return;
+            }
+
             instances.Clear();
             emptyDefinitions.Clear();
+            BuildupsCleared?.Invoke();
         }
     }
 }

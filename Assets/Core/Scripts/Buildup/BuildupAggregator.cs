@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using RPGame.Core.Pooling;
 using RPGame.Core.Statistics;
 using RPGame.Core.Statuses;
@@ -11,6 +13,18 @@ namespace RPGame.Core.Buildup
         private IStatusReceiver statusReceiver;
         private IStatisticsController statisticsController;
         private IStatisticsController subscribedStatisticsController;
+
+        public event Action<BuildupDefinition, float, float> BuildupChanged;
+        public event Action BuildupsCleared;
+
+        public IReadOnlyList<BuildupSnapshot> ActiveBuildups
+        {
+            get
+            {
+                EnsureContainer();
+                return buildupContainer.ActiveBuildups;
+            }
+        }
 
         private void Awake()
         {
@@ -30,6 +44,11 @@ namespace RPGame.Core.Buildup
         private void OnDestroy()
         {
             UnsubscribeFromDied();
+            if (buildupContainer != null)
+            {
+                buildupContainer.BuildupChanged -= HandleBuildupChanged;
+                buildupContainer.BuildupsCleared -= HandleBuildupsCleared;
+            }
         }
 
         private void Update()
@@ -74,6 +93,8 @@ namespace RPGame.Core.Buildup
 
             statusReceiver = GetComponent<IStatusReceiver>();
             buildupContainer = new BuildupContainer(statusReceiver);
+            buildupContainer.BuildupChanged += HandleBuildupChanged;
+            buildupContainer.BuildupsCleared += HandleBuildupsCleared;
         }
 
         private IStatisticsController GetStatisticsController()
@@ -112,6 +133,16 @@ namespace RPGame.Core.Buildup
         private void HandleDied()
         {
             ClearBuildup();
+        }
+
+        private void HandleBuildupChanged(BuildupDefinition definition, float currentAmount, float threshold)
+        {
+            BuildupChanged?.Invoke(definition, currentAmount, threshold);
+        }
+
+        private void HandleBuildupsCleared()
+        {
+            BuildupsCleared?.Invoke();
         }
     }
 }

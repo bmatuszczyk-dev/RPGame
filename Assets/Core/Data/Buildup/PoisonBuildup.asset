@@ -12,6 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5059bef343a849e78365a727f7226f73, type: 3}
   m_Name: PoisonBuildup
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Buildup.BuildupDefinition
+  displayName: Poison
+  icon: {fileID: 21300000, guid: 443919c9943d2c04d939b2a4b8a53b34, type: 3}
+  fillColor: {r: 0.06731392, g: 0.38679248, b: 0.06385724, a: 1}
   threshold: 100
   decayDelay: 3
   decayPerSecond: 10
