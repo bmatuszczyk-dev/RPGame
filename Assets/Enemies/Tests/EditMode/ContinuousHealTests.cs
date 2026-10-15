@@ -59,10 +59,12 @@ namespace RPGame.Enemies.Tests
                 CurrentMana = currentMana;
             }
 
+#pragma warning disable CS0067
             public event Action<float, float> HealthChanged;
             public event Action<float, float> StaminaChanged;
             public event Action<float, float> OnManaChanged;
             public event Action Died;
+#pragma warning restore CS0067
             public float CurrentHealth { get; private set; }
             public float CurrentStamina => 0f;
             public float CurrentMana { get; private set; }

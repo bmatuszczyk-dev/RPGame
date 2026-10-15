@@ -32,7 +32,8 @@ namespace RPGame.Enemies
                 data.TargetPosition,
                 data.TargetDamageable,
                 data.DamageParts,
-                data.Source);
+                data.Source,
+                data.Buildup);
 
             return true;
         }

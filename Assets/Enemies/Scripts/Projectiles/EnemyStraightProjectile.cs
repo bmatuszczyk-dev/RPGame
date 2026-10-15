@@ -1,5 +1,7 @@
 using RPGame.Combat.Projectiles;
+using RPGame.Core.Buildup;
 using RPGame.Core.Damage;
+using RPGame.Core.Statuses;
 using UnityEngine;
 
 namespace RPGame.Enemies
@@ -7,11 +9,14 @@ namespace RPGame.Enemies
     [RequireComponent(typeof(StraightProjectileMover))]
     public sealed class EnemyStraightProjectile : EnemyProjectile, IEnemyProjectile, IProjectileMovementSource
     {
+        private static readonly StatusSourceId BuildupSourceId = new("EnemyProjectileBuildup");
+
         [SerializeField] private float projectileSpeed = 8f;
         [SerializeField] private float projectileLifetime = 5f;
 
         private StraightProjectileMover mover;
         private IDamageable targetDamageable;
+        private BuildupData buildup;
 
         public float CurrentSpeed => projectileSpeed;
 
@@ -24,9 +29,11 @@ namespace RPGame.Enemies
             Vector3 targetPosition,
             IDamageable targetDamageable,
             System.Collections.Generic.IReadOnlyList<PartialDamage> damageParts,
-            GameObject source)
+            GameObject source,
+            BuildupData buildup = null)
         {
             this.targetDamageable = targetDamageable;
+            this.buildup = buildup;
             InitializeProjectile(damageParts, source, projectileLifetime);
 
             CacheMover();
@@ -43,6 +50,11 @@ namespace RPGame.Enemies
             if (ReferenceEquals(damageable, targetDamageable))
             {
                 damageable.ApplyDamage(new DamageData(DamageParts, Source));
+                IBuildupReceiver buildupReceiver = hit.Collider.GetComponentInParent<IBuildupReceiver>();
+                buildupReceiver?.AddBuildup(
+                    buildup?.Definition,
+                    buildup?.Amount ?? 0f,
+                    new StatusContext(BuildupSourceId, Source));
             }
         }
 

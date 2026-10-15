@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RPGame.Core.Buildup;
 using RPGame.Core.Damage;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ namespace RPGame.Enemies
             Vector3 targetPosition,
             IDamageable targetDamageable,
             IReadOnlyList<PartialDamage> damageParts,
-            GameObject source);
+            GameObject source,
+            BuildupData buildup = null);
     }
 }
