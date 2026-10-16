@@ -169,6 +169,31 @@ namespace RPGame.Enemies
                         healerTargetable);
                     return true;
 
+                case AssassinEnemyBehaviourConfig assassinConfig:
+                    if (!TryGetAttack(AttackType.Melee, out IEnemyAttack assassinMeleeAttack)
+                        || !TryGetAttack(AttackType.StraightProjectile, out IEnemyAttack assassinRangedAttack))
+                    {
+                        return false;
+                    }
+
+                    LineOfSight assassinLineOfSight = GetComponent<LineOfSight>();
+                    if (assassinLineOfSight == null)
+                    {
+                        Debug.LogError("Missing field lineOfSight.", this);
+                        return false;
+                    }
+
+                    CombatLeap combatLeap = new(assassinConfig, movement);
+                    createdBehaviour = new AssassinEnemyBehaviour(
+                        detection,
+                        movement,
+                        assassinLineOfSight,
+                        assassinMeleeAttack,
+                        assassinRangedAttack,
+                        assassinConfig,
+                        combatLeap);
+                    return true;
+
                 default:
                     Debug.LogError(
                         $"Unsupported behaviour config '{config.BehaviourConfig.GetType().Name}'.",

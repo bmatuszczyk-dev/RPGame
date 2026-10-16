@@ -113,6 +113,8 @@ namespace RPGame.Enemies.Tests
                 return false;
             }
 
+            public bool TryCombatLeapTo(Vector3 destination, float speed, float arcHeight, float fallSpeed, System.Action<bool> onCompleted) => false;
+
             public bool TryStartCharge(
                 Vector3 destination,
                 float speed,

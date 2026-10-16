@@ -58,6 +58,67 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void InterruptCombat_StopsHorizontalMovementAndFallsToLandingPoint()
+        {
+            gameObject = new GameObject("Leap");
+            bool? completedCombatLeap = null;
+            LeapMovement leap = new(
+                gameObject.transform,
+                () => new MovementAgentState(false, true),
+                (_, _, _) => { },
+                (Vector3 position, out Vector3 landingPosition) =>
+                {
+                    landingPosition = new Vector3(position.x, 0f, position.z);
+                    return true;
+                });
+
+            leap.StartCombat(
+                new Vector3(2f, 0f, 0f),
+                2f,
+                1f,
+                2f,
+                completed => completedCombatLeap = completed);
+            leap.Tick(0.5f);
+            leap.InterruptCombat();
+            Vector3 interruptedPosition = gameObject.transform.position;
+
+            leap.Tick(0.25f);
+
+            Assert.That(gameObject.transform.position.x, Is.EqualTo(interruptedPosition.x));
+            Assert.That(gameObject.transform.position.z, Is.EqualTo(interruptedPosition.z));
+            Assert.That(gameObject.transform.position.y, Is.LessThan(interruptedPosition.y));
+
+            leap.Tick(0.5f);
+
+            Assert.IsFalse(leap.IsActive);
+            Assert.That(gameObject.transform.position.y, Is.EqualTo(0f));
+            Assert.IsFalse(completedCombatLeap);
+        }
+
+        [Test]
+        public void CompleteCombat_ReportsSuccessfulCompletion()
+        {
+            gameObject = new GameObject("Leap");
+            bool? completedCombatLeap = null;
+            LeapMovement leap = new(
+                gameObject.transform,
+                () => new MovementAgentState(false, true),
+                (_, _, _) => { });
+
+            leap.StartCombat(
+                new Vector3(2f, 0f, 0f),
+                2f,
+                1f,
+                2f,
+                completed => completedCombatLeap = completed);
+            leap.Tick(1f);
+            leap.Tick(0f);
+
+            Assert.IsFalse(leap.IsActive);
+            Assert.IsTrue(completedCombatLeap);
+        }
+
+        [Test]
         public void LeapMovement_IsNotMonoBehaviour()
         {
             Assert.IsFalse(typeof(LeapMovement).IsSubclassOf(typeof(MonoBehaviour)));

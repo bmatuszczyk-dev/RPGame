@@ -15,6 +15,12 @@ namespace RPGame.Enemies
         void Stop();
         bool TryResolvePosition(Vector3 desiredPosition, out Vector3 validPosition);
         bool TryLeapTo(Vector3 destination, float speed, float arcHeight);
+        bool TryCombatLeapTo(
+            Vector3 destination,
+            float speed,
+            float arcHeight,
+            float fallSpeed,
+            Action<bool> onCompleted);
         bool TryStartCharge(
             Vector3 destination,
             float speed,

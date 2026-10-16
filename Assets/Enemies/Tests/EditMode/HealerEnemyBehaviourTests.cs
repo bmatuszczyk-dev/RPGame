@@ -294,6 +294,7 @@ namespace RPGame.Enemies.Tests
             }
 
             public bool TryLeapTo(Vector3 destination, float speed, float arcHeight) => false;
+            public bool TryCombatLeapTo(Vector3 destination, float speed, float arcHeight, float fallSpeed, System.Action<bool> onCompleted) => false;
             public bool TryStartCharge(Vector3 destination, float speed, float maxDistance, float knockbackResistance, System.Action<Collider, Vector3> onCollision) => false;
         }
     }

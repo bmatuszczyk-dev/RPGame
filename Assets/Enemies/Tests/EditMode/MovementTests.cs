@@ -97,11 +97,36 @@ namespace RPGame.Enemies.Tests
         public void BlockMovement_WhenLeaping_DoesNotCancelLeap()
         {
             Movement movement = CreateMovement(out _);
-            SetIsLeaping(movement, true);
+            GetLeap(movement).Start(Vector3.forward, 1f, 1f, true);
 
             movement.BlockMovement();
 
             Assert.IsTrue(movement.IsLeaping);
+            Assert.That(GetLeap(movement).State, Is.EqualTo(LeapMovementState.Traversal));
+        }
+
+        [Test]
+        public void BlockMovement_WhenCombatLeaping_TransitionsToFalling()
+        {
+            Movement movement = CreateMovement(out _);
+            GetLeap(movement).StartCombat(Vector3.forward, 1f, 1f, 1f, null);
+
+            movement.BlockMovement();
+
+            Assert.IsTrue(movement.IsLeaping);
+            Assert.That(GetLeap(movement).State, Is.EqualTo(LeapMovementState.CombatFalling));
+        }
+
+        [Test]
+        public void ApplyKnockback_WhenCombatFalling_DoesNotStartKnockback()
+        {
+            Movement movement = CreateMovement(out _);
+            GetLeap(movement).StartCombat(Vector3.forward, 1f, 1f, 1f, null);
+            movement.BlockMovement();
+
+            movement.ApplyKnockback(Vector3.forward, 1f, 0.5f);
+
+            Assert.IsFalse(GetKnockback(movement).IsActive);
         }
 
         [Test]

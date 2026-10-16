@@ -61,7 +61,7 @@ namespace RPGame.Enemies
 
         private void Awake()
         {
-            leap = new LeapMovement(transform, BeginManualMovement, FinishManualMovement);
+            leap = new LeapMovement(transform, BeginManualMovement, FinishManualMovement, TryResolveCombatLanding);
             charge = new ChargeMovement(
                 transform,
                 BeginManualMovement,
@@ -171,6 +171,23 @@ namespace RPGame.Enemies
             return true;
         }
 
+        public bool TryCombatLeapTo(
+            Vector3 destination,
+            float speed,
+            float arcHeight,
+            float fallSpeed,
+            Action<bool> onCompleted)
+        {
+            if (!CanLeap()
+                || !NavMesh.SamplePosition(destination, out NavMeshHit hit, agent.height, agent.areaMask))
+            {
+                return false;
+            }
+
+            leap.StartCombat(hit.position, speed, arcHeight, fallSpeed, onCompleted);
+            return true;
+        }
+
         public bool TryStartCharge(
             Vector3 destination,
             float speed,
@@ -239,6 +256,7 @@ namespace RPGame.Enemies
         {
             movementBlockCount++;
             charge.Cancel();
+            leap.InterruptCombat();
             Stop();
         }
 
@@ -331,6 +349,20 @@ namespace RPGame.Enemies
             {
                 agent.isStopped = IsMovementBlocked || state.WasStopped;
             }
+        }
+
+        private bool TryResolveCombatLanding(Vector3 position, out Vector3 landingPosition)
+        {
+            landingPosition = default;
+            if (agent == null
+                || !NavMesh.SamplePosition(position, out NavMeshHit hit, agent.height, agent.areaMask)
+                || hit.position.y > position.y)
+            {
+                return false;
+            }
+
+            landingPosition = hit.position;
+            return true;
         }
 
         private void BeginKnockback()
