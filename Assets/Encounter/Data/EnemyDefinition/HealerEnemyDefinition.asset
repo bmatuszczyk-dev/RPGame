@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04a16d32523a4c48ba2b77af423ec766, type: 3}
   m_Name: HealerEnemyDefinition
   m_EditorClassIdentifier: RPGame.Encounter::RPGame.Encounter.EnemyDefinition
-  prefab: {fileID: 7132504883470353821, guid: 65d19c170fd742708d1dce60053f64ba, type: 3}
+  prefab: {fileID: 3146591305803551728, guid: 65d19c170fd742708d1dce60053f64ba, type: 3}
   cost: 6
   unlockWave: 5
   prewarmCount: 20

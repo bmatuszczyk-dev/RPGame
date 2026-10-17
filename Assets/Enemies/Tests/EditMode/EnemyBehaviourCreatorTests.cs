@@ -131,25 +131,34 @@ namespace RPGame.Enemies.Tests
         }
 
         [TestCase("Assets/Enemies/Prefabs/SimpleMeleeEnemy/MeleeEnemy.prefab", typeof(MeleeBehaviourCreator))]
-        [TestCase("Assets/Enemies/Prefabs/SimpleMeleeEnemy/FastMelee/FastMeleeEnemyVariant.prefab", typeof(MeleeBehaviourCreator))]
-        [TestCase("Assets/Enemies/Prefabs/SimpleMeleeEnemy/SlowMelee/SlowMeleeEnemyVariant.prefab", typeof(MeleeBehaviourCreator))]
+        [TestCase("Assets/Enemies/Prefabs/SimpleMeleeEnemy/FastMelee/FastMeleeEnemy.prefab", typeof(MeleeBehaviourCreator))]
+        [TestCase("Assets/Enemies/Prefabs/SimpleMeleeEnemy/SlowMelee/SlowMeleeEnemy.prefab", typeof(MeleeBehaviourCreator))]
         [TestCase("Assets/Enemies/Prefabs/BruteEnemy/BruteEnemy.prefab", typeof(MeleeBehaviourCreator))]
         [TestCase("Assets/Enemies/Prefabs/SlowChargeMeleeEnemy/ChargingSlowEnemy.prefab", typeof(ChargingMeleeBehaviourCreator))]
         [TestCase("Assets/Enemies/Prefabs/FastChargeMeleeEnemy/ChargingFastEnemy.prefab", typeof(ChargingMeleeBehaviourCreator))]
         [TestCase("Assets/Enemies/Prefabs/SimpleRangedEnemy/RangedEnemy.prefab", typeof(RangedBehaviourCreator))]
         [TestCase("Assets/Enemies/Prefabs/HealerEnemy/HealerEnemy.prefab", typeof(HealerBehaviourCreator))]
         [TestCase("Assets/Enemies/Prefabs/AssassinEnemy/AssassinEnemy.prefab", typeof(AssassinBehaviourCreator))]
-        public void Prefab_AssignsExpectedBehaviourCreator(string path, Type creatorType)
+        public void Prefab_IsStandaloneAndAssignsOnlyExpectedBehaviourCreator(string path, Type creatorType)
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
             Controller controller = prefab.GetComponent<Controller>();
+            EnemyBehaviourCreator[] creators = prefab.GetComponents<EnemyBehaviourCreator>();
             SerializedObject serializedController = new(controller);
             EnemyBehaviourCreator creator = serializedController
                 .FindProperty("behaviourCreator")
                 .objectReferenceValue as EnemyBehaviourCreator;
 
+            Assert.AreEqual(PrefabAssetType.Regular, PrefabUtility.GetPrefabAssetType(prefab));
+            Assert.AreEqual(1, creators.Length);
             Assert.IsNotNull(creator);
             Assert.AreEqual(creatorType, creator.GetType());
+            Assert.AreSame(creators[0], creator);
+
+            if (creatorType == typeof(HealerBehaviourCreator))
+            {
+                Assert.IsNull(prefab.GetComponent<RangedBehaviourCreator>());
+            }
         }
 
         private GameObject CreateBaseEnemy(bool addAttack = true)

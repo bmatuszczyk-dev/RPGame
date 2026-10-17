@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04a16d32523a4c48ba2b77af423ec766, type: 3}
   m_Name: BruteEnemyDefinition
   m_EditorClassIdentifier: RPGame.Encounter::RPGame.Encounter.EnemyDefinition
-  prefab: {fileID: 6492649173834363408, guid: 649a987b60c44f59a8c09f32e2eb93b5, type: 3}
+  prefab: {fileID: 276993941945002107, guid: 649a987b60c44f59a8c09f32e2eb93b5, type: 3}
   cost: 8
   unlockWave: 4
   prewarmCount: 20

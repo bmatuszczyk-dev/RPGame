@@ -166,7 +166,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a228d74ae0d45788e3d884cac2b0c3d, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.StatisticsController
   config: {fileID: 11400000, guid: 0ecd9846d500940459e2592b6b90fa7f, type: 2}
   attributes: {fileID: 0}
@@ -202,6 +202,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.Movement
   moveSpeed: 3.5
   destinationChangeThreshold: 0.05
+  traversalLeapSpeed: 6
+  traversalLeapArcHeight: 1
 --- !u!114 &399824835638242415
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -218,6 +220,7 @@ MonoBehaviour:
   lineOfSight: {fileID: 0}
   groundProjection: {fileID: 0}
   projectileLauncher: {fileID: 0}
+  bladeSweepMotion: {fileID: 0}
 --- !u!114 &4225329243982257237
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -276,18 +279,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.Controller
   config: {fileID: 11400000, guid: 40d122cb46a2ac749b0c57829eb5daa6, type: 2}
   behaviourCreator: {fileID: 918000000000000002}
---- !u!114 &918000000000000002
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1330688795939094697}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b8e5dee89f0342c4a0eb9eb3093050a6, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.RangedBehaviourCreator
 --- !u!114 &7414506123678943202
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -300,6 +291,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e80a2866f6d490e84cc7a244ef21c9a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.EnemyExperienceReward
+--- !u!114 &918000000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1330688795939094697}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8e5dee89f0342c4a0eb9eb3093050a6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.RangedBehaviourCreator
 --- !u!114 &6117987733199445754
 MonoBehaviour:
   m_ObjectHideFlags: 0

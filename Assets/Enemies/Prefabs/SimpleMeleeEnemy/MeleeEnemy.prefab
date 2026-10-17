@@ -162,7 +162,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a228d74ae0d45788e3d884cac2b0c3d, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.StatisticsController
   config: {fileID: 11400000, guid: 2b12fbfccccb94e4e8a38d391c43e47a, type: 2}
   attributes: {fileID: 0}
@@ -194,7 +194,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 31f4bee537a14fa985ebf56e8236e5a8, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.MeleeBehaviourCreator
 --- !u!114 &7414506123678943201
 MonoBehaviour:
@@ -236,6 +236,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.Movement
   moveSpeed: 1.5
   destinationChangeThreshold: 0.05
+  traversalLeapSpeed: 6
+  traversalLeapArcHeight: 1
 --- !u!114 &1434449273843886759
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -252,6 +254,7 @@ MonoBehaviour:
   lineOfSight: {fileID: 0}
   groundProjection: {fileID: 0}
   projectileLauncher: {fileID: 0}
+  bladeSweepMotion: {fileID: 0}
 --- !u!114 &98207530189551780
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04a16d32523a4c48ba2b77af423ec766, type: 3}
   m_Name: FastMeleeEnemyDefinition
   m_EditorClassIdentifier: RPGame.Encounter::RPGame.Encounter.EnemyDefinition
-  prefab: {fileID: 8567591246751382427, guid: 42a0e484bcb61814f9e0ba7369747fef, type: 3}
+  prefab: {fileID: 6147576842524942118, guid: 42a0e484bcb61814f9e0ba7369747fef, type: 3}
   cost: 3
   unlockWave: 2
   prewarmCount: 50

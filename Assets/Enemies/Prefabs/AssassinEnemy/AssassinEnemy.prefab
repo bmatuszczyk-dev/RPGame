@@ -291,7 +291,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a228d74ae0d45788e3d884cac2b0c3d, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.StatisticsController
   config: {fileID: 11400000, guid: 77960d1a48e54ca2ab8239adfca2224a, type: 2}
   attributes: {fileID: 0}
@@ -404,18 +404,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.Controller
   config: {fileID: 11400000, guid: b9e6f96ea18d4a8cba852e69d0b93d4e, type: 2}
   behaviourCreator: {fileID: 918000000000000005}
---- !u!114 &918000000000000005
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1330688795939094697}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3fac0de2cbf545c9ade2a8afec6da038, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.AssassinBehaviourCreator
 --- !u!114 &7414506123678943202
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -428,6 +416,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e80a2866f6d490e84cc7a244ef21c9a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.EnemyExperienceReward
+--- !u!114 &918000000000000005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1330688795939094697}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fac0de2cbf545c9ade2a8afec6da038, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.AssassinBehaviourCreator
 --- !u!114 &6117987733199445754
 MonoBehaviour:
   m_ObjectHideFlags: 0
