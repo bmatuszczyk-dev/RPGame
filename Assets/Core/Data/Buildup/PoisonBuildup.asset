@@ -17,6 +17,6 @@ MonoBehaviour:
   fillColor: {r: 0.06731392, g: 0.38679248, b: 0.06385724, a: 1}
   threshold: 100
   decayDelay: 3
-  decayPerSecond: 10
+  decayPerSecond: 3
   triggeredStatus: {fileID: 11400000, guid: fe10ce20add14fb0a1f5a5cace24a25c, type: 2}
   triggeredStatusDuration: 8

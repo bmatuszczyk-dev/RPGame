@@ -170,7 +170,7 @@ namespace RPGame.Enemies
                     return true;
 
                 case AssassinEnemyBehaviourConfig assassinConfig:
-                    if (!TryGetAttack(AttackType.Melee, out IEnemyAttack assassinMeleeAttack)
+                    if (!TryGetAttack(AttackType.AssasinSlash, out IEnemyAttack assassinMeleeAttack)
                         || !TryGetAttack(AttackType.StraightProjectile, out IEnemyAttack assassinRangedAttack))
                     {
                         return false;

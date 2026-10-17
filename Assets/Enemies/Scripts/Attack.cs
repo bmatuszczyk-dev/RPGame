@@ -11,6 +11,7 @@ namespace RPGame.Enemies
         [SerializeField] private LineOfSight lineOfSight;
         [SerializeField] private GroundProjection groundProjection;
         [SerializeField] private ProjectileLauncher projectileLauncher;
+        [SerializeField] private AssasinSlashView assasinSlashView;
 
         private Config config;
         private readonly Dictionary<AttackType, IEnemyAttack> runtimeAttacks = new();
@@ -122,6 +123,13 @@ namespace RPGame.Enemies
                     GetProjectileLauncher(),
                     () => gameObject),
 
+                AttackType.AssasinSlash => new AssasinSlashAttack(
+                    config.GetAttack<AssasinSlashAttackConfig>(AttackType.AssasinSlash),
+                    transform,
+                    GetDamageable,
+                    () => gameObject,
+                    GetAssasinSlashView()),
+
                 _ => throw new System.InvalidOperationException($"Unsupported attack type '{type}'.")
             };
         }
@@ -191,6 +199,21 @@ namespace RPGame.Enemies
             }
 
             return projectileLauncher;
+        }
+
+        private AssasinSlashView GetAssasinSlashView()
+        {
+            if (assasinSlashView == null)
+            {
+                assasinSlashView = GetComponent<AssasinSlashView>();
+            }
+
+            if (assasinSlashView == null)
+            {
+                throw new System.InvalidOperationException("Missing field assasinSlashView.");
+            }
+
+            return assasinSlashView;
         }
     }
 }

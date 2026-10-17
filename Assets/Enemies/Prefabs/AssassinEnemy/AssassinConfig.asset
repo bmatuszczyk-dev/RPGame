@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.Config
   behaviourConfig: {fileID: 11400000, guid: 901f774e62b24f5b95ce143688b6d20a, type: 2}
   attacks:
-  - type: 0
-    config: {fileID: 11400000, guid: e6b8538e05e94a9d8734a340fe8d6b18, type: 2}
+  - type: 3
+    config: {fileID: 11400000, guid: 3e3b48d7fdc74d86b5b87d8e992b3757, type: 2}
   - type: 1
     config: {fileID: 11400000, guid: 7b4cd0f9a9634df0bdf6e7a668381e0e, type: 2}
   experienceReward: 50

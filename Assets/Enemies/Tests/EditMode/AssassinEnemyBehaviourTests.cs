@@ -86,7 +86,27 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
-        public void Tick_InMeleeRangeBeforeCombatLeap_MaintainsRangedDistanceWithoutMelee()
+        public void Tick_AfterInterruptedCombatLeap_DoesNotUseMelee()
+        {
+            FakeMovement movement = new();
+            FakeAttack melee = new() { IsInRangeValue = true };
+            FakeDetection detection = new() { Target = CreateTarget(new Vector3(5f, 0f, 0f)) };
+            AssassinEnemyBehaviour behaviour = CreateBehaviour(
+                detection,
+                movement,
+                melee,
+                new FakeAttack());
+
+            behaviour.Tick(0f);
+            movement.CompleteCombatLeap(false);
+            detection.Target = CreateTarget(Vector3.forward);
+            behaviour.Tick(0f);
+
+            Assert.That(melee.AttackCount, Is.Zero);
+        }
+
+        [Test]
+        public void Tick_TooCloseBeforeCombatLeap_MovesOutwardWithoutMelee()
         {
             FakeMovement movement = new();
             FakeAttack melee = new() { IsInRangeValue = true };
@@ -99,7 +119,7 @@ namespace RPGame.Enemies.Tests
             behaviour.Tick(0.1f);
 
             Assert.That(melee.AttackCount, Is.Zero);
-            Assert.That(movement.LastMoveDestination, Is.EqualTo(new Vector3(0f, 0f, -3f)));
+            Assert.That(movement.LastMoveDestination, Is.EqualTo(new Vector3(0f, 0f, -4.5f)));
         }
 
         [Test]
@@ -159,6 +179,7 @@ namespace RPGame.Enemies.Tests
 
             Assert.That(movement.CombatLeapCount, Is.Zero);
             Assert.That(ranged.AttackCount, Is.EqualTo(1));
+            Assert.That(movement.StopCount, Is.Zero);
         }
 
         [Test]
@@ -198,18 +219,59 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
-        public void Tick_WhenTargetIsTooCloseForRanged_MaintainsRangedDistance()
+        public void Tick_WhenTargetIsTooClose_MovesToPrefferedDistanceFromPlayerAndCanUseRanged()
         {
             FakeMovement movement = new();
+            FakeAttack ranged = new();
             AssassinEnemyBehaviour behaviour = CreateBehaviour(
                 new FakeDetection() { Target = CreateTarget(new Vector3(2f, 0f, 0f)) },
                 movement,
                 new FakeAttack(),
-                new FakeAttack());
+                ranged);
 
             behaviour.Tick(0.1f);
 
-            Assert.That(movement.LastMoveDestination, Is.EqualTo(new Vector3(-2f, 0f, 0f)));
+            Assert.That(movement.LastMoveDestination, Is.EqualTo(new Vector3(-3.5f, 0f, 0f)));
+            Assert.That(ranged.AttackCount, Is.EqualTo(1));
+            Assert.That(movement.StopCount, Is.Zero);
+        }
+
+        [Test]
+        public void Tick_WhenTargetIsTooFar_ApproachesAndCanUseRanged()
+        {
+            FakeMovement movement = new();
+            FakeAttack ranged = new();
+            AssassinEnemyBehaviour behaviour = CreateBehaviour(
+                new FakeDetection() { Target = CreateTarget(new Vector3(10f, 0f, 0f)) },
+                movement,
+                new FakeAttack(),
+                ranged);
+
+            behaviour.Tick(0f);
+
+            Assert.That(movement.LastMoveDestination, Is.EqualTo(new Vector3(10f, 0f, 0f)));
+            Assert.That(ranged.AttackCount, Is.EqualTo(1));
+            Assert.That(movement.StopCount, Is.Zero);
+        }
+
+        [Test]
+        public void Tick_WhenStrafePointIsInvalid_TriesTheOtherSide()
+        {
+            SerializedObject serializedConfig = new(config);
+            serializedConfig.FindProperty("combatLeapChance").floatValue = 0f;
+            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
+
+            FakeMovement movement = new() { ResolveFailuresBeforeSuccess = 1 };
+            AssassinEnemyBehaviour behaviour = CreateBehaviour(
+                new FakeDetection() { Target = CreateTarget(new Vector3(5f, 0f, 0f)) },
+                movement,
+                new FakeAttack(),
+                new FakeAttack());
+
+            behaviour.Tick(0f);
+
+            Assert.That(movement.ResolvePositionCount, Is.EqualTo(2));
+            Assert.That(movement.LastMoveDestination, Is.Not.EqualTo(Vector3.zero));
         }
 
         private AssassinEnemyBehaviour CreateBehaviour(
@@ -263,6 +325,8 @@ namespace RPGame.Enemies.Tests
             public int CombatLeapCount { get; private set; }
             public int StopCount { get; private set; }
             public int CommandCount { get; private set; }
+            public int ResolvePositionCount { get; private set; }
+            public int ResolveFailuresBeforeSuccess { get; set; }
             public Vector3 LastMoveDestination { get; private set; }
             private Action<bool> combatLeapCompleted;
 
@@ -285,6 +349,13 @@ namespace RPGame.Enemies.Tests
 
             public bool TryResolvePosition(Vector3 desiredPosition, out Vector3 validPosition)
             {
+                ResolvePositionCount++;
+                if (ResolveFailuresBeforeSuccess-- > 0)
+                {
+                    validPosition = default;
+                    return false;
+                }
+
                 validPosition = desiredPosition;
                 return true;
             }

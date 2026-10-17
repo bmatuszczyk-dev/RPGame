@@ -14,6 +14,7 @@ namespace RPGame.Enemies
         private readonly EnemySearchTarget searchTarget = new();
         private bool canPerformMeleeAttack;
         private bool wasCombatLeapFinished;
+        private readonly int strafeDirection = Random.value < 0.5f ? -1 : 1;
 
         internal AssassinEnemyBehaviour(
             IEnemyDetection detection,
@@ -45,7 +46,9 @@ namespace RPGame.Enemies
 
             wasCombatLeapFinished = combatLeap.LeapFinished;
 
-            if (movement.IsLeaping || movement.IsMovementBlocked)
+            if (meleeAttack is AssasinSlashAttack { IsActive: true }
+                || movement.IsLeaping
+                || movement.IsMovementBlocked)
             {
                 return;
             }
@@ -66,7 +69,7 @@ namespace RPGame.Enemies
             searchTarget.Reset();
             movement.FaceTowards(target.Position);
 
-            if (canPerformMeleeAttack && meleeAttack.IsInRange(target))
+            if (canPerformMeleeAttack)
             {
                 movement.Stop();
                 if (TryAttack(meleeAttack, target))
@@ -78,6 +81,20 @@ namespace RPGame.Enemies
             }
 
             float distance = Vector3.Distance(movement.Position, target.Position);
+            if (distance > config.CombatLeapMaxDistance)
+            {
+                movement.MoveTo(target.Position);
+                TryAttack(rangedAttack, target);
+                return;
+            }
+
+            if (distance < config.CombatLeapMinDistance)
+            {
+                MoveToPreferredDistance(target.Position);
+                TryAttack(rangedAttack, target);
+                return;
+            }
+
             if (combatLeap.CanStart(distance)
                 && lineOfSight.HasLineOfSight(target.Position)
                 && combatLeap.TryStart(target.Position, deltaTime))
@@ -87,14 +104,8 @@ namespace RPGame.Enemies
                 return;
             }
 
-            if (distance >= config.RangedMinDistance)
-            {
-                movement.Stop();
-                TryAttack(rangedAttack, target);
-                return;
-            }
-
-            MaintainRangedDistance(target.Position);
+            Strafe(target.Position, distance);
+            TryAttack(rangedAttack, target);
         }
 
         private bool TryAttack(IEnemyAttack attack, SelectedTarget target)
@@ -102,7 +113,7 @@ namespace RPGame.Enemies
             return attack.TryAttack(target);
         }
 
-        private void MaintainRangedDistance(Vector3 targetPosition)
+        private void MoveToPreferredDistance(Vector3 targetPosition)
         {
             Vector3 direction = movement.Position - targetPosition;
             direction.y = 0f;
@@ -112,8 +123,42 @@ namespace RPGame.Enemies
                 return;
             }
 
-            Vector3 desiredPosition = targetPosition + direction.normalized * config.RangedMinDistance;
+            Vector3 desiredPosition = targetPosition + direction.normalized * config.PrefferedDistanceFromPlayer;
             if (movement.TryResolvePosition(desiredPosition, out Vector3 validPosition))
+            {
+                movement.MoveTo(validPosition);
+                return;
+            }
+
+            movement.Stop();
+        }
+
+        private void Strafe(Vector3 targetPosition, float distance)
+        {
+            Vector3 radialDirection = movement.Position - targetPosition;
+            radialDirection.y = 0f;
+            if (radialDirection.sqrMagnitude <= Mathf.Epsilon)
+            {
+                MoveToPreferredDistance(targetPosition);
+                return;
+            }
+
+            radialDirection.Normalize();
+            Vector3 tangentDirection = Vector3.Cross(Vector3.up, radialDirection) * strafeDirection;
+            float radialCorrection = config.PrefferedDistanceFromPlayer - distance;
+            Vector3 desiredPosition = movement.Position
+                + tangentDirection * config.StrafeLookAheadDistance
+                + radialDirection * radialCorrection;
+            if (movement.TryResolvePosition(desiredPosition, out Vector3 validPosition))
+            {
+                movement.MoveTo(validPosition);
+                return;
+            }
+
+            desiredPosition = movement.Position
+                - tangentDirection * config.StrafeLookAheadDistance
+                + radialDirection * radialCorrection;
+            if (movement.TryResolvePosition(desiredPosition, out validPosition))
             {
                 movement.MoveTo(validPosition);
                 return;

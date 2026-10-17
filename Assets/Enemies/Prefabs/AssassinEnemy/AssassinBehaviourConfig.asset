@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.AssassinEnemyBehaviourConfig
   combatLeapMinDistance: 3
   combatLeapMaxDistance: 9
-  combatLeapSpeed: 11
+  combatLeapSpeed: 15
   combatLeapArcHeight: 2.25
   combatLeapFallSpeed: 8
   combatLeapCooldown: 5
   combatLeapChance: 0.5
   combatLeapTriggerCheckInterval: 0.5
-  rangedMinDistance: 4
+  prefferedDistanceFromPlayer: 5.5
+  strafeLookAheadDistance: 2

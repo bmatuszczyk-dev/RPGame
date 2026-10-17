@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3fb48b88e914dc0ad7559f8e8ca3447, type: 3}
   m_Name: AssassinStraightProjectileAttackConfig
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.StraightProjectileAttackConfig
-  attackInterval: 1.5
+  attackInterval: 2.5
   damage:
   - minDamage: 1
     maxDamage: 3
