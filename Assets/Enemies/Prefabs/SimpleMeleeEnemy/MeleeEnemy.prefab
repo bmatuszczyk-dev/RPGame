@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 4790906503720014475}
   - component: {fileID: 1754915428058411402}
   - component: {fileID: 818951505973610660}
+  - component: {fileID: 918000000000000001}
   - component: {fileID: 7414506123678943201}
   - component: {fileID: 896530926046458949}
   - component: {fileID: 8546718972918938816}
@@ -161,7 +162,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a228d74ae0d45788e3d884cac2b0c3d, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.StatisticsController
   config: {fileID: 11400000, guid: 2b12fbfccccb94e4e8a38d391c43e47a, type: 2}
   attributes: {fileID: 0}
@@ -181,10 +182,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42bba49cff584ae8adf9654d6a96da47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.Controller
-  detection: {fileID: 896530926046458949}
-  movement: {fileID: 8546718972918938816}
   config: {fileID: 11400000, guid: ed08f6085c824b2a8b77efbd58d79cee, type: 2}
-  attack: {fileID: 0}
+  behaviourCreator: {fileID: 918000000000000001}
+--- !u!114 &918000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3977383957096067067}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31f4bee537a14fa985ebf56e8236e5a8, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.MeleeBehaviourCreator
 --- !u!114 &7414506123678943201
 MonoBehaviour:
   m_ObjectHideFlags: 0

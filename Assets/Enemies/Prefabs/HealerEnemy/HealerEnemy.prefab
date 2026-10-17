@@ -264,7 +264,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4225329243982257237, guid: c28530f0280de3145a19b87c536c22e2, type: 3}
       propertyPath: targetPoint
-      value: 
+      value:
       objectReference: {fileID: 5398999880178238113}
     - target: {fileID: 4528952106602094361, guid: c28530f0280de3145a19b87c536c22e2, type: 3}
       propertyPath: moveSpeed
@@ -282,6 +282,14 @@ PrefabInstance:
       propertyPath: regenerateMana
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7414506123678943202, guid: c28530f0280de3145a19b87c536c22e2, type: 3}
+      propertyPath: behaviourCreator
+      value:
+      objectReference: {fileID: 918000000000000006}
+    - target: {fileID: 918000000000000002, guid: c28530f0280de3145a19b87c536c22e2, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 399824835638242415, guid: c28530f0280de3145a19b87c536c22e2, type: 3}
     m_RemovedGameObjects:
@@ -290,8 +298,23 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2888679485070886716, guid: c28530f0280de3145a19b87c536c22e2, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7213456789012345678}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1330688795939094697, guid: c28530f0280de3145a19b87c536c22e2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 918000000000000006}
   m_SourcePrefab: {fileID: 100100000, guid: c28530f0280de3145a19b87c536c22e2, type: 3}
+--- !u!114 &918000000000000006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 7132504883470353821}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed762a5d09ff4037b62a1a5641e344e3, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.HealerBehaviourCreator
 --- !u!114 &3899213526667991911 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6117987733199445754, guid: c28530f0280de3145a19b87c536c22e2, type: 3}
