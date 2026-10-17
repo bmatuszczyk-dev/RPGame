@@ -219,7 +219,7 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
-        public void Tick_WhenTargetIsTooClose_MovesToPrefferedDistanceFromPlayerAndCanUseRanged()
+        public void Tick_WhenTargetIsTooClose_MovesToPreferredDistanceFromPlayerAndCanUseRanged()
         {
             FakeMovement movement = new();
             FakeAttack ranged = new();

@@ -3,9 +3,9 @@ using UnityEngine;
 namespace RPGame.Enemies
 {
     [CreateAssetMenu(
-        fileName = "AssasinSlashAttackConfig",
-        menuName = "RPGame/Enemies/Attacks/Assasin Slash Attack Config")]
-    public sealed class AssasinSlashAttackConfig : AttackConfig
+        fileName = "AssassinSlashAttackConfig",
+        menuName = "RPGame/Enemies/Attacks/Assassin Slash Attack Config")]
+    public sealed class AssassinSlashAttackConfig : AttackConfig
     {
         [SerializeField, Min(0f)] private float windupDuration = 0.15f;
         [SerializeField, Min(0f)] private float slashDuration = 0.12f;

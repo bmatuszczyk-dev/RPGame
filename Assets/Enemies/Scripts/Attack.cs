@@ -11,7 +11,7 @@ namespace RPGame.Enemies
         [SerializeField] private LineOfSight lineOfSight;
         [SerializeField] private GroundProjection groundProjection;
         [SerializeField] private ProjectileLauncher projectileLauncher;
-        [SerializeField] private AssasinSlashView assasinSlashView;
+        [SerializeField] private BladeSweepMotion bladeSweepMotion;
 
         private Config config;
         private readonly Dictionary<AttackType, IEnemyAttack> runtimeAttacks = new();
@@ -123,12 +123,12 @@ namespace RPGame.Enemies
                     GetProjectileLauncher(),
                     () => gameObject),
 
-                AttackType.AssasinSlash => new AssasinSlashAttack(
-                    config.GetAttack<AssasinSlashAttackConfig>(AttackType.AssasinSlash),
+                AttackType.AssassinSlash => new AssassinSlashAttack(
+                    config.GetAttack<AssassinSlashAttackConfig>(AttackType.AssassinSlash),
                     transform,
                     GetDamageable,
                     () => gameObject,
-                    GetAssasinSlashView()),
+                    GetBladeSweepMotion()),
 
                 _ => throw new System.InvalidOperationException($"Unsupported attack type '{type}'.")
             };
@@ -201,19 +201,19 @@ namespace RPGame.Enemies
             return projectileLauncher;
         }
 
-        private AssasinSlashView GetAssasinSlashView()
+        private BladeSweepMotion GetBladeSweepMotion()
         {
-            if (assasinSlashView == null)
+            if (bladeSweepMotion == null)
             {
-                assasinSlashView = GetComponent<AssasinSlashView>();
+                bladeSweepMotion = GetComponent<BladeSweepMotion>();
             }
 
-            if (assasinSlashView == null)
+            if (bladeSweepMotion == null)
             {
-                throw new System.InvalidOperationException("Missing field assasinSlashView.");
+                throw new System.InvalidOperationException("Missing field bladeSweepMotion.");
             }
 
-            return assasinSlashView;
+            return bladeSweepMotion;
         }
     }
 }

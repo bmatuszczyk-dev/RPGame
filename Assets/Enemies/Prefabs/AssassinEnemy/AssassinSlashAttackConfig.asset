@@ -10,8 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 482f7404d85c4b44b7da4a009040dc68, type: 3}
-  m_Name: AssasinSlashAttackConfig
-  m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.AssasinSlashAttackConfig
+  m_Name: AssassinSlashAttackConfig
+  m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.AssassinSlashAttackConfig
   attackInterval: 0
   damage:
   - minDamage: 12

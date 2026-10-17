@@ -5,6 +5,6 @@ namespace RPGame.Enemies
         Melee,
         StraightProjectile,
         ParabolicProjectile,
-        AssasinSlash
+        AssassinSlash
     }
 }

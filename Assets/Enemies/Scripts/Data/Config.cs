@@ -72,7 +72,7 @@ namespace RPGame.Enemies
                 AttackType.Melee => config is MeleeAttackConfig,
                 AttackType.StraightProjectile => config is StraightProjectileAttackConfig,
                 AttackType.ParabolicProjectile => config is ParabolicProjectileAttackConfig,
-                AttackType.AssasinSlash => config is AssasinSlashAttackConfig,
+                AttackType.AssassinSlash => config is AssassinSlashAttackConfig,
                 _ => false
             };
         }

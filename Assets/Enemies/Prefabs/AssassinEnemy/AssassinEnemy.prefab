@@ -344,7 +344,7 @@ MonoBehaviour:
   lineOfSight: {fileID: 0}
   groundProjection: {fileID: 0}
   projectileLauncher: {fileID: 0}
-  assasinSlashView: {fileID: 820000000000000001}
+  bladeSweepMotion: {fileID: 820000000000000001}
 --- !u!114 &4225329243982257237
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -530,7 +530,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 57613bff0eea4645bdfcff824936b908, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.AssasinSlashView
+  m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.BladeSweepMotion
   leftBladePivot: {fileID: 820000000000000003}
   rightBladePivot: {fileID: 2826068841089388264}
   rotationDuration: 0.3

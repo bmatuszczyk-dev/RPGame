@@ -170,7 +170,7 @@ namespace RPGame.Enemies
                     return true;
 
                 case AssassinEnemyBehaviourConfig assassinConfig:
-                    if (!TryGetAttack(AttackType.AssasinSlash, out IEnemyAttack assassinMeleeAttack)
+                    if (!TryGetAttack(AttackType.AssassinSlash, out IEnemyAttack assassinSlashAttack)
                         || !TryGetAttack(AttackType.StraightProjectile, out IEnemyAttack assassinRangedAttack))
                     {
                         return false;
@@ -188,7 +188,7 @@ namespace RPGame.Enemies
                         detection,
                         movement,
                         assassinLineOfSight,
-                        assassinMeleeAttack,
+                        assassinSlashAttack,
                         assassinRangedAttack,
                         assassinConfig,
                         combatLeap);

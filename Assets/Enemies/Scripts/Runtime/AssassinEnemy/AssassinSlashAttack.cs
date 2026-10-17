@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace RPGame.Enemies
 {
-    public enum AssasinSlashState
+    public enum AssassinSlashState
     {
         Idle,
         Windup,
@@ -13,15 +13,15 @@ namespace RPGame.Enemies
         Recovery
     }
 
-    public sealed class AssasinSlashAttack : IEnemyAttack, IPooledEnemyResettable
+    public sealed class AssassinSlashAttack : IEnemyAttack, IPooledEnemyResettable
     {
         private const int HitBufferSize = 16;
 
-        private readonly AssasinSlashAttackConfig config;
+        private readonly AssassinSlashAttackConfig config;
         private readonly Transform attackerTransform;
         private readonly Func<SelectedTarget, IDamageable> damageableProvider;
         private readonly Func<GameObject> sourceProvider;
-        private readonly AssasinSlashView view;
+        private readonly BladeSweepMotion bladeSweepMotion;
         private readonly Collider[] hitBuffer = new Collider[HitBufferSize];
 
         private IDamageable targetDamageable;
@@ -29,22 +29,32 @@ namespace RPGame.Enemies
         private float stateElapsed;
         private bool hitResolved;
 
-        public AssasinSlashState State { get; private set; }
-        public bool IsActive => State != AssasinSlashState.Idle;
+        private readonly Vector3 cachedHitboxCenter;
+        private readonly Vector3 cachedHitboxSize;
+        private readonly bool hasCachedHitbox;
+
+        public AssassinSlashState State { get; private set; }
+        public bool IsActive => State != AssassinSlashState.Idle;
         public float Range => 0f;
 
-        public AssasinSlashAttack(
-            AssasinSlashAttackConfig config,
+        public AssassinSlashAttack(
+            AssassinSlashAttackConfig config,
             Transform attackerTransform,
             Func<SelectedTarget, IDamageable> damageableProvider,
             Func<GameObject> sourceProvider,
-            AssasinSlashView view)
+            BladeSweepMotion bladeSweepMotion)
         {
             this.config = config;
             this.attackerTransform = attackerTransform;
             this.damageableProvider = damageableProvider;
             this.sourceProvider = sourceProvider;
-            this.view = view;
+            this.bladeSweepMotion = bladeSweepMotion;
+            hasCachedHitbox = BladeSweepBounds.TryCalculate(
+                bladeSweepMotion,
+                out Vector3 hitboxCenter,
+                out Vector3 hitboxSize);
+            cachedHitboxCenter = hitboxCenter;
+            cachedHitboxSize = hitboxSize;
         }
 
         public void Tick(float deltaTime)
@@ -54,18 +64,18 @@ namespace RPGame.Enemies
                 return;
             }
 
-            view.Tick(deltaTime);
+            bladeSweepMotion.Tick(deltaTime);
             stateElapsed += deltaTime;
             switch (State)
             {
-                case AssasinSlashState.Windup:
+                case AssassinSlashState.Windup:
                     if (stateElapsed >= config.WindupDuration)
                     {
                         EnterSlash();
                     }
                     break;
 
-                case AssasinSlashState.Slash:
+                case AssassinSlashState.Slash:
                     float slashProgress = GetNormalizedTime(config.SlashDuration);
                     if (!hitResolved && slashProgress >= config.HitTimeNormalized)
                     {
@@ -78,8 +88,8 @@ namespace RPGame.Enemies
                     }
                     break;
 
-                case AssasinSlashState.Recovery:
-                    if (stateElapsed >= config.RecoveryDuration && !view.IsPlaying)
+                case AssassinSlashState.Recovery:
+                    if (stateElapsed >= config.RecoveryDuration && !bladeSweepMotion.IsPlaying)
                     {
                         Reset();
                     }
@@ -114,8 +124,8 @@ namespace RPGame.Enemies
             lockedForward = attackerTransform.forward;
             stateElapsed = 0f;
             hitResolved = false;
-            State = AssasinSlashState.Windup;
-            view.Play();
+            State = AssassinSlashState.Windup;
+            bladeSweepMotion.Play();
             return true;
         }
 
@@ -131,7 +141,7 @@ namespace RPGame.Enemies
 
         private void EnterSlash()
         {
-            State = AssasinSlashState.Slash;
+            State = AssassinSlashState.Slash;
             stateElapsed = 0f;
             if (config.HitTimeNormalized <= 0f)
             {
@@ -141,23 +151,23 @@ namespace RPGame.Enemies
 
         private void EnterRecovery()
         {
-            State = AssasinSlashState.Recovery;
+            State = AssassinSlashState.Recovery;
             stateElapsed = 0f;
         }
 
         private void ResolveHit()
         {
             hitResolved = true;
-            if (!view.TryGetHitbox(out Vector3 localCenter, out Vector3 hitboxSize))
+            if (!hasCachedHitbox)
             {
                 return;
             }
 
             Quaternion rotation = Quaternion.LookRotation(lockedForward);
-            Vector3 center = attackerTransform.position + rotation * localCenter;
+            Vector3 center = attackerTransform.position + rotation * cachedHitboxCenter;
             int hitCount = Physics.OverlapBoxNonAlloc(
                 center,
-                hitboxSize * 0.5f,
+                cachedHitboxSize * 0.5f,
                 hitBuffer,
                 rotation,
                 config.HitLayers,
@@ -191,11 +201,11 @@ namespace RPGame.Enemies
 
         private void Reset()
         {
-            State = AssasinSlashState.Idle;
+            State = AssassinSlashState.Idle;
             targetDamageable = null;
             stateElapsed = 0f;
             hitResolved = false;
-            view.Stop();
+            bladeSweepMotion.Stop();
         }
     }
 }

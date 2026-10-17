@@ -15,7 +15,7 @@ namespace RPGame.Enemies
         [SerializeField, Min(0f)] private float combatLeapCooldown = 5f;
         [SerializeField, Range(0f, 1f)] private float combatLeapChance = 1f;
         [SerializeField, Min(0.01f)] private float combatLeapTriggerCheckInterval = 0.5f;
-        [SerializeField, Min(0f)] private float prefferedDistanceFromPlayer = 5.5f;
+        [SerializeField, Min(0f)] private float preferredDistanceFromPlayer = 5.5f;
         [SerializeField, Min(0f)] private float strafeLookAheadDistance = 2f;
 
         public float CombatLeapMinDistance => combatLeapMinDistance;
@@ -26,7 +26,7 @@ namespace RPGame.Enemies
         public float CombatLeapCooldown => combatLeapCooldown;
         public float CombatLeapChance => combatLeapChance;
         public float CombatLeapTriggerCheckInterval => combatLeapTriggerCheckInterval;
-        public float PrefferedDistanceFromPlayer => prefferedDistanceFromPlayer;
+        public float PreferredDistanceFromPlayer => preferredDistanceFromPlayer;
         public float StrafeLookAheadDistance => strafeLookAheadDistance;
 
         private void OnValidate()
@@ -39,7 +39,7 @@ namespace RPGame.Enemies
             combatLeapCooldown = Mathf.Max(0f, combatLeapCooldown);
             combatLeapChance = Mathf.Clamp01(combatLeapChance);
             combatLeapTriggerCheckInterval = Mathf.Max(0.01f, combatLeapTriggerCheckInterval);
-            prefferedDistanceFromPlayer = Mathf.Max(0f, prefferedDistanceFromPlayer);
+            preferredDistanceFromPlayer = Mathf.Max(0f, preferredDistanceFromPlayer);
             strafeLookAheadDistance = Mathf.Max(0f, strafeLookAheadDistance);
         }
     }

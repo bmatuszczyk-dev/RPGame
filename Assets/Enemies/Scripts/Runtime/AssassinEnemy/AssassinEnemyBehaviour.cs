@@ -7,12 +7,12 @@ namespace RPGame.Enemies
         private readonly IEnemyDetection detection;
         private readonly IEnemyMovement movement;
         private readonly IEnemyLineOfSight lineOfSight;
-        private readonly IEnemyAttack meleeAttack;
+        private readonly IEnemyAttack slashAttack;
         private readonly IEnemyAttack rangedAttack;
         private readonly AssassinEnemyBehaviourConfig config;
         private readonly CombatLeap combatLeap;
         private readonly EnemySearchTarget searchTarget = new();
-        private bool canPerformMeleeAttack;
+        private bool hasPendingSlash;
         private bool wasCombatLeapFinished;
         private readonly int strafeDirection = Random.value < 0.5f ? -1 : 1;
 
@@ -20,7 +20,7 @@ namespace RPGame.Enemies
             IEnemyDetection detection,
             IEnemyMovement movement,
             IEnemyLineOfSight lineOfSight,
-            IEnemyAttack meleeAttack,
+            IEnemyAttack slashAttack,
             IEnemyAttack rangedAttack,
             AssassinEnemyBehaviourConfig config,
             CombatLeap combatLeap)
@@ -28,7 +28,7 @@ namespace RPGame.Enemies
             this.detection = detection;
             this.movement = movement;
             this.lineOfSight = lineOfSight;
-            this.meleeAttack = meleeAttack;
+            this.slashAttack = slashAttack;
             this.rangedAttack = rangedAttack;
             this.config = config;
             this.combatLeap = combatLeap;
@@ -36,17 +36,17 @@ namespace RPGame.Enemies
 
         public void Tick(float deltaTime)
         {
-            meleeAttack.Tick(deltaTime);
+            slashAttack.Tick(deltaTime);
             rangedAttack.Tick(deltaTime);
             combatLeap.Tick(deltaTime);
             if (combatLeap.LeapFinished && !wasCombatLeapFinished)
             {
-                canPerformMeleeAttack = true;
+                hasPendingSlash = true;
             }
 
             wasCombatLeapFinished = combatLeap.LeapFinished;
 
-            if (meleeAttack is AssasinSlashAttack { IsActive: true }
+            if (slashAttack is AssassinSlashAttack { IsActive: true }
                 || movement.IsLeaping
                 || movement.IsMovementBlocked)
             {
@@ -69,12 +69,12 @@ namespace RPGame.Enemies
             searchTarget.Reset();
             movement.FaceTowards(target.Position);
 
-            if (canPerformMeleeAttack)
+            if (hasPendingSlash)
             {
                 movement.Stop();
-                if (TryAttack(meleeAttack, target))
+                if (slashAttack.TryAttack(target))
                 {
-                    canPerformMeleeAttack = false;
+                    hasPendingSlash = false;
                 }
 
                 return;
@@ -84,14 +84,14 @@ namespace RPGame.Enemies
             if (distance > config.CombatLeapMaxDistance)
             {
                 movement.MoveTo(target.Position);
-                TryAttack(rangedAttack, target);
+                rangedAttack.TryAttack(target);
                 return;
             }
 
             if (distance < config.CombatLeapMinDistance)
             {
                 MoveToPreferredDistance(target.Position);
-                TryAttack(rangedAttack, target);
+                rangedAttack.TryAttack(target);
                 return;
             }
 
@@ -99,18 +99,13 @@ namespace RPGame.Enemies
                 && lineOfSight.HasLineOfSight(target.Position)
                 && combatLeap.TryStart(target.Position, deltaTime))
             {
-                canPerformMeleeAttack = false;
+                hasPendingSlash = false;
                 wasCombatLeapFinished = false;
                 return;
             }
 
             Strafe(target.Position, distance);
-            TryAttack(rangedAttack, target);
-        }
-
-        private bool TryAttack(IEnemyAttack attack, SelectedTarget target)
-        {
-            return attack.TryAttack(target);
+            rangedAttack.TryAttack(target);
         }
 
         private void MoveToPreferredDistance(Vector3 targetPosition)
@@ -123,10 +118,9 @@ namespace RPGame.Enemies
                 return;
             }
 
-            Vector3 desiredPosition = targetPosition + direction.normalized * config.PrefferedDistanceFromPlayer;
-            if (movement.TryResolvePosition(desiredPosition, out Vector3 validPosition))
+            Vector3 desiredPosition = targetPosition + direction.normalized * config.PreferredDistanceFromPlayer;
+            if (TryMoveTo(desiredPosition))
             {
-                movement.MoveTo(validPosition);
                 return;
             }
 
@@ -145,26 +139,35 @@ namespace RPGame.Enemies
 
             radialDirection.Normalize();
             Vector3 tangentDirection = Vector3.Cross(Vector3.up, radialDirection) * strafeDirection;
-            float radialCorrection = config.PrefferedDistanceFromPlayer - distance;
+            float radialCorrection = config.PreferredDistanceFromPlayer - distance;
             Vector3 desiredPosition = movement.Position
                 + tangentDirection * config.StrafeLookAheadDistance
                 + radialDirection * radialCorrection;
-            if (movement.TryResolvePosition(desiredPosition, out Vector3 validPosition))
+            if (TryMoveTo(desiredPosition))
             {
-                movement.MoveTo(validPosition);
                 return;
             }
 
             desiredPosition = movement.Position
                 - tangentDirection * config.StrafeLookAheadDistance
                 + radialDirection * radialCorrection;
-            if (movement.TryResolvePosition(desiredPosition, out validPosition))
+            if (TryMoveTo(desiredPosition))
             {
-                movement.MoveTo(validPosition);
                 return;
             }
 
             movement.Stop();
+        }
+
+        private bool TryMoveTo(Vector3 desiredPosition)
+        {
+            if (!movement.TryResolvePosition(desiredPosition, out Vector3 validPosition))
+            {
+                return false;
+            }
+
+            movement.MoveTo(validPosition);
+            return true;
         }
     }
 }

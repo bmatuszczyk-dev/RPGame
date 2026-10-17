@@ -20,5 +20,5 @@ MonoBehaviour:
   combatLeapCooldown: 5
   combatLeapChance: 0.5
   combatLeapTriggerCheckInterval: 0.5
-  prefferedDistanceFromPlayer: 5.5
+  preferredDistanceFromPlayer: 5.5
   strafeLookAheadDistance: 2

@@ -6,29 +6,29 @@ using UnityEngine;
 
 namespace RPGame.Enemies.Tests
 {
-    public sealed class AssasinSlashAttackTests
+    public sealed class AssassinSlashAttackTests
     {
         private GameObject attacker;
         private GameObject target;
-        private AssasinSlashAttackConfig config;
+        private AssassinSlashAttackConfig config;
         private FakeDamageable targetDamageable;
 
         [SetUp]
         public void SetUp()
         {
             attacker = new GameObject("Attacker");
-            AssasinSlashView slashView = attacker.AddComponent<AssasinSlashView>();
+            BladeSweepMotion bladeSweepMotion = attacker.AddComponent<BladeSweepMotion>();
             Transform leftBladePivot = CreateBladePivot("LeftBladePivot", new Vector3(-0.25f, 0.5f, 0f));
             Transform rightBladePivot = CreateBladePivot("RightBladePivot", new Vector3(0.25f, 0.5f, 0f));
-            SerializedObject serializedView = new(slashView);
-            serializedView.FindProperty("leftBladePivot").objectReferenceValue = leftBladePivot;
-            serializedView.FindProperty("rightBladePivot").objectReferenceValue = rightBladePivot;
-            serializedView.ApplyModifiedPropertiesWithoutUndo();
+            SerializedObject serializedMotion = new(bladeSweepMotion);
+            serializedMotion.FindProperty("leftBladePivot").objectReferenceValue = leftBladePivot;
+            serializedMotion.FindProperty("rightBladePivot").objectReferenceValue = rightBladePivot;
+            serializedMotion.ApplyModifiedPropertiesWithoutUndo();
             target = new GameObject("Target") { layer = 3 };
             target.transform.position = Vector3.forward;
             target.AddComponent<BoxCollider>();
             targetDamageable = target.AddComponent<FakeDamageable>();
-            config = ScriptableObject.CreateInstance<AssasinSlashAttackConfig>();
+            config = ScriptableObject.CreateInstance<AssassinSlashAttackConfig>();
 
             SerializedObject serializedConfig = new(config);
             serializedConfig.FindProperty("hitLayers").intValue = 1 << 3;
@@ -46,7 +46,7 @@ namespace RPGame.Enemies.Tests
         [Test]
         public void Tick_DoesNotResolveDamageDuringWindup()
         {
-            AssasinSlashAttack attack = CreateAttack();
+            AssassinSlashAttack attack = CreateAttack();
             attack.TryAttack(CreateTarget());
 
             attack.Tick(0.14f);
@@ -57,7 +57,7 @@ namespace RPGame.Enemies.Tests
         [Test]
         public void Tick_ResolvesDamageExactlyOnceAtHitTiming()
         {
-            AssasinSlashAttack attack = CreateAttack();
+            AssassinSlashAttack attack = CreateAttack();
             attack.TryAttack(CreateTarget());
 
             TickToHit(attack);
@@ -70,7 +70,7 @@ namespace RPGame.Enemies.Tests
         public void Tick_MissesTargetOutsideSpatialHitbox()
         {
             target.transform.position = Vector3.forward * 5f;
-            AssasinSlashAttack attack = CreateAttack();
+            AssassinSlashAttack attack = CreateAttack();
             attack.TryAttack(CreateTarget());
 
             TickToHit(attack);
@@ -82,7 +82,7 @@ namespace RPGame.Enemies.Tests
         public void Tick_MultipleTargetCollidersResolveDamageOnce()
         {
             target.AddComponent<SphereCollider>();
-            AssasinSlashAttack attack = CreateAttack();
+            AssassinSlashAttack attack = CreateAttack();
             attack.TryAttack(CreateTarget());
 
             TickToHit(attack);
@@ -93,7 +93,7 @@ namespace RPGame.Enemies.Tests
         [Test]
         public void Tick_KeepsDirectionLockedAfterAttackStarts()
         {
-            AssasinSlashAttack attack = CreateAttack();
+            AssassinSlashAttack attack = CreateAttack();
             target.transform.position = Vector3.forward;
             attack.TryAttack(CreateTarget());
             Vector3 lockedForward = attacker.transform.forward;
@@ -107,22 +107,22 @@ namespace RPGame.Enemies.Tests
         [Test]
         public void ResetForDespawn_ClearsActiveSlash()
         {
-            AssasinSlashAttack attack = CreateAttack();
+            AssassinSlashAttack attack = CreateAttack();
             attack.TryAttack(CreateTarget());
 
             attack.ResetForDespawn();
 
-            Assert.That(attack.State, Is.EqualTo(AssasinSlashState.Idle));
+            Assert.That(attack.State, Is.EqualTo(AssassinSlashState.Idle));
         }
 
-        private AssasinSlashAttack CreateAttack()
+        private AssassinSlashAttack CreateAttack()
         {
-            return new AssasinSlashAttack(
+            return new AssassinSlashAttack(
                 config,
                 attacker.transform,
                 _ => targetDamageable,
                 () => attacker,
-                attacker.GetComponent<AssasinSlashView>());
+                attacker.GetComponent<BladeSweepMotion>());
         }
 
         private Transform CreateBladePivot(string pivotName, Vector3 localPosition)
@@ -144,7 +144,7 @@ namespace RPGame.Enemies.Tests
             return new SelectedTarget(new FakeTargetable(target.transform), target.transform.position);
         }
 
-        private static void TickToHit(AssasinSlashAttack attack)
+        private static void TickToHit(AssassinSlashAttack attack)
         {
             Physics.SyncTransforms();
             attack.Tick(0.15f);
