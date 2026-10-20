@@ -14,7 +14,7 @@ namespace RPGame.Core.Buildup
         private IStatisticsController statisticsController;
         private IStatisticsController subscribedStatisticsController;
 
-        public event Action<BuildupDefinition, float, float> BuildupChanged;
+        public event Action<BuildupDefinition, float, float, BuildupState> BuildupChanged;
         public event Action BuildupsCleared;
 
         public IReadOnlyList<BuildupSnapshot> ActiveBuildups
@@ -135,9 +135,13 @@ namespace RPGame.Core.Buildup
             ClearBuildup();
         }
 
-        private void HandleBuildupChanged(BuildupDefinition definition, float currentAmount, float threshold)
+        private void HandleBuildupChanged(
+            BuildupDefinition definition,
+            float currentAmount,
+            float threshold,
+            BuildupState state)
         {
-            BuildupChanged?.Invoke(definition, currentAmount, threshold);
+            BuildupChanged?.Invoke(definition, currentAmount, threshold, state);
         }
 
         private void HandleBuildupsCleared()

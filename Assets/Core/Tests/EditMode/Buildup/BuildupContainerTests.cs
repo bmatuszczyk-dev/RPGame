@@ -52,7 +52,7 @@ namespace RPGame.Core.Tests.Buildup
         }
 
         [Test]
-        public void Add_AtThresholdAppliesStatusAndClearsProgress()
+        public void Add_AtThresholdAppliesStatusAndActivatesEffect()
         {
             StatusDefinition status = CreateStatus();
             BuildupDefinition definition = CreateDefinition(status);
@@ -63,8 +63,10 @@ namespace RPGame.Core.Tests.Buildup
             StatusContext thresholdContext = CreateContext("Threshold");
             container.Add(definition, 30f, thresholdContext);
 
-            Assert.That(container.GetCurrentAmount(definition), Is.Zero);
+            Assert.That(container.GetCurrentAmount(definition), Is.EqualTo(100f));
+            Assert.That(container.ActiveBuildups[0].State, Is.EqualTo(BuildupState.EffectActive));
             Assert.That(receiver.AppliedStatuses.Count, Is.EqualTo(1));
+            Assert.That(receiver.AppliedStatuses[0].Duration, Is.EqualTo(8f));
             Assert.That(receiver.AppliedStatuses[0].Context.SourceId, Is.EqualTo(thresholdContext.SourceId));
             Assert.That(receiver.AppliedStatuses[0].Context.Source, Is.EqualTo(thresholdContext.Source));
         }
@@ -78,7 +80,85 @@ namespace RPGame.Core.Tests.Buildup
             container.Add(definition, 90f, CreateContext("First"));
             container.Add(definition, 25f, CreateContext("Second"));
 
+            Assert.That(container.GetCurrentAmount(definition), Is.EqualTo(100f));
+        }
+
+        [Test]
+        public void Tick_EffectActiveDecreasesLinearlyAndRemovesAtZero()
+        {
+            BuildupDefinition definition = CreateDefinition(CreateStatus(), triggeredStatusDuration: 8f);
+            BuildupContainer container = new(new FakeStatusReceiver());
+            container.Add(definition, 100f, CreateContext("Source"));
+
+            container.Tick(2f);
+
+            Assert.That(container.GetCurrentAmount(definition), Is.EqualTo(75f));
+            Assert.That(container.ActiveBuildups[0].State, Is.EqualTo(BuildupState.EffectActive));
+
+            container.Tick(6f);
+
             Assert.That(container.GetCurrentAmount(definition), Is.Zero);
+            Assert.That(container.ActiveBuildups, Is.Empty);
+        }
+
+        [Test]
+        public void Add_DuringEffectActiveIsIgnored()
+        {
+            BuildupDefinition definition = CreateDefinition(CreateStatus());
+            FakeStatusReceiver receiver = new();
+            BuildupContainer container = new(receiver);
+            container.Add(definition, 100f, CreateContext("Trigger"));
+
+            container.Add(definition, 50f, CreateContext("Ignored"));
+
+            Assert.That(container.GetCurrentAmount(definition), Is.EqualTo(100f));
+            Assert.That(receiver.AppliedStatuses.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Add_AfterEffectActiveEndsAccumulatesAgain()
+        {
+            StatusDefinition status = CreateStatus();
+            BuildupDefinition definition = CreateDefinition(status, triggeredStatusDuration: 2f);
+            FakeStatusReceiver receiver = new();
+            BuildupContainer container = new(receiver);
+            container.Add(definition, 100f, CreateContext("Trigger"));
+            container.Tick(2f);
+            receiver.ActiveStatuses.Remove(status);
+
+            container.Add(definition, 30f, CreateContext("Next"));
+
+            Assert.That(container.GetCurrentAmount(definition), Is.EqualTo(30f));
+            Assert.That(container.ActiveBuildups[0].State, Is.EqualTo(BuildupState.Accumulating));
+        }
+
+        [Test]
+        public void EffectActive_DoesNotAffectOtherDefinitions()
+        {
+            BuildupDefinition active = CreateDefinition(CreateStatus());
+            BuildupDefinition accumulating = CreateDefinition(decayDelay: 0f, decayPerSecond: 10f);
+            BuildupContainer container = new(new FakeStatusReceiver());
+            container.Add(active, 100f, CreateContext("Active"));
+            container.Add(accumulating, 30f, CreateContext("Accumulating"));
+
+            container.Tick(1f);
+
+            Assert.That(container.GetCurrentAmount(active), Is.EqualTo(87.5f));
+            Assert.That(container.GetCurrentAmount(accumulating), Is.EqualTo(20f));
+        }
+
+        [Test]
+        public void Add_WithZeroTriggeredStatusDurationAppliesStatusAndRemovesBuildup()
+        {
+            BuildupDefinition definition = CreateDefinition(CreateStatus(), triggeredStatusDuration: 0f);
+            FakeStatusReceiver receiver = new();
+            BuildupContainer container = new(receiver);
+
+            container.Add(definition, 100f, CreateContext("Source"));
+
+            Assert.That(receiver.AppliedStatuses.Count, Is.EqualTo(1));
+            Assert.That(container.GetCurrentAmount(definition), Is.Zero);
+            Assert.That(container.ActiveBuildups, Is.Empty);
         }
 
         [Test]
@@ -152,12 +232,12 @@ namespace RPGame.Core.Tests.Buildup
         }
 
         [Test]
-        public void Clear_RemovesAllProgress()
+        public void Clear_RemovesAllProgressRegardlessOfState()
         {
-            BuildupDefinition first = CreateDefinition();
+            BuildupDefinition first = CreateDefinition(CreateStatus());
             BuildupDefinition second = CreateDefinition();
             BuildupContainer container = new(new FakeStatusReceiver());
-            container.Add(first, 30f, CreateContext("Source"));
+            container.Add(first, 100f, CreateContext("Source"));
             container.Add(second, 40f, CreateContext("Source"));
 
             container.Clear();
@@ -169,7 +249,8 @@ namespace RPGame.Core.Tests.Buildup
         private BuildupDefinition CreateDefinition(
             StatusDefinition status = null,
             float decayDelay = 3f,
-            float decayPerSecond = 10f)
+            float decayPerSecond = 10f,
+            float triggeredStatusDuration = 8f)
         {
             BuildupDefinition definition = ScriptableObject.CreateInstance<BuildupDefinition>();
             createdAssets.Add(definition);
@@ -178,7 +259,7 @@ namespace RPGame.Core.Tests.Buildup
             serializedDefinition.FindProperty("decayDelay").floatValue = decayDelay;
             serializedDefinition.FindProperty("decayPerSecond").floatValue = decayPerSecond;
             serializedDefinition.FindProperty("triggeredStatus").objectReferenceValue = status;
-            serializedDefinition.FindProperty("triggeredStatusDuration").floatValue = 8f;
+            serializedDefinition.FindProperty("triggeredStatusDuration").floatValue = triggeredStatusDuration;
             serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
             return definition;
         }

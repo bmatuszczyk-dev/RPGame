@@ -9,16 +9,23 @@ namespace RPGame.UI.Buildup
         [SerializeField] private Image icon;
         [SerializeField] private Image fill;
 
-        public void Initialize(BuildupDefinition definition)
+        public void Initialize(BuildupDefinition definition, BuildupState state)
         {
             if (icon != null)
             {
                 icon.sprite = definition != null ? definition.Icon : null;
             }
 
+            SetState(definition, state);
+        }
+
+        public void SetState(BuildupDefinition definition, BuildupState state)
+        {
             if (fill != null && definition != null)
             {
-                fill.color = definition.FillColor;
+                fill.color = state == BuildupState.EffectActive
+                    ? definition.EffectActiveColor
+                    : definition.FillColor;
             }
         }
 

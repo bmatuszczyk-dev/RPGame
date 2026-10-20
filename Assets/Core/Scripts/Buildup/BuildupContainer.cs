@@ -11,7 +11,7 @@ namespace RPGame.Core.Buildup
         private readonly List<BuildupSnapshot> activeBuildups = new();
         private readonly IStatusReceiver statusReceiver;
 
-        public event Action<BuildupDefinition, float, float> BuildupChanged;
+        public event Action<BuildupDefinition, float, float, BuildupState> BuildupChanged;
         public event Action BuildupsCleared;
 
         public IReadOnlyList<BuildupSnapshot> ActiveBuildups
@@ -24,7 +24,8 @@ namespace RPGame.Core.Buildup
                     activeBuildups.Add(new BuildupSnapshot(
                         entry.Key,
                         entry.Value.CurrentAmount,
-                        entry.Key.Threshold));
+                        entry.Key.Threshold,
+                        entry.Value.State));
                 }
 
                 return activeBuildups;
@@ -43,17 +44,27 @@ namespace RPGame.Core.Buildup
                 return;
             }
 
+            instances.TryGetValue(definition, out BuildupInstance instance);
+            if (instance?.State == BuildupState.EffectActive)
+            {
+                return;
+            }
+
             if (statusReceiver.HasStatus(definition.TriggeredStatus))
             {
                 if (instances.Remove(definition))
                 {
-                    BuildupChanged?.Invoke(definition, 0f, definition.Threshold);
+                    BuildupChanged?.Invoke(
+                        definition,
+                        0f,
+                        definition.Threshold,
+                        BuildupState.Accumulating);
                 }
 
                 return;
             }
 
-            if (!instances.TryGetValue(definition, out BuildupInstance instance))
+            if (instance == null)
             {
                 instance = new BuildupInstance(definition);
                 instances.Add(definition, instance);
@@ -62,16 +73,35 @@ namespace RPGame.Core.Buildup
             instance.Add(amount);
             if (instance.CurrentAmount < definition.Threshold)
             {
-                BuildupChanged?.Invoke(definition, instance.CurrentAmount, definition.Threshold);
+                BuildupChanged?.Invoke(
+                    definition,
+                    instance.CurrentAmount,
+                    definition.Threshold,
+                    instance.State);
                 return;
             }
 
-            instances.Remove(definition);
-            BuildupChanged?.Invoke(definition, 0f, definition.Threshold);
+            instance.ActivateEffect();
             statusReceiver.ApplyStatus(
                 definition.TriggeredStatus,
                 definition.TriggeredStatusDuration,
                 context);
+            BuildupChanged?.Invoke(
+                definition,
+                instance.CurrentAmount,
+                definition.Threshold,
+                instance.State);
+
+            if (definition.TriggeredStatusDuration <= 0f)
+            {
+                instance.Tick(0f);
+                instances.Remove(definition);
+                BuildupChanged?.Invoke(
+                    definition,
+                    0f,
+                    definition.Threshold,
+                    BuildupState.EffectActive);
+            }
         }
 
         public void Tick(float deltaTime)
@@ -83,7 +113,11 @@ namespace RPGame.Core.Buildup
                 entry.Value.Tick(deltaTime);
                 if (entry.Value.CurrentAmount != currentAmount)
                 {
-                    BuildupChanged?.Invoke(entry.Key, entry.Value.CurrentAmount, entry.Key.Threshold);
+                    BuildupChanged?.Invoke(
+                        entry.Key,
+                        entry.Value.CurrentAmount,
+                        entry.Key.Threshold,
+                        entry.Value.State);
                 }
 
                 if (entry.Value.CurrentAmount <= 0f)

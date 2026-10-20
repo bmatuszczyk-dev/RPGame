@@ -58,11 +58,19 @@ namespace RPGame.UI.Buildup
             for (int i = 0; i < activeBuildups.Count; i++)
             {
                 BuildupSnapshot buildup = activeBuildups[i];
-                HandleBuildupChanged(buildup.Definition, buildup.CurrentAmount, buildup.Threshold);
+                HandleBuildupChanged(
+                    buildup.Definition,
+                    buildup.CurrentAmount,
+                    buildup.Threshold,
+                    buildup.State);
             }
         }
 
-        private void HandleBuildupChanged(BuildupDefinition definition, float currentAmount, float threshold)
+        private void HandleBuildupChanged(
+            BuildupDefinition definition,
+            float currentAmount,
+            float threshold,
+            BuildupState state)
         {
             if (definition == null)
             {
@@ -76,6 +84,7 @@ namespace RPGame.UI.Buildup
             }
 
             BuildupBarUI entry = GetOrCreateEntry(definition);
+            entry?.SetState(definition, state);
             entry?.SetProgress(currentAmount, threshold);
         }
 
@@ -92,7 +101,7 @@ namespace RPGame.UI.Buildup
             }
 
             entry = Instantiate(buildupBarPrefab, entriesRoot);
-            entry.Initialize(definition);
+            entry.Initialize(definition, BuildupState.Accumulating);
             entries.Add(definition, entry);
             return entry;
         }

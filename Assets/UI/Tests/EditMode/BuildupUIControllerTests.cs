@@ -44,6 +44,9 @@ namespace RPGame.UI.Tests
             buildupAggregator.AddBuildup(CreateDefinition(), 25f, CreateContext());
 
             Assert.That(entriesRoot.childCount, Is.EqualTo(1));
+            Assert.That(
+                GetFill(entriesRoot.GetChild(0).GetComponent<BuildupBarUI>()).color,
+                Is.EqualTo(Color.green));
         }
 
         [Test]
@@ -67,11 +70,31 @@ namespace RPGame.UI.Tests
         }
 
         [Test]
-        public void BuildupChanged_AtThreshold_RemovesEntry()
+        public void BuildupChanged_AtThresholdKeepsEntryAndUsesEffectActiveColor()
         {
-            BuildupDefinition definition = CreateDefinition();
+            Color effectActiveColor = Color.magenta;
+            BuildupDefinition definition = CreateDefinition(effectActiveColor: effectActiveColor);
             buildupAggregator.AddBuildup(definition, 25f, CreateContext());
             buildupAggregator.AddBuildup(definition, 75f, CreateContext());
+
+            Image fill = GetFill(entriesRoot.GetChild(0).GetComponent<BuildupBarUI>());
+            Assert.That(entriesRoot.childCount, Is.EqualTo(1));
+            Assert.That(fill.fillAmount, Is.EqualTo(1f));
+            Assert.That(fill.color, Is.EqualTo(effectActiveColor));
+        }
+
+        [Test]
+        public void EffectActive_UpdatesProgressAndRemovesEntryAtZero()
+        {
+            BuildupDefinition definition = CreateDefinition(triggeredStatusDuration: 8f);
+            buildupAggregator.AddBuildup(definition, 100f, CreateContext());
+
+            TickBuildup(4f);
+
+            Assert.That(entriesRoot.childCount, Is.EqualTo(1));
+            Assert.That(GetFill(entriesRoot.GetChild(0).GetComponent<BuildupBarUI>()).fillAmount, Is.EqualTo(0.5f));
+
+            TickBuildup(4f);
 
             Assert.That(entriesRoot.childCount, Is.Zero);
         }
@@ -96,6 +119,42 @@ namespace RPGame.UI.Tests
             controller.gameObject.SetActive(true);
 
             Assert.That(entriesRoot.childCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void OnEnable_SynchronizesEffectActiveStateAndColor()
+        {
+            Color effectActiveColor = Color.magenta;
+            BuildupDefinition definition = CreateDefinition(effectActiveColor: effectActiveColor);
+            controller.gameObject.SetActive(false);
+            buildupAggregator.AddBuildup(definition, 100f, CreateContext());
+
+            controller.gameObject.SetActive(true);
+
+            Image fill = GetFill(entriesRoot.GetChild(0).GetComponent<BuildupBarUI>());
+            Assert.That(fill.fillAmount, Is.EqualTo(1f));
+            Assert.That(fill.color, Is.EqualTo(effectActiveColor));
+        }
+
+        [Test]
+        public void ResetForDespawn_RemovesEffectActiveEntry()
+        {
+            buildupAggregator.AddBuildup(CreateDefinition(), 100f, CreateContext());
+
+            buildupAggregator.ResetForDespawn();
+
+            Assert.That(entriesRoot.childCount, Is.Zero);
+        }
+
+        [Test]
+        public void ZeroDurationEffect_DoesNotLeaveEntryVisible()
+        {
+            buildupAggregator.AddBuildup(
+                CreateDefinition(triggeredStatusDuration: 0f),
+                100f,
+                CreateContext());
+
+            Assert.That(entriesRoot.childCount, Is.Zero);
         }
 
         [Test]
@@ -137,14 +196,24 @@ namespace RPGame.UI.Tests
             return prefab;
         }
 
-        private BuildupDefinition CreateDefinition()
+        private BuildupDefinition CreateDefinition(
+            float triggeredStatusDuration = 8f,
+            Color? effectActiveColor = null)
         {
             BuildupDefinition definition = ScriptableObject.CreateInstance<BuildupDefinition>();
             createdObjects.Add(definition);
             SerializedObject serializedDefinition = new(definition);
             serializedDefinition.FindProperty("threshold").floatValue = 100f;
+            serializedDefinition.FindProperty("fillColor").colorValue = Color.green;
+            serializedDefinition.FindProperty("effectActiveColor").colorValue = effectActiveColor ?? Color.red;
+            serializedDefinition.FindProperty("triggeredStatusDuration").floatValue = triggeredStatusDuration;
             serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
             return definition;
+        }
+
+        private void TickBuildup(float deltaTime)
+        {
+            GetPrivateField<BuildupContainer>(buildupAggregator, "buildupContainer").Tick(deltaTime);
         }
 
         private StatusContext CreateContext()

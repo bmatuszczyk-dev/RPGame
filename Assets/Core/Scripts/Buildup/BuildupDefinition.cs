@@ -9,6 +9,7 @@ namespace RPGame.Core.Buildup
         [SerializeField] private string displayName;
         [SerializeField] private Sprite icon;
         [SerializeField] private Color fillColor = Color.white;
+        [SerializeField] private Color effectActiveColor = Color.white;
         [SerializeField, Min(0.0001f)] private float threshold = 100f;
         [SerializeField, Min(0f)] private float decayDelay = 3f;
         [SerializeField, Min(0f)] private float decayPerSecond = 10f;
@@ -18,6 +19,7 @@ namespace RPGame.Core.Buildup
         public string DisplayName => displayName;
         public Sprite Icon => icon;
         public Color FillColor => fillColor;
+        public Color EffectActiveColor => effectActiveColor;
         public float Threshold => threshold;
         public float DecayDelay => decayDelay;
         public float DecayPerSecond => decayPerSecond;
