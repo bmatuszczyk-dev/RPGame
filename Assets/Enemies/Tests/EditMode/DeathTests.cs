@@ -37,9 +37,10 @@ namespace RPGame.Enemies.Tests
             enemyStatistics.ResetToConfig();
 
             enemyObject.AddComponent<NavMeshAgent>();
+            movement = enemyObject.AddComponent<Movement>();
+            InvokeAwake(movement);
             detection = enemyObject.AddComponent<Detection>();
             controller = enemyObject.AddComponent<RPGame.Enemies.Controller>();
-            movement = enemyObject.GetComponent<Movement>();
             targetable = enemyObject.GetComponent<EnemyTargetable>();
             death = enemyObject.GetComponent<Death>();
             InvokeStart(death);
@@ -164,7 +165,6 @@ namespace RPGame.Enemies.Tests
 
             RPGame.Enemies.Controller unconfiguredController = unconfiguredEnemy.AddComponent<RPGame.Enemies.Controller>();
             Movement unconfiguredMovement = unconfiguredEnemy.GetComponent<Movement>();
-            Attack unconfiguredAttack = unconfiguredEnemy.GetComponent<Attack>();
             Detection unconfiguredDetection = unconfiguredEnemy.GetComponent<Detection>();
             EnemyTargetable unconfiguredTargetable = unconfiguredEnemy.GetComponent<EnemyTargetable>();
             Death unconfiguredDeath = unconfiguredEnemy.GetComponent<Death>();
@@ -173,7 +173,6 @@ namespace RPGame.Enemies.Tests
 
             Assert.IsFalse(unconfiguredDeath.IsDead);
             Assert.IsTrue(unconfiguredController.enabled);
-            Assert.IsTrue(unconfiguredAttack.enabled);
             Assert.IsTrue(unconfiguredDetection.enabled);
             Assert.IsTrue(unconfiguredTargetable.enabled);
             Assert.IsTrue(unconfiguredMovement.enabled);
@@ -211,6 +210,26 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void DeathEvent_WhenLeaping_ClearsLeapState()
+        {
+            SetIsLeaping(movement, true);
+
+            KillEnemy();
+
+            Assert.IsFalse(movement.IsLeaping);
+        }
+
+        [Test]
+        public void DeathEvent_WhenCharging_ClearsChargeState()
+        {
+            SetIsCharging(movement, true);
+
+            KillEnemy();
+
+            Assert.IsFalse(movement.IsCharging);
+        }
+
+        [Test]
         public void CoreAndCombat_DoNotReferenceEnemiesOrLoot()
         {
             bool coreReferencesEnemies = typeof(StatisticsController).Assembly
@@ -240,6 +259,12 @@ namespace RPGame.Enemies.Tests
         {
             MethodInfo method = typeof(Death).GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic);
             method.Invoke(enemyDeath, null);
+        }
+
+        private static void InvokeAwake(Movement enemyMovement)
+        {
+            MethodInfo method = typeof(Movement).GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic);
+            method.Invoke(enemyMovement, null);
         }
 
         private TargetFixture CreateDamageablePlayerTarget(string objectName, Vector3 position)
@@ -287,6 +312,22 @@ namespace RPGame.Enemies.Tests
             serializedController.FindProperty("config").objectReferenceValue = statisticsConfig;
             serializedController.FindProperty("initializeOnAwake").boolValue = false;
             serializedController.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void SetIsLeaping(Movement enemyMovement, bool isLeaping)
+        {
+            FieldInfo movementField = typeof(Movement).GetField("leap", BindingFlags.Instance | BindingFlags.NonPublic);
+            LeapMovement leap = (LeapMovement)movementField.GetValue(enemyMovement);
+            FieldInfo activeField = typeof(LeapMovement).GetField("isActive", BindingFlags.Instance | BindingFlags.NonPublic);
+            activeField.SetValue(leap, isLeaping);
+        }
+
+        private static void SetIsCharging(Movement enemyMovement, bool isCharging)
+        {
+            FieldInfo movementField = typeof(Movement).GetField("charge", BindingFlags.Instance | BindingFlags.NonPublic);
+            ChargeMovement charge = (ChargeMovement)movementField.GetValue(enemyMovement);
+            FieldInfo activeField = typeof(ChargeMovement).GetField("isActive", BindingFlags.Instance | BindingFlags.NonPublic);
+            activeField.SetValue(charge, isCharging);
         }
 
         private static void ClearTargetRegistry()

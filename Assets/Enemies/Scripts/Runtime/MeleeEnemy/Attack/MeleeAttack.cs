@@ -12,6 +12,8 @@ namespace RPGame.Enemies
         private readonly Func<SelectedTarget, IDamageable> damageableProvider;
         private readonly Func<GameObject> sourceProvider;
         private float remainingCooldown;
+        private float remainingWindup;
+        private Action pendingAttackCompletion;
 
         public MeleeAttack(
             MeleeAttackConfig config,
@@ -30,16 +32,29 @@ namespace RPGame.Enemies
         public void Tick(float deltaTime)
         {
             remainingCooldown -= deltaTime;
+
+            if (pendingAttackCompletion == null)
+            {
+                return;
+            }
+
+            remainingWindup -= deltaTime;
+            if (remainingWindup <= 0f)
+            {
+                Action completeAttack = pendingAttackCompletion;
+                ClearWindup();
+                completeAttack.Invoke();
+            }
         }
 
         public void ResetForSpawn()
         {
-            remainingCooldown = 0f;
+            ResetRuntimeState();
         }
 
         public void ResetForDespawn()
         {
-            remainingCooldown = 0f;
+            ResetRuntimeState();
         }
 
         public bool IsInRange(SelectedTarget target)
@@ -49,8 +64,11 @@ namespace RPGame.Enemies
                 return false;
             }
 
+            Vector3 targetPosition = target.Targetable.TargetPoint != null
+                ? target.Targetable.TargetPoint.position
+                : target.Position;
             float attackRangeSqr = Range * Range;
-            return (target.Position - attackerPositionProvider()).sqrMagnitude <= attackRangeSqr;
+            return (targetPosition - attackerPositionProvider()).sqrMagnitude <= attackRangeSqr;
         }
 
         public bool TryAttack(SelectedTarget target)
@@ -65,22 +83,47 @@ namespace RPGame.Enemies
                 return false;
             }
 
-            DamageResult result = damageable.ApplyDamage(new DamageData(DamageRangeRoller.Roll(config.Damage), source));
-            if (!result.WasApplied)
+            remainingWindup = config.WindupDuration;
+
+            if (remainingWindup <= 0f)
             {
-                return false;
+                CompleteAttackAttempt(target, damageable, source);
+                return true;
             }
 
-            remainingCooldown = config.AttackInterval;
+            pendingAttackCompletion = () => CompleteAttackAttempt(target, damageable, source);
             return true;
         }
 
         private bool CanAttack(SelectedTarget target, IDamageable damageable)
         {
-            return remainingCooldown <= 0f
+            return pendingAttackCompletion == null
+                && remainingCooldown <= 0f
                 && IsInRange(target)
                 && damageable != null
                 && damageable.CanReceiveDamage;
+        }
+
+        private void CompleteAttackAttempt(SelectedTarget target, IDamageable damageable, GameObject source)
+        {
+            if (IsInRange(target) && damageable != null && damageable.CanReceiveDamage)
+            {
+                damageable.ApplyDamage(new DamageData(DamageRangeRoller.Roll(config.Damage), source));
+            }
+
+            remainingCooldown = config.AttackInterval;
+        }
+
+        private void ResetRuntimeState()
+        {
+            remainingCooldown = 0f;
+            ClearWindup();
+        }
+
+        private void ClearWindup()
+        {
+            remainingWindup = 0f;
+            pendingAttackCompletion = null;
         }
     }
 }

@@ -72,6 +72,44 @@ namespace RPGame.Progression.Tests
         }
 
         [Test]
+        public void AddExperience_RaisesExperienceGainedWithAddedAmount()
+        {
+            int receivedAmount = 0;
+            progression.ExperienceGained += amount => receivedAmount += amount;
+
+            progression.AddExperience(10);
+
+            Assert.AreEqual(10, receivedAmount);
+        }
+
+        [Test]
+        public void AddExperience_WhenAmountWouldOverflow_IgnoresAmountWithoutRaisingExperienceGained()
+        {
+            int eventCount = 0;
+            progression.ExperienceGained += _ => eventCount++;
+            SetAvailableExperience(int.MaxValue - 5);
+
+            progression.AddExperience(10);
+
+            Assert.AreEqual(int.MaxValue - 5, progression.AvailableExperience);
+            Assert.AreEqual(0, eventCount);
+        }
+
+        [Test]
+        public void SpendExperience_DoesNotRaiseExperienceGained()
+        {
+            int eventCount = 0;
+            progression.ExperienceGained += _ => eventCount++;
+            progression.AddExperience(100);
+            eventCount = 0;
+
+            progression.Jobs.UnlockJob(wizardDefinition);
+            progression.Jobs.AddXPToJob(WizardJobId, 50);
+
+            Assert.AreEqual(0, eventCount);
+        }
+
+        [Test]
         public void AddExperience_WhenAmountIsNotPositive_IgnoresAmount()
         {
             progression.AddExperience(100);
@@ -333,6 +371,13 @@ namespace RPGame.Progression.Tests
             SerializedObject serializedAttributes = new SerializedObject(attributes);
             serializedAttributes.FindProperty("config").objectReferenceValue = config;
             serializedAttributes.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private void SetAvailableExperience(int amount)
+        {
+            SerializedObject serializedProgression = new(progression);
+            serializedProgression.FindProperty("availableXP").intValue = amount;
+            serializedProgression.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void AddPerksToJobDefinition(JobDefinition definition, params PerkDefinition[] perks)

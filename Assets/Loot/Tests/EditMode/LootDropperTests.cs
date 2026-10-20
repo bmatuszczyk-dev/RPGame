@@ -111,6 +111,35 @@ namespace RPGame.Loot.Tests
         }
 
         [Test]
+        public void PooledDropper_WhenRespawned_CanDropLootAgainOnce()
+        {
+            ItemDefinition item = CreateItemDefinition();
+            LootDropper dropper = CreateDropper(CreateLootTable((item, 1, 1)), CreatePickupPrefab());
+            HashSet<ItemPickup> existingPickups = GetExistingPickups();
+
+            dropper.ResetForSpawn();
+            dropper.DropLoot();
+            dropper.DropLoot();
+            dropper.ResetForDespawn();
+            dropper.ResetForSpawn();
+            dropper.DropLoot();
+
+            Assert.AreEqual(2, GetNewPickups(existingPickups).Count);
+        }
+
+        [Test]
+        public void ResetForDespawn_DoesNotCreatePickups()
+        {
+            ItemDefinition item = CreateItemDefinition();
+            LootDropper dropper = CreateDropper(CreateLootTable((item, 1, 1)), CreatePickupPrefab());
+            HashSet<ItemPickup> existingPickups = GetExistingPickups();
+
+            dropper.ResetForDespawn();
+
+            Assert.IsEmpty(GetNewPickups(existingPickups));
+        }
+
+        [Test]
         public void DropLoot_WithoutDropOrigin_SpawnsAtDropperPosition()
         {
             ItemDefinition item = CreateItemDefinition();

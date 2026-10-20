@@ -3,6 +3,7 @@
     "rootNamespace": "RPGame.UI",
     "references": [
         "RPGame.Core",
+        "RPGame.Player",
         "RPGame.Progression",
         "RPGame.Encounter",
         "RPGame.Leaderboard",

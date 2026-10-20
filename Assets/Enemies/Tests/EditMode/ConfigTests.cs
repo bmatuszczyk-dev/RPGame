@@ -64,6 +64,14 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void KnockbackResistance_DefaultsToZero()
+        {
+            Config config = CreateConfig();
+
+            Assert.AreEqual(0f, config.KnockbackResistance);
+        }
+
+        [Test]
         public void AttackConfigs_DoNotContainAttackExecutionLogic()
         {
             Type[] configTypes =

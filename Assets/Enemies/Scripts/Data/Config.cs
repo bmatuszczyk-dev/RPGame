@@ -9,10 +9,14 @@ namespace RPGame.Enemies
     {
         [SerializeField] private EnemyBehaviourConfigBase behaviourConfig;
         [SerializeField] private List<AttackEntry> attacks = new();
+        [SerializeField, Min(0)] private int experienceReward;
+        [SerializeField, Range(0f, 1f)] private float knockbackResistance;
 
         private Dictionary<AttackType, AttackConfig> attackLookup;
 
         public EnemyBehaviourConfigBase BehaviourConfig => behaviourConfig;
+        public int ExperienceReward => experienceReward;
+        public float KnockbackResistance => knockbackResistance;
 
         public T GetAttack<T>(AttackType type) where T : AttackConfig
         {
@@ -68,6 +72,7 @@ namespace RPGame.Enemies
                 AttackType.Melee => config is MeleeAttackConfig,
                 AttackType.StraightProjectile => config is StraightProjectileAttackConfig,
                 AttackType.ParabolicProjectile => config is ParabolicProjectileAttackConfig,
+                AttackType.AssassinSlash => config is AssassinSlashAttackConfig,
                 _ => false
             };
         }
@@ -75,6 +80,7 @@ namespace RPGame.Enemies
         private void OnValidate()
         {
             attackLookup = null;
+            knockbackResistance = Mathf.Clamp01(knockbackResistance);
         }
 
         private void EnsureAttackLookup()

@@ -24,6 +24,7 @@ namespace RPGame.Progression
         public int AvailableExperience => availableXP;
 
         public event Action AvailableExperienceChanged;
+        public event Action<int> ExperienceGained;
 
         private void Awake()
         {
@@ -38,17 +39,14 @@ namespace RPGame.Progression
 
         public void AddExperience(int amount)
         {
-            if (amount <= 0)
+            if (amount <= 0 || amount > int.MaxValue - availableXP)
             {
                 return;
             }
 
-            int previousAvailableXP = availableXP;
-            availableXP = amount > int.MaxValue - availableXP ? int.MaxValue : availableXP + amount;
-            if (previousAvailableXP != availableXP)
-            {
-                AvailableExperienceChanged?.Invoke();
-            }
+            availableXP += amount;
+            AvailableExperienceChanged?.Invoke();
+            ExperienceGained?.Invoke(amount);
         }
 
         public int GetAvailableXP()

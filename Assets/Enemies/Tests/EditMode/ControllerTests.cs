@@ -62,6 +62,45 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void Start_PassesConfigKnockbackResistanceToMovement()
+        {
+            SerializedObject serializedConfig = new(controller.Config);
+            serializedConfig.FindProperty("knockbackResistance").floatValue = 0.75f;
+            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
+
+            InvokeStart(controller);
+
+            Assert.That(GetKnockbackResistance(controller.GetComponent<Movement>()), Is.EqualTo(0.75f));
+        }
+
+        [Test]
+        public void ResetForSpawn_RecreatesBehaviourAfterDespawn()
+        {
+            controller.ResetForDespawn();
+
+            Assert.IsNull(controller.Behaviour);
+
+            controller.ResetForSpawn();
+
+            Assert.IsInstanceOf<MeleeEnemyBehaviour>(controller.Behaviour);
+        }
+
+        [Test]
+        public void Start_WithoutBehaviourCreator_DisablesController()
+        {
+            SerializedObject serializedController = new(controller);
+            serializedController.FindProperty("behaviourCreator").objectReferenceValue = null;
+            serializedController.ApplyModifiedPropertiesWithoutUndo();
+
+            LogAssert.Expect(LogType.Error, "Missing field behaviourCreator.");
+
+            InvokeStart(controller);
+
+            Assert.IsFalse(controller.enabled);
+            Assert.IsNull(controller.Behaviour);
+        }
+
+        [Test]
         public void Tick_WhenTargetIsInAttackRange_TriesAttack()
         {
             TargetFixture target = CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f));
@@ -250,7 +289,7 @@ namespace RPGame.Enemies.Tests
             Config config = CreateEnemyConfig(CreateAsset<UnsupportedEnemyBehaviourConfig>());
             ConfigureController(enemyController, config);
 
-            LogAssert.Expect(LogType.Error, "Unsupported behaviour config 'UnsupportedEnemyBehaviourConfig'.");
+            LogAssert.Expect(LogType.Error, "MeleeBehaviourCreator requires MeleeEnemyBehaviourConfig.");
 
             InvokeStart(enemyController);
 
@@ -274,7 +313,7 @@ namespace RPGame.Enemies.Tests
             Assert.IsTrue(RequiresComponent<StatisticsController>());
             Assert.IsTrue(RequiresComponent<Detection>());
             Assert.IsTrue(RequiresComponent<Movement>());
-            Assert.IsTrue(RequiresComponent<Attack>());
+            Assert.IsFalse(RequiresComponent<Attack>());
             Assert.IsTrue(RequiresComponent<EnemyTargetable>());
             Assert.IsTrue(RequiresComponent<DamageReceiver>());
             Assert.IsTrue(RequiresComponent<Death>());
@@ -311,6 +350,7 @@ namespace RPGame.Enemies.Tests
             Assert.IsFalse(source.Contains("ProjectileLaunchData", StringComparison.Ordinal));
             Assert.IsFalse(source.Contains("IsInRange(", StringComparison.Ordinal));
             Assert.IsFalse(source.Contains("TryAttack(", StringComparison.Ordinal));
+            Assert.IsFalse(source.Contains("switch", StringComparison.Ordinal));
         }
 
         [Test]
@@ -380,7 +420,11 @@ namespace RPGame.Enemies.Tests
             GameObject enemy = CreateObject(objectName);
             enemy.transform.position = Vector3.zero;
             enemy.AddComponent<NavMeshAgent>();
+            Movement movement = enemy.AddComponent<Movement>();
+            InvokeStart(movement);
             enemy.AddComponent<Detection>();
+            enemy.AddComponent<Attack>();
+            enemy.AddComponent<MeleeBehaviourCreator>();
             enemy.AddComponent<RPGame.Enemies.Controller>();
             return enemy;
         }
@@ -537,7 +581,25 @@ namespace RPGame.Enemies.Tests
         {
             SerializedObject serializedController = new(enemyController);
             serializedController.FindProperty("config").objectReferenceValue = config;
+            serializedController.FindProperty("behaviourCreator").objectReferenceValue = GetCreator(enemyController.gameObject, config);
             serializedController.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static EnemyBehaviourCreator GetCreator(GameObject enemy, Config config)
+        {
+            return config.BehaviourConfig switch
+            {
+                RangedEnemyBehaviourConfig => enemy.GetComponent<RangedBehaviourCreator>()
+                    ?? enemy.AddComponent<RangedBehaviourCreator>(),
+                ChargingMeleeEnemyBehaviourConfig => enemy.GetComponent<ChargingMeleeBehaviourCreator>()
+                    ?? enemy.AddComponent<ChargingMeleeBehaviourCreator>(),
+                HealerEnemyBehaviourConfig => enemy.GetComponent<HealerBehaviourCreator>()
+                    ?? enemy.AddComponent<HealerBehaviourCreator>(),
+                AssassinEnemyBehaviourConfig => enemy.GetComponent<AssassinBehaviourCreator>()
+                    ?? enemy.AddComponent<AssassinBehaviourCreator>(),
+                _ => enemy.GetComponent<MeleeBehaviourCreator>()
+                    ?? enemy.AddComponent<MeleeBehaviourCreator>()
+            };
         }
 
         private static void ConfigureDamage(SerializedObject serializedConfig, float damageAmount)
@@ -549,6 +611,14 @@ namespace RPGame.Enemies.Tests
             damageEntry.FindPropertyRelative("maxDamage").floatValue = damageAmount;
             damageEntry.FindPropertyRelative("damageType").enumValueIndex = (int)DamageType.Physical;
             damageEntry.FindPropertyRelative("damageElement").enumValueIndex = (int)DamageElement.None;
+        }
+
+        private static float GetKnockbackResistance(Movement movement)
+        {
+            FieldInfo field = typeof(Movement).GetField(
+                "knockbackResistance",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            return (float)field.GetValue(movement);
         }
 
         private EnemyStraightProjectile CreateStraightProjectilePrefab(string objectName)
@@ -627,6 +697,12 @@ namespace RPGame.Enemies.Tests
         {
             MethodInfo method = typeof(RPGame.Enemies.Controller).GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic);
             method.Invoke(enemyController, null);
+        }
+
+        private static void InvokeStart(Movement movement)
+        {
+            MethodInfo method = typeof(Movement).GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic);
+            method.Invoke(movement, null);
         }
 
         private readonly struct TargetFixture

@@ -59,6 +59,7 @@ namespace RPGame.Enemies
             }
 
             searchTarget.Reset();
+            movement.FaceTowards(target.Position);
 
             repositionSearchCooldown = Mathf.Max(0f, repositionSearchCooldown - deltaTime);
             attackDelay -= deltaTime;

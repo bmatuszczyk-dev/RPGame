@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using RPGame.Combat.Projectiles;
+using RPGame.Core.Buildup;
 using RPGame.Core.Damage;
 using UnityEditor;
 using UnityEngine;
@@ -105,6 +106,33 @@ namespace RPGame.Enemies.Tests
             Assert.AreSame(target, spawnedProjectile.TargetDamageable);
             Assert.AreSame(damageParts, spawnedProjectile.DamageParts);
             Assert.AreSame(source, spawnedProjectile.Source);
+        }
+
+        [Test]
+        public void Launch_PassesBuildupDataThroughSharedInterface()
+        {
+            ProjectileLauncher launcher = CreateLauncher(out _);
+            GameObject projectilePrefab = CreateObject("BuildupProjectilePrefab");
+            projectilePrefab.AddComponent<TestEnemyProjectile>();
+            BuildupDefinition buildupDefinition = ScriptableObject.CreateInstance<BuildupDefinition>();
+
+            bool launched = launcher.Launch(new ProjectileLaunchData(
+                projectilePrefab,
+                Vector3.forward,
+                null,
+                CreateDamageParts(10f),
+                null,
+                new BuildupData(buildupDefinition, 25f)));
+
+            TestEnemyProjectile spawnedProjectile = UnityEngine.Object
+                .FindObjectsByType<TestEnemyProjectile>()
+                .First(projectile => projectile.gameObject != projectilePrefab);
+            createdObjects.Add(spawnedProjectile.gameObject);
+
+            Assert.IsTrue(launched);
+            Assert.AreSame(buildupDefinition, spawnedProjectile.Buildup.Definition);
+            Assert.That(spawnedProjectile.Buildup.Amount, Is.EqualTo(25f));
+            UnityEngine.Object.DestroyImmediate(buildupDefinition);
         }
 
         [Test]
@@ -221,17 +249,20 @@ namespace RPGame.Enemies.Tests
             public IDamageable TargetDamageable { get; private set; }
             public IReadOnlyList<PartialDamage> DamageParts { get; private set; }
             public GameObject Source { get; private set; }
+            public BuildupData Buildup { get; private set; }
 
             public void Initialize(
                 Vector3 targetPosition,
                 IDamageable targetDamageable,
                 IReadOnlyList<PartialDamage> damageParts,
-                GameObject source)
+                GameObject source,
+                BuildupData buildup = null)
             {
                 TargetPosition = targetPosition;
                 TargetDamageable = targetDamageable;
                 DamageParts = damageParts;
                 Source = source;
+                Buildup = buildup;
             }
         }
     }

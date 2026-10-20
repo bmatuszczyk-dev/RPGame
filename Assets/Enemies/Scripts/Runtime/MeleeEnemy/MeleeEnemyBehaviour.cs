@@ -28,6 +28,7 @@ namespace RPGame.Enemies
             }
 
             searchTarget.Reset();
+            movement.FaceTowards(target.Position);
 
             if (attack.IsInRange(target))
             {

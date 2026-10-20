@@ -165,6 +165,14 @@ namespace RPGame.Enemies.Tests
             SetPrivateField(statistics, "config", CreateStatisticsConfig());
             statistics.ResetToConfig();
             Movement movement = gameObject.AddComponent<Movement>();
+            typeof(Movement).GetMethod(
+                    "Awake",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .Invoke(movement, null);
+            typeof(Movement).GetMethod(
+                    "Start",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .Invoke(movement, null);
             Detection detection = gameObject.AddComponent<Detection>();
             EnemyTargetable targetable = gameObject.AddComponent<EnemyTargetable>();
             gameObject.AddComponent<DamageReceiver>();

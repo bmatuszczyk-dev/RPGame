@@ -1,10 +1,11 @@
 using System.Collections.Generic;
+using RPGame.Combat.Projectiles;
 using RPGame.Core.Damage;
 using UnityEngine;
 
 namespace RPGame.Enemies
 {
-    public abstract class EnemyProjectile : MonoBehaviour
+    public abstract class EnemyProjectile : MonoBehaviour, IProjectileDestructible
     {
         [SerializeField] private LayerMask hitLayers = ~0;
         [SerializeField] private QueryTriggerInteraction triggerInteraction = QueryTriggerInteraction.Collide;
@@ -19,6 +20,12 @@ namespace RPGame.Enemies
         internal bool IsInitialized { get; private set; }
         internal bool IsFinished { get; private set; }
         internal int FinishCount { get; private set; }
+        public ProjectileTeam Team => ProjectileTeam.Enemy;
+
+        public void DestroyProjectile()
+        {
+            Finish();
+        }
 
         protected void InitializeProjectile(
             IReadOnlyList<PartialDamage> damageParts,
@@ -132,6 +139,18 @@ namespace RPGame.Enemies
                 return;
             }
 
+            if (TryGetProjectileDestructible(hit.Collider, out IProjectileDestructible projectile)
+                && !ReferenceEquals(projectile, this))
+            {
+                if (projectile.Team != Team)
+                {
+                    projectile.DestroyProjectile();
+                    Finish();
+                }
+
+                return;
+            }
+
             TryGetDamageable(hit.Collider, out IDamageable damageable);
             OnImpact(hit, damageable);
             Finish();
@@ -156,10 +175,25 @@ namespace RPGame.Enemies
             return damageable != null;
         }
 
+        private static bool TryGetProjectileDestructible(
+            Collider hitCollider,
+            out IProjectileDestructible projectile)
+        {
+            projectile = hitCollider.GetComponentInParent(typeof(IProjectileDestructible)) as IProjectileDestructible;
+            return projectile != null;
+        }
+
         private bool ShouldIgnore(Collider hitCollider)
         {
             GameObject hitObject = hitCollider.gameObject;
             if (hitObject == gameObject || hitObject.transform.IsChildOf(transform))
+            {
+                return true;
+            }
+
+            if (TryGetProjectileDestructible(hitCollider, out IProjectileDestructible projectile)
+                && !ReferenceEquals(projectile, this)
+                && projectile.Team == Team)
             {
                 return true;
             }

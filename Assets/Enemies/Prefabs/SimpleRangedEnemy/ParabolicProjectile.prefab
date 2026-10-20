@@ -108,7 +108,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -140,9 +140,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.EnemyParabolicProjectile
   hitLayers:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 4294967167
   triggerInteraction: 2
-  hitRadius: 0.1
+  hitRadius: 0.25
   projectileLifetime: 5
   arcHeight: 7
   ascentDuration: 0.75

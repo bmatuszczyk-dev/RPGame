@@ -274,6 +274,38 @@ namespace RPGame.Player.Tests
             Assert.AreSame(candidate, targeting.CurrentTarget);
         }
 
+        [Test]
+        public void SetCurrentTarget_WhenTargetChanges_RaisesTargetChanged()
+        {
+            TestTargetable target = CreateTarget("Target", Vector3.forward);
+            ITargetable changedTarget = null;
+            int eventCount = 0;
+            targeting.TargetChanged += targetable =>
+            {
+                changedTarget = targetable;
+                eventCount++;
+            };
+
+            InvokeSetCurrentTarget(target);
+            InvokeSetCurrentTarget(target);
+
+            Assert.AreEqual(1, eventCount);
+            Assert.AreSame(target, changedTarget);
+        }
+
+        [Test]
+        public void SetCurrentTarget_WhenTargetIsCleared_RaisesTargetChangedWithNull()
+        {
+            TestTargetable target = CreateTarget("Target", Vector3.forward);
+            ITargetable changedTarget = target;
+            targeting.TargetChanged += targetable => changedTarget = targetable;
+
+            InvokeSetCurrentTarget(target);
+            InvokeSetCurrentTarget(null);
+
+            Assert.IsNull(changedTarget);
+        }
+
         private ITargetable SelectBest(float maxTargetDistance = 20f, float targetingRadius = 0.25f)
         {
             return TargetSelector.SelectBest(
@@ -331,6 +363,12 @@ namespace RPGame.Player.Tests
         {
             FieldInfo field = typeof(TargetingController).GetField("<CurrentTarget>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
             field.SetValue(targeting, target);
+        }
+
+        private void InvokeSetCurrentTarget(ITargetable target)
+        {
+            MethodInfo method = typeof(TargetingController).GetMethod("SetCurrentTarget", BindingFlags.Instance | BindingFlags.NonPublic);
+            method.Invoke(targeting, new object[] { target });
         }
 
         private static void SetField(object target, string fieldName, object value)

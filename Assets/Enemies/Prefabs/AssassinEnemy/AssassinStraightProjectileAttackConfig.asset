@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3fb48b88e914dc0ad7559f8e8ca3447, type: 3}
+  m_Name: AssassinStraightProjectileAttackConfig
+  m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.StraightProjectileAttackConfig
+  attackInterval: 2.5
+  damage:
+  - minDamage: 1
+    maxDamage: 3
+    damageType: 0
+    damageElement: 0
+  projectilePrefab: {fileID: 7003297021522163546, guid: ab2dcd08d4dd8794aa12c0edbf010f9a, type: 3}
+  buildupDefinition: {fileID: 11400000, guid: 4dcd7c7b444b4b84bf15309387f8df8e, type: 2}
+  buildupAmount: 15

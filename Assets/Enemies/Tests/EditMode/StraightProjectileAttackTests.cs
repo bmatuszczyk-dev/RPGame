@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using RPGame.Core.Buildup;
 using RPGame.Core.Damage;
 using RPGame.Core.Targeting;
 using UnityEditor;
@@ -120,18 +121,49 @@ namespace RPGame.Enemies.Tests
             Assert.AreSame(prefab.gameObject, launcher.LastLaunchData.ProjectilePrefab);
         }
 
+        [Test]
+        public void TryAttack_PassesConfiguredBuildupToLaunchData()
+        {
+            BuildupDefinition buildupDefinition = ScriptableObject.CreateInstance<BuildupDefinition>();
+            createdAssets.Add(buildupDefinition);
+            StraightProjectileAttack attack = CreateAttack(
+                1f,
+                true,
+                out FakeProjectileLauncher launcher,
+                out _,
+                buildupDefinition,
+                25f);
+
+            attack.TryAttack(CreateSelectedTarget(Vector3.one));
+
+            Assert.AreSame(buildupDefinition, launcher.LastLaunchData.Buildup.Definition);
+            Assert.That(launcher.LastLaunchData.Buildup.Amount, Is.EqualTo(25f));
+        }
+
+        [Test]
+        public void TryAttack_WithoutBuildupConfig_UsesEmptyBuildupLaunchData()
+        {
+            StraightProjectileAttack attack = CreateAttack(1f, true, out FakeProjectileLauncher launcher, out _);
+
+            attack.TryAttack(CreateSelectedTarget(Vector3.one));
+
+            Assert.IsNull(launcher.LastLaunchData.Buildup);
+        }
+
         private StraightProjectileAttack CreateAttack(
             float attackInterval,
             bool hasLineOfSight,
             out FakeProjectileLauncher launcher,
-            out EnemyStraightProjectile prefab)
+            out EnemyStraightProjectile prefab,
+            BuildupDefinition buildupDefinition = null,
+            float buildupAmount = 0f)
         {
             launcher = new FakeProjectileLauncher();
             FakeDamageable damageable = new();
             prefab = CreateProjectilePrefab();
 
             return new StraightProjectileAttack(
-                CreateStraightConfig(attackInterval, 10f, prefab),
+                CreateStraightConfig(attackInterval, 10f, prefab, buildupDefinition, buildupAmount),
                 new FakeLineOfSight(hasLineOfSight),
                 launcher,
                 _ => damageable,
@@ -141,7 +173,9 @@ namespace RPGame.Enemies.Tests
         private StraightProjectileAttackConfig CreateStraightConfig(
             float attackInterval,
             float damageAmount,
-            EnemyStraightProjectile projectilePrefab)
+            EnemyStraightProjectile projectilePrefab,
+            BuildupDefinition buildupDefinition = null,
+            float buildupAmount = 0f)
         {
             StraightProjectileAttackConfig config = ScriptableObject.CreateInstance<StraightProjectileAttackConfig>();
             createdAssets.Add(config);
@@ -149,6 +183,8 @@ namespace RPGame.Enemies.Tests
             SerializedObject serializedConfig = new(config);
             serializedConfig.FindProperty("projectilePrefab").objectReferenceValue = projectilePrefab.gameObject;
             serializedConfig.FindProperty("attackInterval").floatValue = attackInterval;
+            serializedConfig.FindProperty("buildupDefinition").objectReferenceValue = buildupDefinition;
+            serializedConfig.FindProperty("buildupAmount").floatValue = buildupAmount;
             SetDamage(serializedConfig, damageAmount);
             serializedConfig.ApplyModifiedPropertiesWithoutUndo();
             return config;

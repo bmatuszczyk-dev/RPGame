@@ -1,3 +1,4 @@
+using System;
 using RPGame.Core.Targeting;
 using UnityEngine;
 
@@ -12,6 +13,8 @@ namespace RPGame.Player.Targeting
         [SerializeField] private float targetRetentionTime = 0.2f;
 
         private float targetRetentionTimer;
+
+        public event Action<ITargetable> TargetChanged;
 
         public ITargetable CurrentTarget { get; private set; }
 
@@ -102,6 +105,7 @@ namespace RPGame.Player.Targeting
 
             CurrentTarget = target;
             Debug.Log($"[Targeting] Current target: {FormatTarget(CurrentTarget)}", this);
+            TargetChanged?.Invoke(CurrentTarget);
         }
 
         private void OnValidate()
@@ -137,7 +141,7 @@ namespace RPGame.Player.Targeting
                 return "None";
             }
 
-            if (target is Object unityObject)
+            if (target is UnityEngine.Object unityObject)
             {
                 return unityObject.name;
             }

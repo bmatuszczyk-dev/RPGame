@@ -421,6 +421,7 @@ GameObject:
   - component: {fileID: 9106253214432637820}
   - component: {fileID: 1105072201663407447}
   - component: {fileID: 9104286350229094230}
+  - component: {fileID: 5501000000000000004}
   - component: {fileID: 5887479847380067334}
   - component: {fileID: 5501000000000000002}
   - component: {fileID: 1416622787065215315}
@@ -818,6 +819,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2dbfd3740605de4faf2c301c5ad9c81, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.StatusEffectAggregator
+--- !u!114 &5501000000000000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52dcd7dcdbd845009746511bd0f1f8ca, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Buildup.BuildupAggregator
 --- !u!114 &5887479847380067334
 MonoBehaviour:
   m_ObjectHideFlags: 0

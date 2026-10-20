@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using RPGame.Core.Pooling;
 using RPGame.Core.Statistics;
 using RPGame.Inventory;
 using UnityEngine;
 
 namespace RPGame.Loot
 {
-    public sealed class LootDropper : MonoBehaviour
+    public sealed class LootDropper : MonoBehaviour, IPooledEnemyResettable
     {
         [SerializeField] private LootTable lootTable;
         [SerializeField] private ItemPickup pickupPrefab;
@@ -26,6 +27,15 @@ namespace RPGame.Loot
         private void OnDisable()
         {
             UnsubscribeDeathSource();
+        }
+
+        public void ResetForSpawn()
+        {
+            hasDropped = false;
+        }
+
+        public void ResetForDespawn()
+        {
         }
 
         public void DropLoot()

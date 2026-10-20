@@ -251,7 +251,7 @@ MonoBehaviour:
   maxLifetime: 5
   hitLayers:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 4294967167
   triggerInteraction: 2
   hitRadius: 0.1
   destroyOnHit: 1

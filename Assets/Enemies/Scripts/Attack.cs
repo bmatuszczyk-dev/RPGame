@@ -11,6 +11,7 @@ namespace RPGame.Enemies
         [SerializeField] private LineOfSight lineOfSight;
         [SerializeField] private GroundProjection groundProjection;
         [SerializeField] private ProjectileLauncher projectileLauncher;
+        [SerializeField] private BladeSweepMotion bladeSweepMotion;
 
         private Config config;
         private readonly Dictionary<AttackType, IEnemyAttack> runtimeAttacks = new();
@@ -122,6 +123,13 @@ namespace RPGame.Enemies
                     GetProjectileLauncher(),
                     () => gameObject),
 
+                AttackType.AssassinSlash => new AssassinSlashAttack(
+                    config.GetAttack<AssassinSlashAttackConfig>(AttackType.AssassinSlash),
+                    transform,
+                    GetDamageable,
+                    () => gameObject,
+                    GetBladeSweepMotion()),
+
                 _ => throw new System.InvalidOperationException($"Unsupported attack type '{type}'.")
             };
         }
@@ -191,6 +199,21 @@ namespace RPGame.Enemies
             }
 
             return projectileLauncher;
+        }
+
+        private BladeSweepMotion GetBladeSweepMotion()
+        {
+            if (bladeSweepMotion == null)
+            {
+                bladeSweepMotion = GetComponent<BladeSweepMotion>();
+            }
+
+            if (bladeSweepMotion == null)
+            {
+                throw new System.InvalidOperationException("Missing field bladeSweepMotion.");
+            }
+
+            return bladeSweepMotion;
         }
     }
 }

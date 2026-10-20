@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6895df9c967c41758aeb7fe3f742d041, type: 3}
+  m_Name: FastMeleeConfig
+  m_EditorClassIdentifier: 
+  behaviourConfig: {fileID: 11400000, guid: f1a36f3bbd7b41a5a16c3f12d2bf037c, type: 2}
+  attacks:
+  - type: 0
+    config: {fileID: 11400000, guid: 2af4c57f17e073c41956478fb8e7632e, type: 2}
+  experienceReward: 20

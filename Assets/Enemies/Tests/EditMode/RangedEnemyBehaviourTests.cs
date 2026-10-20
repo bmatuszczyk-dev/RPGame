@@ -81,6 +81,20 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void Tick_WhenTargetIsDetected_FacesTarget()
+        {
+            Vector3 targetPosition = new(8f, 0f, 0f);
+            FakeDetection detection = CreateDetectionWithTarget(targetPosition);
+            FakeMovement movement = new();
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement);
+
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(1, movement.FaceTowardsCount);
+            Assert.AreEqual(targetPosition, movement.LastFaceTarget);
+        }
+
+        [Test]
         public void Tick_WhenTargetIsTooFar_Approaches()
         {
             FakeDetection detection = CreateDetectionWithTarget(new Vector3(8f, 0f, 0f));
@@ -745,15 +759,43 @@ namespace RPGame.Enemies.Tests
             public bool CanResolvePosition { get; set; } = true;
             public int MoveToCount { get; private set; }
             public int StopCount { get; private set; }
+            public int FaceTowardsCount { get; private set; }
             public int TryResolvePositionCount { get; private set; }
             public Vector3 Position { get; set; }
+            public bool IsLeaping => false;
+            public bool IsCharging => false;
+            public bool IsMovementBlocked => false;
             public Vector3 LastDestination { get; private set; }
             public Vector3 LastDesiredPosition { get; private set; }
+            public Vector3 LastFaceTarget { get; private set; }
+
+            public void FaceTowards(Vector3 position)
+            {
+                FaceTowardsCount++;
+                LastFaceTarget = position;
+            }
 
             public void MoveTo(Vector3 position)
             {
                 MoveToCount++;
                 LastDestination = position;
+            }
+
+            public bool TryLeapTo(Vector3 destination, float speed, float arcHeight)
+            {
+                return false;
+            }
+
+            public bool TryCombatLeapTo(Vector3 destination, float speed, float arcHeight, float fallSpeed, Action<bool> onCompleted) => false;
+
+            public bool TryStartCharge(
+                Vector3 destination,
+                float speed,
+                float maxDistance,
+                float knockbackResistance,
+                Action<Collider, Vector3> onCollision)
+            {
+                return false;
             }
 
             public void Stop()

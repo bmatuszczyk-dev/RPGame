@@ -108,7 +108,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -142,6 +142,6 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 9
   triggerInteraction: 2
-  hitRadius: 0.1
-  projectileSpeed: 8
-  projectileLifetime: 5
+  hitRadius: 0.75
+  projectileSpeed: 5
+  projectileLifetime: 10

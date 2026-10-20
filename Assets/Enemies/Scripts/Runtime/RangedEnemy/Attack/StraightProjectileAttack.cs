@@ -1,4 +1,5 @@
 using System;
+using RPGame.Core.Buildup;
 using RPGame.Core.Damage;
 using RPGame.Core.Pooling;
 using UnityEngine;
@@ -63,7 +64,8 @@ namespace RPGame.Enemies
                 target.Position,
                 targetDamageable,
                 DamageRangeRoller.Roll(config.Damage),
-                sourceProvider?.Invoke());
+                sourceProvider?.Invoke(),
+                CreateBuildupData());
 
             if (!projectileLauncher.Launch(launchData))
             {
@@ -84,6 +86,13 @@ namespace RPGame.Enemies
                 && lineOfSight != null
                 && lineOfSight.HasLineOfSight(target.Position)
                 && projectileLauncher != null;
+        }
+
+        private BuildupData CreateBuildupData()
+        {
+            return config.BuildupDefinition != null && config.BuildupAmount > 0f
+                ? new BuildupData(config.BuildupDefinition, config.BuildupAmount)
+                : null;
         }
     }
 }

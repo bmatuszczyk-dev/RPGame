@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using RPGame.Combat.Projectiles;
+using RPGame.Core.Buildup;
 using RPGame.Core.Damage;
 using UnityEditor;
 using UnityEngine;
@@ -97,6 +98,52 @@ namespace RPGame.Enemies.Tests
             Assert.IsTrue(projectile.IsFinished);
             Assert.AreEqual(1, target.ApplyDamageCount);
             Assert.AreEqual(10f, target.LastDamageData.Amount);
+        }
+
+        [Test]
+        public void HandleHit_WhenBuildupIsConfigured_AddsBuildupAfterDamage()
+        {
+            EnemyStraightProjectile projectile = CreateProjectile(Vector3.zero, Quaternion.identity);
+            TestDamageable target = CreateDamageableTarget("Target", Vector3.one);
+            TestBuildupReceiver receiver = target.gameObject.AddComponent<TestBuildupReceiver>();
+            BuildupDefinition definition = ScriptableObject.CreateInstance<BuildupDefinition>();
+            GameObject source = CreateObject("Source");
+
+            projectile.Initialize(
+                target.transform.position,
+                target,
+                CreateDamageParts(10f),
+                source,
+                new BuildupData(definition, 30f));
+            projectile.HandleHit(target.GetComponent<Collider>());
+
+            Assert.AreEqual(1, target.ApplyDamageCount);
+            Assert.AreEqual(1, receiver.AddCount);
+            Assert.AreSame(definition, receiver.Definition);
+            Assert.That(receiver.Amount, Is.EqualTo(30f));
+            Assert.AreSame(source, receiver.Context.Source);
+            Object.DestroyImmediate(definition);
+        }
+
+        [Test]
+        public void HandleHit_WhenHitIsNotTarget_DoesNotAddBuildup()
+        {
+            EnemyStraightProjectile projectile = CreateProjectile(Vector3.zero, Quaternion.identity);
+            TestDamageable target = CreateDamageableTarget("Target", Vector3.one);
+            TestDamageable other = CreateDamageableTarget("Other", Vector3.one);
+            TestBuildupReceiver receiver = other.gameObject.AddComponent<TestBuildupReceiver>();
+            BuildupDefinition definition = ScriptableObject.CreateInstance<BuildupDefinition>();
+
+            projectile.Initialize(
+                target.transform.position,
+                target,
+                CreateDamageParts(10f),
+                null,
+                new BuildupData(definition, 30f));
+            projectile.HandleHit(other.GetComponent<Collider>());
+
+            Assert.AreEqual(0, receiver.AddCount);
+            Object.DestroyImmediate(definition);
         }
 
         [Test]
@@ -273,6 +320,25 @@ namespace RPGame.Enemies.Tests
                 ApplyDamageCount++;
                 LastDamageData = data;
                 return DamageResult.Applied(data, data.Amount, 100f, 100f - data.Amount, false);
+            }
+        }
+
+        private sealed class TestBuildupReceiver : MonoBehaviour, IBuildupReceiver
+        {
+            public int AddCount { get; private set; }
+            public BuildupDefinition Definition { get; private set; }
+            public float Amount { get; private set; }
+            public RPGame.Core.Statuses.StatusContext Context { get; private set; }
+
+            public void AddBuildup(
+                BuildupDefinition definition,
+                float amount,
+                RPGame.Core.Statuses.StatusContext context)
+            {
+                AddCount++;
+                Definition = definition;
+                Amount = amount;
+                Context = context;
             }
         }
 

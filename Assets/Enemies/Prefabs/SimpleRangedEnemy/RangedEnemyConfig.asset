@@ -18,3 +18,4 @@ MonoBehaviour:
     config: {fileID: 11400000, guid: 83fc017e785e14444956eba27ca575d0, type: 2}
   - type: 2
     config: {fileID: 11400000, guid: 89a141f1946246446ba5e57ce4ac58c2, type: 2}
+  experienceReward: 50
