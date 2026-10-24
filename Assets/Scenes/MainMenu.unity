@@ -3159,6 +3159,8 @@ MonoBehaviour:
   playerNameInputField: {fileID: 870989701}
   confirmButton: {fileID: 240618984}
   errorText: {fileID: 325000303}
+  newGameButton: {fileID: 1452482550}
+  quitButton: {fileID: 1009019930}
 --- !u!1 &325000300
 GameObject:
   m_ObjectHideFlags: 0
