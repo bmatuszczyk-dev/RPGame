@@ -11,18 +11,52 @@ namespace RPGame.UI.PlayerWindows
         [SerializeField] private GameObject playerNameContextWindow;
         [SerializeField] private TMP_InputField playerNameInputField;
         [SerializeField] private Button confirmButton;
+        [SerializeField] private Button cancelButton;
         [SerializeField] private TMP_Text errorText;
 
         private bool isSubmitting;
         private bool isDestroyed;
+        private bool isChangingPlayerName;
 
         public bool IsPlayerNameConfirmed { get; private set; }
         public event Action PlayerNameConfirmed;
+        public event Action PlayerNameChanged;
+
+        public bool HandleEscape()
+        {
+            if (!isChangingPlayerName || isSubmitting)
+            {
+                return false;
+            }
+
+            playerNameContextWindow.SetActive(false);
+            isChangingPlayerName = false;
+            cancelButton.gameObject.SetActive(false);
+            return true;
+        }
+
+        public void OpenForChange(string playerName)
+        {
+            if (isSubmitting)
+            {
+                return;
+            }
+
+            isChangingPlayerName = true;
+            playerNameInputField.text = playerName == "Unavailable" ? string.Empty : playerName;
+            HideError();
+            playerNameContextWindow.SetActive(true);
+            confirmButton.interactable = true;
+            cancelButton.gameObject.SetActive(true);
+            playerNameInputField.ActivateInputField();
+        }
 
         private void Awake()
         {
             confirmButton.onClick.AddListener(ConfirmPlayerName);
+            cancelButton.onClick.AddListener(CancelPlayerNameChange);
             HideError();
+            cancelButton.gameObject.SetActive(false);
             playerNameContextWindow.SetActive(true);
             confirmButton.interactable = false;
         }
@@ -53,6 +87,10 @@ namespace RPGame.UI.PlayerWindows
                 confirmButton.onClick.RemoveListener(ConfirmPlayerName);
             }
 
+            if (cancelButton != null)
+            {
+                cancelButton.onClick.RemoveListener(CancelPlayerNameChange);
+            }
         }
 
         private async void ConfirmPlayerName()
@@ -75,8 +113,17 @@ namespace RPGame.UI.PlayerWindows
             if (result.IsSuccess)
             {
                 playerNameContextWindow.SetActive(false);
-                SetPlayerNameConfirmed();
                 isSubmitting = false;
+                cancelButton.gameObject.SetActive(false);
+
+                if (isChangingPlayerName)
+                {
+                    isChangingPlayerName = false;
+                    PlayerNameChanged?.Invoke();
+                    return;
+                }
+
+                SetPlayerNameConfirmed();
                 return;
             }
 
@@ -88,6 +135,7 @@ namespace RPGame.UI.PlayerWindows
         {
             playerNameContextWindow.SetActive(true);
             confirmButton.interactable = true;
+            cancelButton.gameObject.SetActive(isChangingPlayerName);
 
             if (string.IsNullOrEmpty(errorMessage))
             {
@@ -100,6 +148,11 @@ namespace RPGame.UI.PlayerWindows
             }
 
             playerNameInputField.ActivateInputField();
+        }
+
+        private void CancelPlayerNameChange()
+        {
+            HandleEscape();
         }
 
         private void SetPlayerNameConfirmed()
@@ -126,6 +179,7 @@ namespace RPGame.UI.PlayerWindows
                 && playerNameContextWindow != null
                 && playerNameInputField != null
                 && confirmButton != null
+                && cancelButton != null
                 && errorText != null;
         }
     }

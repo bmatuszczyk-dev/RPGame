@@ -1,5 +1,7 @@
+using RPGame.Core.Settings;
 using RPGame.UI.Leaderboard;
 using RPGame.UI.PlayerWindows;
+using RPGame.UI.Settings;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,14 +12,18 @@ namespace RPGame.UI
         [SerializeField] private PlayerNameWindowUI playerNameWindow;
         [SerializeField] private Button newGameButton;
         [SerializeField] private Button leaderboardsButton;
+        [SerializeField] private Button settingsButton;
         [SerializeField] private Button quitButton;
         [SerializeField] private LeaderboardScreen leaderboardScreen;
+        [SerializeField] private SettingsPanelUI settingsPanel;
 
         private void Awake()
         {
+            GameSettings.ApplySavedSettings();
             GameFlow.ShowMenuCursor();
             newGameButton.onClick.AddListener(StartNewGame);
             leaderboardsButton.onClick.AddListener(OpenLeaderboards);
+            settingsButton.onClick.AddListener(OpenSettings);
             quitButton.onClick.AddListener(QuitGame);
             playerNameWindow.PlayerNameConfirmed += EnableMenuActions;
             SetMenuActionsAvailable(playerNameWindow.IsPlayerNameConfirmed);
@@ -32,6 +38,7 @@ namespace RPGame.UI
         {
             newGameButton.onClick.RemoveListener(StartNewGame);
             leaderboardsButton.onClick.RemoveListener(OpenLeaderboards);
+            settingsButton.onClick.RemoveListener(OpenSettings);
             quitButton.onClick.RemoveListener(QuitGame);
             playerNameWindow.PlayerNameConfirmed -= EnableMenuActions;
         }
@@ -52,6 +59,14 @@ namespace RPGame.UI
             }
         }
 
+        private void OpenSettings()
+        {
+            if (playerNameWindow.IsPlayerNameConfirmed)
+            {
+                settingsPanel.Open();
+            }
+        }
+
         private static void QuitGame()
         {
             GameFlow.QuitGame();
@@ -66,6 +81,7 @@ namespace RPGame.UI
         {
             newGameButton.interactable = isAvailable;
             leaderboardsButton.interactable = isAvailable;
+            settingsButton.interactable = isAvailable;
         }
     }
 }
