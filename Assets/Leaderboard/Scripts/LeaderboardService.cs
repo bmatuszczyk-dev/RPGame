@@ -35,12 +35,12 @@ namespace RPGame.Leaderboard
 
         public static Task InitializeAsync()
         {
-            if (State == LeaderboardServiceState.Ready || State == LeaderboardServiceState.Failed)
+            if (State == LeaderboardServiceState.Ready)
             {
                 return Task.CompletedTask;
             }
 
-            if (initializationTask != null)
+            if (State == LeaderboardServiceState.Initializing && initializationTask != null)
             {
                 return initializationTask;
             }
@@ -57,15 +57,8 @@ namespace RPGame.Leaderboard
                 return;
             }
 
-            try
-            {
-                PlayerName = await AuthenticationService.Instance.GetPlayerNameAsync();
-                PlayerId = AuthenticationService.Instance.PlayerId;
-            }
-            catch (Exception exception)
-            {
-                SetFailed("refreshing player name", exception);
-            }
+            PlayerName = AuthenticationService.Instance.PlayerName;
+            PlayerId = AuthenticationService.Instance.PlayerId;
         }
 
         public static async Task UpdatePlayerNameAsync(string playerName)
@@ -73,19 +66,12 @@ namespace RPGame.Leaderboard
             await InitializeAsync();
             if (State != LeaderboardServiceState.Ready)
             {
-                return;
+                throw new InvalidOperationException("Leaderboard service is not initialized.");
             }
 
-            try
-            {
-                await AuthenticationService.Instance.UpdatePlayerNameAsync(playerName);
-                PlayerName = AuthenticationService.Instance.PlayerName;
-                PlayerId = AuthenticationService.Instance.PlayerId;
-            }
-            catch (Exception exception)
-            {
-                SetFailed("updating player name", exception);
-            }
+            await AuthenticationService.Instance.UpdatePlayerNameAsync(playerName);
+            PlayerName = AuthenticationService.Instance.PlayerName;
+            PlayerId = AuthenticationService.Instance.PlayerId;
         }
 
         public static async Task SubmitScoreAsync(EncounterResult result)
@@ -215,7 +201,7 @@ namespace RPGame.Leaderboard
                 }
 
                 PlayerId = AuthenticationService.Instance.PlayerId;
-                PlayerName = await AuthenticationService.Instance.GetPlayerNameAsync();
+                PlayerName = AuthenticationService.Instance.PlayerName;
                 State = LeaderboardServiceState.Ready;
             }
             catch (Exception exception)
