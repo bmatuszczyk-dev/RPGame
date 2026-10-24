@@ -111,7 +111,7 @@ namespace RPGame.Leaderboard
             await InitializeAsync();
             if (State != LeaderboardServiceState.Ready)
             {
-                return Array.Empty<LeaderboardEntry>();
+                throw new InvalidOperationException("Leaderboard service is not initialized.");
             }
 
             try
@@ -128,7 +128,7 @@ namespace RPGame.Leaderboard
             catch (Exception exception)
             {
                 Debug.LogError($"Leaderboard top scores request failed: {exception.Message}");
-                return Array.Empty<LeaderboardEntry>();
+                throw;
             }
         }
 
@@ -162,7 +162,7 @@ namespace RPGame.Leaderboard
             await InitializeAsync();
             if (State != LeaderboardServiceState.Ready)
             {
-                return Array.Empty<LeaderboardEntry>();
+                throw new InvalidOperationException("Leaderboard service is not initialized.");
             }
 
             try
@@ -183,7 +183,7 @@ namespace RPGame.Leaderboard
             catch (Exception exception)
             {
                 Debug.LogError($"Leaderboard player range request failed: {exception.Message}");
-                return Array.Empty<LeaderboardEntry>();
+                throw;
             }
         }
 

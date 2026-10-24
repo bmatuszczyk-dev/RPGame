@@ -1,3 +1,4 @@
+using System;
 using RPGame.Leaderboard;
 using TMPro;
 using UnityEngine;
@@ -11,30 +12,19 @@ namespace RPGame.UI.PlayerWindows
         [SerializeField] private TMP_InputField playerNameInputField;
         [SerializeField] private Button confirmButton;
         [SerializeField] private TMP_Text errorText;
-        [SerializeField] private Button newGameButton;
-        [SerializeField] private Button quitButton;
 
         private bool isSubmitting;
         private bool isDestroyed;
 
+        public bool IsPlayerNameConfirmed { get; private set; }
+        public event Action PlayerNameConfirmed;
+
         private void Awake()
         {
-            GameFlow.ShowMenuCursor();
             confirmButton.onClick.AddListener(ConfirmPlayerName);
             HideError();
             playerNameContextWindow.SetActive(true);
             confirmButton.interactable = false;
-            SetNewGameAvailable(false);
-
-            if (newGameButton != null)
-            {
-                newGameButton.onClick.AddListener(StartNewGame);
-            }
-
-            if (quitButton != null)
-            {
-                quitButton.onClick.AddListener(QuitGame);
-            }
         }
 
         private async void Start()
@@ -48,7 +38,7 @@ namespace RPGame.UI.PlayerWindows
             if (result.IsSuccess && !string.IsNullOrWhiteSpace(result.PlayerName))
             {
                 playerNameContextWindow.SetActive(false);
-                SetNewGameAvailable(true);
+                SetPlayerNameConfirmed();
                 return;
             }
 
@@ -63,15 +53,6 @@ namespace RPGame.UI.PlayerWindows
                 confirmButton.onClick.RemoveListener(ConfirmPlayerName);
             }
 
-            if (newGameButton != null)
-            {
-                newGameButton.onClick.RemoveListener(StartNewGame);
-            }
-
-            if (quitButton != null)
-            {
-                quitButton.onClick.RemoveListener(QuitGame);
-            }
         }
 
         private async void ConfirmPlayerName()
@@ -94,7 +75,7 @@ namespace RPGame.UI.PlayerWindows
             if (result.IsSuccess)
             {
                 playerNameContextWindow.SetActive(false);
-                SetNewGameAvailable(true);
+                SetPlayerNameConfirmed();
                 isSubmitting = false;
                 return;
             }
@@ -107,7 +88,6 @@ namespace RPGame.UI.PlayerWindows
         {
             playerNameContextWindow.SetActive(true);
             confirmButton.interactable = true;
-            SetNewGameAvailable(false);
 
             if (string.IsNullOrEmpty(errorMessage))
             {
@@ -122,27 +102,15 @@ namespace RPGame.UI.PlayerWindows
             playerNameInputField.ActivateInputField();
         }
 
-        private void StartNewGame()
+        private void SetPlayerNameConfirmed()
         {
-            if (playerNameContextWindow == null || playerNameContextWindow.activeInHierarchy)
+            if (IsPlayerNameConfirmed)
             {
                 return;
             }
 
-            GameFlow.LoadGameplay();
-        }
-
-        private static void QuitGame()
-        {
-            GameFlow.QuitGame();
-        }
-
-        private void SetNewGameAvailable(bool isAvailable)
-        {
-            if (newGameButton != null)
-            {
-                newGameButton.interactable = isAvailable;
-            }
+            IsPlayerNameConfirmed = true;
+            PlayerNameConfirmed?.Invoke();
         }
 
         private void HideError()
