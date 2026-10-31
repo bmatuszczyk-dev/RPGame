@@ -208,7 +208,7 @@ namespace RPGame.Enemies
             Vector3 direction,
             float distance,
             float duration,
-            Action<Collider, Vector3> onCollision = null)
+            Action<KnockbackEndContext> onEnded = null)
         {
             if (leap.IsActive)
             {
@@ -227,7 +227,14 @@ namespace RPGame.Enemies
                 return;
             }
 
-            knockback.Start(direction, effectiveDistance, duration, onCollision);
+            knockback.Start(
+                direction,
+                effectiveDistance,
+                duration,
+                (obstacle, collisionPoint) => onEnded?.Invoke(new KnockbackEndContext(
+                    KnockbackEndReason.Collision,
+                    obstacle,
+                    collisionPoint)));
         }
 
         public void ResetForSpawn()

@@ -271,7 +271,7 @@ namespace RPGame.UI.Tests
 
         private sealed class FakeStatusReceiver : MonoBehaviour, IStatusReceiver
         {
-            public void ApplyStatus(StatusDefinition status, float duration, StatusContext context) { }
+            public bool ApplyStatus(StatusDefinition status, float duration, StatusContext context) => true;
             public bool HasStatus(StatusDefinition status) => false;
             public bool TryConsumeStatus(StatusDefinition status) => false;
         }
