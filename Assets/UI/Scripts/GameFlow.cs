@@ -27,8 +27,7 @@ namespace RPGame.UI
 
         public static void ShowMenuCursor()
         {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            CursorController.ShowMenuCursor();
         }
 
         public static void QuitGame()
@@ -66,8 +65,13 @@ namespace RPGame.UI
 
         private static void SetCursorForScene(bool isGameplayScene)
         {
-            Cursor.lockState = isGameplayScene ? CursorLockMode.Locked : CursorLockMode.None;
-            Cursor.visible = !isGameplayScene;
+            if (isGameplayScene)
+            {
+                CursorController.ShowGameplayCursor();
+                return;
+            }
+
+            CursorController.ShowMenuCursor();
         }
     }
 }

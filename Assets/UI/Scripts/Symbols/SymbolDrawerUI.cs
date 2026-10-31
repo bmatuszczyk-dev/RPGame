@@ -1,4 +1,5 @@
 using RPGame.Core.Spells.Symbols;
+using RPGame.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -34,7 +35,11 @@ namespace RPGame.UI.Symbols
 
         private void Update()
         {
-            SetDrawingImageActive(IsDrawModifierPressed() || isDrawing);
+            bool isDrawModifierPressed = IsDrawModifierPressed();
+            bool shouldDraw = isDrawModifierPressed || isDrawing;
+
+            SetDrawingImageActive(shouldDraw);
+            CursorController.SetDrawingCursorActive(shouldDraw);
         }
 
         private void OnEnable()
