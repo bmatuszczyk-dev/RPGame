@@ -26,7 +26,6 @@ namespace RPGame.Combat.Spells
                 statusReceiver);
 
             ExecuteTargetPhase(casterData, SpellBehaviorPhase.PreResolve, context);
-            ExecuteMarkConsumers(casterData, context);
 
             if (resolveBehavior.Phase != SpellBehaviorPhase.Resolve
                 || !resolveBehavior.Resolve(context))
@@ -34,6 +33,7 @@ namespace RPGame.Combat.Spells
                 return false;
             }
 
+            ExecuteMarkConsumers(casterData, context);
             ExecuteTargetPhase(casterData, SpellBehaviorPhase.PostResolve, context);
             ExecuteTargetPhase(casterData, SpellBehaviorPhase.Effect, context);
             RecordMarkProgress(context);

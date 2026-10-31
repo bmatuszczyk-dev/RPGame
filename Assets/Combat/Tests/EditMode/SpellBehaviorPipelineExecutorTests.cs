@@ -61,7 +61,7 @@ namespace RPGame.Combat.Tests
             ExecuteSpell(new SpellId("fire_zone"));
 
             CollectionAssert.AreEqual(
-                new[] { "PreResolve", "ConsumeMark", "Resolve", "PostResolve", "Effect" },
+                new[] { "PreResolve", "Resolve", "ConsumeMark", "PostResolve", "Effect" },
                 executed);
             Assert.IsTrue(statusReceiver.HasStatus(markDefinition));
         }
@@ -84,12 +84,27 @@ namespace RPGame.Combat.Tests
             ExecuteSpell(new SpellId("fire_zone"));
 
             CollectionAssert.AreEqual(
-                new[] { "PreResolve", "ConsumeMark", "Resolve" },
+                new[] { "PreResolve", "Resolve" },
                 executed);
             Assert.IsFalse(statusReceiver.HasStatus(markDefinition));
 
             ExecuteSpell(new SpellId("magic_missile"));
 
+            Assert.IsTrue(statusReceiver.HasStatus(markDefinition));
+        }
+
+        [Test]
+        public void Resolve_WhenResolveFails_DoesNotConsumeExistingMark()
+        {
+            statusReceiver.ApplyStatus(markDefinition, 5f, CreateStatusContext());
+            ConsumeMarkBehavior consumeMark = new(markDefinition);
+
+            ExecuteSpell(
+                new SpellId("wave"),
+                new IRuntimeSpellBehavior[] { consumeMark },
+                new RecordingResolveBehavior("Resolve", new List<string>(), false));
+
+            Assert.AreEqual(0, consumeMark.Results.Count);
             Assert.IsTrue(statusReceiver.HasStatus(markDefinition));
         }
 
@@ -215,7 +230,7 @@ namespace RPGame.Combat.Tests
             ExecuteSpell(
                 new SpellId("wave"),
                 new IRuntimeSpellBehavior[] { firstConsume, secondConsume },
-                new RecordingResolveBehavior("Resolve", new List<string>(), false));
+                new RecordingResolveBehavior("Resolve", new List<string>(), true));
 
             int successCount = 0;
             successCount += firstConsume.Results[0] ? 1 : 0;

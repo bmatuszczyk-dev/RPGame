@@ -163,7 +163,7 @@ namespace RPGame.Combat.Tests
                 target,
                 new FailingResolveBehavior());
 
-            Assert.IsFalse(statusReceiver.HasStatus(markDefinition));
+            Assert.IsTrue(statusReceiver.HasStatus(markDefinition));
             Assert.AreEqual(0, testTarget.Results.Count);
             Assert.AreEqual(30f, testTarget.CurrentHealth);
         }
