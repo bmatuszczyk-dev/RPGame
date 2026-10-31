@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RPGame.Core;
 using RPGame.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -14,7 +15,7 @@ namespace RPGame.UI.PlayerWindows
 
         private void Update()
         {
-            if (Keyboard.current == null)
+            if (GameplayInputBlocker.IsBlocked || Keyboard.current == null)
             {
                 return;
             }

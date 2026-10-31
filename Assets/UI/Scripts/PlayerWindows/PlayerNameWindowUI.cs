@@ -13,6 +13,7 @@ namespace RPGame.UI.PlayerWindows
         [SerializeField] private Button confirmButton;
         [SerializeField] private Button cancelButton;
         [SerializeField] private TMP_Text errorText;
+        [SerializeField] private bool initializeOnStart = true;
 
         private bool isSubmitting;
         private bool isDestroyed;
@@ -57,12 +58,17 @@ namespace RPGame.UI.PlayerWindows
             cancelButton.onClick.AddListener(CancelPlayerNameChange);
             HideError();
             cancelButton.gameObject.SetActive(false);
-            playerNameContextWindow.SetActive(true);
-            confirmButton.interactable = false;
+            playerNameContextWindow.SetActive(initializeOnStart);
+            confirmButton.interactable = !initializeOnStart;
         }
 
         private async void Start()
         {
+            if (!initializeOnStart)
+            {
+                return;
+            }
+
             PlayerNameOperationResult result = await PlayerNameService.GetCurrentPlayerNameAsync();
             if (!HasUiReferences())
             {

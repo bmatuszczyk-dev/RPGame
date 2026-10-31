@@ -1,5 +1,6 @@
 using RPGame.Core.Movement;
 using RPGame.Core.Statistics;
+using RPGame.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
@@ -139,6 +140,12 @@ namespace RPGame.Player
 
         private void Update()
         {
+            if (GameplayInputBlocker.IsBlocked)
+            {
+                StopNormalMovement();
+                return;
+            }
+
             if (IsMovementBlocked)
             {
                 StopNormalMovement();

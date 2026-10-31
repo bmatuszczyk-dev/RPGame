@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using RPGame.UI.PlayerWindows;
+using System;
 
 namespace RPGame.UI.Settings
 {
@@ -28,13 +29,22 @@ namespace RPGame.UI.Settings
         [SerializeField] private Button backButton;
 
         private GameSettingsValues savedValues;
+        private GameObject returnPanel;
         private bool isDestroyed;
+
+        public event Action Closed;
 
         public void Open()
         {
+            Open(mainMenuPanel);
+        }
+
+        public void Open(GameObject panelToRestore)
+        {
             savedValues = GameSettings.Load();
             SetDraft(savedValues);
-            mainMenuPanel.SetActive(false);
+            returnPanel = panelToRestore != null ? panelToRestore : mainMenuPanel;
+            returnPanel.SetActive(false);
             gameObject.SetActive(true);
             RefreshPlayerName();
         }
@@ -92,7 +102,13 @@ namespace RPGame.UI.Settings
         private void Close()
         {
             gameObject.SetActive(false);
-            mainMenuPanel.SetActive(true);
+            if (returnPanel != null)
+            {
+                returnPanel.SetActive(true);
+            }
+
+            returnPanel = mainMenuPanel;
+            Closed?.Invoke();
         }
 
         private void ShowPlayerNameWindow()

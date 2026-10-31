@@ -8,12 +8,14 @@ namespace RPGame.UI
         private static CursorLockMode previousCursorLockState;
         private static bool previousCursorVisible;
 
+        // TODO Zmien nazwe na ShowCursor
         public static void ShowMenuCursor()
         {
             isDrawingCursorActive = false;
             SetCursor(CursorLockMode.None, true);
         }
 
+        // TODO: Zmien nazwe na HideCursor 
         public static void ShowGameplayCursor()
         {
             isDrawingCursorActive = false;
