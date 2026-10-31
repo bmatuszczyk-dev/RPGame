@@ -13,6 +13,7 @@ namespace RPGame.Core.Statuses
         [SerializeField] private float duration;
         [SerializeField] private float remainingDuration;
         [SerializeField] private float value;
+        [SerializeField] private int currentStacks;
         [SerializeField] private float remainingAmount;
         [SerializeField] private float periodicTickTimer;
         private readonly List<Action> cleanupActions = new();
@@ -41,6 +42,7 @@ namespace RPGame.Core.Statuses
         public float Duration => duration;
         public float RemainingDuration => remainingDuration;
         public float Value => value;
+        public int CurrentStacks => currentStacks;
         public float RemainingAmount => remainingAmount;
         public StatusLifecycleEvent LastLifecycleEvent { get; private set; }
         public bool IsFinished => remainingDuration <= 0f;
@@ -57,6 +59,16 @@ namespace RPGame.Core.Statuses
         public void SetValue(float value)
         {
             this.value = Mathf.Max(0f, value);
+        }
+
+        public void SetCurrentStacks(int currentStacks)
+        {
+            this.currentStacks = Mathf.Max(0, currentStacks);
+        }
+
+        public void IncrementCurrentStacks(int maxStacks)
+        {
+            currentStacks = Mathf.Min(Mathf.Max(1, maxStacks), currentStacks + 1);
         }
 
         public bool HasSameIdentity(StatusDefinition definition, StatusContext context)
@@ -90,6 +102,11 @@ namespace RPGame.Core.Statuses
             remainingAmount += GetAmount(definition);
             LastLifecycleEvent = StatusLifecycleEvent.Refreshed;
             definition?.OnRefresh(target, this);
+        }
+
+        public void StackAndRefresh(StatusTarget target, float incomingDuration)
+        {
+            Refresh(target, incomingDuration);
         }
 
         public void KeepLongerDuration(StatusTarget target, float incomingDuration)

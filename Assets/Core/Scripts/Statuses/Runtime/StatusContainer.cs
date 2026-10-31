@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace RPGame.Core.Statuses
@@ -11,6 +12,9 @@ namespace RPGame.Core.Statuses
         private bool clearRequested;
 
         public IReadOnlyList<StatusInstance> Statuses => statuses;
+        public event Action<StatusInstance> StatusAdded;
+        public event Action<StatusInstance> StatusUpdated;
+        public event Action<StatusInstance> StatusRemoved;
 
         public StatusContainer(StatusTarget target)
         {
@@ -35,6 +39,7 @@ namespace RPGame.Core.Statuses
             if (existingInstance != null)
             {
                 ApplyExistingInstance(definition, existingInstance, duration, context);
+                StatusUpdated?.Invoke(existingInstance);
                 return true;
             }
 
@@ -44,6 +49,7 @@ namespace RPGame.Core.Statuses
                 if (existingInstance != null)
                 {
                     ApplySingleInstance(definition, existingInstance, duration, context);
+                    StatusUpdated?.Invoke(existingInstance);
                     return true;
                 }
             }
@@ -52,6 +58,7 @@ namespace RPGame.Core.Statuses
             {
                 statuses.Add(instance);
                 instance.Apply(target);
+                StatusAdded?.Invoke(instance);
             }
 
             return true;
@@ -100,6 +107,7 @@ namespace RPGame.Core.Statuses
                 if (!status.IsFinished && status.HasDefinition(definition))
                 {
                     status.Remove(target, StatusLifecycleEvent.Consumed);
+                    StatusRemoved?.Invoke(status);
                     statuses.RemoveAt(i);
                     return true;
                 }
@@ -144,6 +152,7 @@ namespace RPGame.Core.Statuses
                 if (status.IsFinished)
                 {
                     status.Remove(target, StatusLifecycleEvent.Expired);
+                    StatusRemoved?.Invoke(status);
                     statuses.RemoveAt(i);
                 }
             }
@@ -183,6 +192,9 @@ namespace RPGame.Core.Statuses
                 case ReapplyPolicy.Stack:
                     existingInstance.Stack(target, duration);
                     break;
+                case ReapplyPolicy.StackAndRefresh:
+                    existingInstance.StackAndRefresh(target, duration);
+                    break;
             }
         }
 
@@ -200,6 +212,7 @@ namespace RPGame.Core.Statuses
             for (int i = statuses.Count - 1; i >= 0; i--)
             {
                 statuses[i].Remove(target, StatusLifecycleEvent.Cleared);
+                StatusRemoved?.Invoke(statuses[i]);
             }
 
             statuses.Clear();

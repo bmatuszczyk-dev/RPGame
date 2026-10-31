@@ -1,6 +1,8 @@
 using System;
+using RPGame.Core.Effects;
 using RPGame.Core.Pooling;
 using RPGame.Core.Statistics.Attributes;
+using RPGame.Core.Statuses;
 using UnityEngine;
 
 namespace RPGame.Core.Statistics
@@ -32,7 +34,7 @@ namespace RPGame.Core.Statistics
         public float HealthRegenerationPerSecond => config != null ? config.HealthRegenerationPerSecond : 0f;
         public float StaminaRegenerationPerSecond => config != null ? config.StaminaRegenerationPerSecond : 0f;
         public float StaminaRegenerationDelay => config != null ? config.StaminaRegenerationDelay : 0f;
-        public float ManaRegenerationPerSecond => config != null ? config.ManaRegenerationPerSecond : 0f;
+        public float ManaRegenerationPerSecond => GetFinalManaRegeneration();
         public float ManaRegenerationDelay => config != null ? config.ManaRegenerationDelay : 0f;
         public float HealthNormalized => MaxHealth > 0f ? CurrentHealth / MaxHealth : 0f;
         public float StaminaNormalized => MaxStamina > 0f ? CurrentStamina / MaxStamina : 0f;
@@ -44,6 +46,8 @@ namespace RPGame.Core.Statistics
         private float lastKnownMaxHealth;
         private float lastKnownMaxStamina;
         private float lastKnownMaxMana;
+        private EffectAggregator effectAggregator;
+        private StatusAggregator statusAggregator;
 
         private void Awake()
         {
@@ -217,7 +221,7 @@ namespace RPGame.Core.Statistics
                 }
                 else
                 {
-                    RestoreMana(config.ManaRegenerationPerSecond * deltaTime);
+                    RestoreMana(ManaRegenerationPerSecond * deltaTime);
                 }
             }
         }
@@ -326,6 +330,39 @@ namespace RPGame.Core.Statistics
         {
             ResolveAttributes();
             return attributes != null ? attributes.GetValue(attributeType) * AttributeVitalBonus : 0f;
+        }
+
+        private float GetFinalManaRegeneration()
+        {
+            float baseRegeneration = config != null ? config.ManaRegenerationPerSecond : 0f;
+            float flatBonus = GetManaRegenerationEffectValue(EffectModifierType.Flat);
+            float percentBonus = GetManaRegenerationEffectValue(EffectModifierType.Percent);
+            return Mathf.Max(0f, (baseRegeneration + flatBonus) * (1f + percentBonus));
+        }
+
+        private float GetManaRegenerationEffectValue(EffectModifierType modifierType)
+        {
+            ResolveModifierSources();
+            float permanentValue = effectAggregator != null
+                ? effectAggregator.GetEffectValue(EffectStat.ManaRegeneration, modifierType)
+                : 0f;
+            float statusValue = statusAggregator != null
+                ? statusAggregator.GetEffectValue(EffectStat.ManaRegeneration, modifierType)
+                : 0f;
+            return permanentValue + statusValue;
+        }
+
+        private void ResolveModifierSources()
+        {
+            if (effectAggregator == null)
+            {
+                TryGetComponent(out effectAggregator);
+            }
+
+            if (statusAggregator == null)
+            {
+                TryGetComponent(out statusAggregator);
+            }
         }
     }
 }

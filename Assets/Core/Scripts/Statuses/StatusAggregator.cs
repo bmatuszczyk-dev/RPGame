@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using RPGame.Core.Damage;
+using RPGame.Core.Effects;
 using RPGame.Core.Movement;
 using RPGame.Core.Pooling;
 using RPGame.Core.Statistics;
@@ -17,6 +18,9 @@ namespace RPGame.Core.Statuses
         private IDamageable damageable;
         private StatusTarget statusTarget;
         private IStatisticsController subscribedStatisticsController;
+        private readonly Dictionary<StatusInstance, StatusModifierEntry> statusModifiers = new();
+        private readonly Dictionary<EffectStat, float> flatModifierValues = new();
+        private readonly Dictionary<EffectStat, float> percentModifierValues = new();
 
         public IReadOnlyList<StatusInstance> Statuses => statusContainer.Statuses;
 
@@ -25,6 +29,7 @@ namespace RPGame.Core.Statuses
             statisticsController = GetComponent<IStatisticsController>();
             CacheStatusTarget();
             statusContainer = new StatusContainer(statusTarget);
+            SubscribeToStatusChanges();
         }
 
         private void OnEnable()
@@ -62,6 +67,14 @@ namespace RPGame.Core.Statuses
             return statusContainer.TryConsumeStatus(status);
         }
 
+        public float GetEffectValue(EffectStat stat, EffectModifierType modifierType)
+        {
+            Dictionary<EffectStat, float> values = modifierType == EffectModifierType.Flat
+                ? flatModifierValues
+                : percentModifierValues;
+            return values.TryGetValue(stat, out float value) ? value : 0f;
+        }
+
         public void ClearStatuses()
         {
             EnsureStatusContainer();
@@ -87,6 +100,7 @@ namespace RPGame.Core.Statuses
 
             CacheStatusTarget();
             statusContainer = new StatusContainer(statusTarget);
+            SubscribeToStatusChanges();
         }
 
         private IStatisticsController GetStatisticsController()
@@ -139,6 +153,69 @@ namespace RPGame.Core.Statuses
         private void HandleDied()
         {
             ClearStatuses();
+        }
+
+        private void SubscribeToStatusChanges()
+        {
+            statusContainer.StatusAdded += AddStatusModifier;
+            statusContainer.StatusUpdated += UpdateStatusModifier;
+            statusContainer.StatusRemoved += RemoveStatusModifier;
+        }
+
+        private void AddStatusModifier(StatusInstance instance)
+        {
+            if (instance?.Definition is not IStatusStatModifier modifier)
+            {
+                return;
+            }
+
+            float value = modifier.GetValue(instance);
+            StatusModifierEntry entry = new(modifier.Stat, modifier.ModifierType, value);
+            statusModifiers[instance] = entry;
+            AddModifierValue(entry, 1f);
+        }
+
+        private void UpdateStatusModifier(StatusInstance instance)
+        {
+            RemoveStatusModifier(instance);
+            AddStatusModifier(instance);
+        }
+
+        private void RemoveStatusModifier(StatusInstance instance)
+        {
+            if (!statusModifiers.TryGetValue(instance, out StatusModifierEntry entry))
+            {
+                return;
+            }
+
+            statusModifiers.Remove(instance);
+            AddModifierValue(entry, -1f);
+        }
+
+        private void AddModifierValue(StatusModifierEntry entry, float sign)
+        {
+            Dictionary<EffectStat, float> values = entry.ModifierType == EffectModifierType.Flat
+                ? flatModifierValues
+                : percentModifierValues;
+            values.TryGetValue(entry.Stat, out float currentValue);
+            values[entry.Stat] = currentValue + entry.Value * sign;
+        }
+
+        private readonly struct StatusModifierEntry
+        {
+            public StatusModifierEntry(
+                EffectStat stat,
+                EffectModifierType modifierType,
+                float value)
+            {
+                Stat = stat;
+                ModifierType = modifierType;
+                Value = value;
+            }
+
+            public EffectStat Stat { get; }
+            public EffectModifierType ModifierType { get; }
+            public float Value { get; }
         }
     }
 }

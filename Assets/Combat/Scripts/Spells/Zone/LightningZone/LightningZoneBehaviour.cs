@@ -158,12 +158,19 @@ namespace RPGame.Combat.Spells
                     return false;
                 }
 
-                return context.StatusReceiver.ApplyStatus(
+                bool targetWasStunned = context.StatusReceiver.HasStatus(stunStatus);
+                bool applied = context.StatusReceiver.ApplyStatus(
                     stunStatus,
                     stunDuration,
                     new StatusContext(
                         new StatusSourceId(nameof(LightningZoneBehaviour)),
                         statusSource));
+                if (applied && !targetWasStunned)
+                {
+                    context.SetExecutionFlag(SpellExecutionFlag.StunApplied);
+                }
+
+                return applied;
             }
         }
     }

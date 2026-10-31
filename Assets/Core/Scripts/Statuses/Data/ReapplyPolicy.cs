@@ -4,6 +4,7 @@ namespace RPGame.Core.Statuses
     {
         Refresh,
         Ignore,
-        Stack
+        Stack,
+        StackAndRefresh
     }
 }

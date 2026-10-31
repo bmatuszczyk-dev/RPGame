@@ -6,6 +6,8 @@ namespace RPGame.Core.Effects
     public sealed class PermanentEffectContainer
     {
         private readonly List<EffectInstance> effects = new();
+        private readonly Dictionary<EffectStat, float> flatEffectValues = new();
+        private readonly Dictionary<EffectStat, float> percentEffectValues = new();
 
         public IReadOnlyList<EffectInstance> Effects => effects;
 
@@ -20,6 +22,10 @@ namespace RPGame.Core.Effects
             if (instance != null)
             {
                 effects.Add(instance);
+                if (definition is StatEffectDefinition statEffect)
+                {
+                    AddEffectValue(statEffect.Stat, statEffect.ModifierType, statEffect.Value);
+                }
             }
         }
 
@@ -38,14 +44,10 @@ namespace RPGame.Core.Effects
 
         public float GetEffectValue(EffectStat stat, EffectModifierType modifierType)
         {
-            float value = 0f;
-
-            foreach (EffectInstance effect in GetEffects(stat, modifierType))
-            {
-                value += effect.Value;
-            }
-
-            return value;
+            Dictionary<EffectStat, float> values = modifierType == EffectModifierType.Flat
+                ? flatEffectValues
+                : percentEffectValues;
+            return values.TryGetValue(stat, out float value) ? value : 0f;
         }
 
         public SpellPropertyModifiers CreateSpellPropertyModifiers(Spell spell)
@@ -125,17 +127,16 @@ namespace RPGame.Core.Effects
             return orderedBehaviors;
         }
 
-        private IEnumerable<EffectInstance> GetEffects(
+        private void AddEffectValue(
             EffectStat stat,
-            EffectModifierType modifierType)
+            EffectModifierType modifierType,
+            float value)
         {
-            foreach (EffectInstance effect in effects)
-            {
-                if (effect.Stat == stat && effect.ModifierType == modifierType)
-                {
-                    yield return effect;
-                }
-            }
+            Dictionary<EffectStat, float> values = modifierType == EffectModifierType.Flat
+                ? flatEffectValues
+                : percentEffectValues;
+            values.TryGetValue(stat, out float currentValue);
+            values[stat] = currentValue + value;
         }
 
         private static EffectInstance CreateInstance(PassiveEffectDefinition definition)
