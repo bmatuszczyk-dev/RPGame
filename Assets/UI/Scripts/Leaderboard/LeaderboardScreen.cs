@@ -1,8 +1,11 @@
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using RPGame.Leaderboard;
 using RPGame.UI.Common;
+using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace RPGame.UI.Leaderboard
@@ -17,8 +20,10 @@ namespace RPGame.UI.Leaderboard
         [SerializeField] private GameObject leaderboardPanel;
         [SerializeField] private GameObject summaryPanel;
         [SerializeField] private LoadingImageSpinner loadingSpinner;
+        [SerializeField] private TMP_Text statusText;
+        [SerializeField] private TMP_Text leaderboardText;
 
-        private bool isLoading;
+        private int loadVersion;
 
         private void OnEnable()
         {
@@ -38,6 +43,16 @@ namespace RPGame.UI.Leaderboard
             }
         }
 
+        private void Update()
+        {
+            if (leaderboardPanel != null
+                && leaderboardPanel.activeInHierarchy
+                && Keyboard.current?.escapeKey.wasPressedThisFrame == true)
+            {
+                ShowSummary();
+            }
+        }
+
         public void Open()
         {
             if (summaryPanel != null)
@@ -51,41 +66,58 @@ namespace RPGame.UI.Leaderboard
 
         public void Close()
         {
-            SetLoadingSpinnerVisible(false);
-            SetLeaderboardPanelVisible(false);
-        }
-
-        public async Task LoadAsync()
-        {
-            if (isLoading)
+            if (leaderboardPanel == null || !leaderboardPanel.activeSelf)
             {
                 return;
             }
 
-            isLoading = true;
+            loadVersion++;
+            SetLoadingSpinnerVisible(false);
+            SetStatus(string.Empty);
+            SetLeaderboardPanelVisible(false);
+        }
+
+        public Task LoadAsync()
+        {
+            return LoadAsync(++loadVersion);
+        }
+
+        private async Task LoadAsync(int version)
+        {
             ResetRows();
             SetLoadingSpinnerVisible(true);
+            SetStatus("Loading leaderboard...");
 
             try
             {
                 if (runSubmitter != null)
                 {
                     await runSubmitter.SubmissionTask;
-                    if (!CanUpdateUI())
+                    if (!CanUpdateUI(version))
                     {
                         return;
                     }
                 }
 
                 IReadOnlyList<LeaderboardEntry> topScores = await LeaderboardService.GetTopScoresAsync();
-                if (!CanUpdateUI())
+                if (!CanUpdateUI(version))
                 {
                     return;
                 }
 
                 PopulateRows(topScoreRows, topScores);
 
-                if (topScores.Count == 0 || ContainsCurrentPlayer(topScores))
+                if (topScores.Count == 0)
+                {
+                    SetLeaderboardText(topScores, null);
+                    SetStatus("No leaderboard entries yet.");
+                    return;
+                }
+
+                SetLeaderboardText(topScores, null);
+                SetStatus(string.Empty);
+
+                if (ContainsCurrentPlayer(topScores))
                 {
                     return;
                 }
@@ -97,19 +129,26 @@ namespace RPGame.UI.Leaderboard
 
                 IReadOnlyList<LeaderboardEntry> playerCenteredScores =
                     await LeaderboardService.GetPlayerCenteredScoresAsync();
-                if (!CanUpdateUI())
+                if (!CanUpdateUI(version))
                 {
                     return;
                 }
 
                 PopulateRows(playerCenteredRows, playerCenteredScores);
+                SetLeaderboardText(topScores, playerCenteredScores);
+            }
+            catch
+            {
+                if (CanUpdateUI(version))
+                {
+                    SetStatus("Unable to load leaderboard.");
+                }
             }
             finally
             {
-                if (this != null)
+                if (this != null && version == loadVersion)
                 {
                     SetLoadingSpinnerVisible(false);
-                    isLoading = false;
                 }
             }
         }
@@ -122,6 +161,11 @@ namespace RPGame.UI.Leaderboard
             if (playerCenteredSection != null)
             {
                 playerCenteredSection.SetActive(false);
+            }
+
+            if (leaderboardText != null)
+            {
+                leaderboardText.text = string.Empty;
             }
         }
 
@@ -181,9 +225,13 @@ namespace RPGame.UI.Leaderboard
             return false;
         }
 
-        private bool CanUpdateUI()
+        private bool CanUpdateUI(int version)
         {
-            return this != null && isActiveAndEnabled;
+            return this != null
+                && version == loadVersion
+                && isActiveAndEnabled
+                && leaderboardPanel != null
+                && leaderboardPanel.activeInHierarchy;
         }
 
         private void ShowSummary()
@@ -209,6 +257,70 @@ namespace RPGame.UI.Leaderboard
             if (loadingSpinner != null && loadingSpinner.gameObject.activeSelf != isVisible)
             {
                 loadingSpinner.gameObject.SetActive(isVisible);
+            }
+        }
+
+        private void SetStatus(string message)
+        {
+            if (statusText == null)
+            {
+                return;
+            }
+
+            statusText.text = message;
+            statusText.gameObject.SetActive(!string.IsNullOrEmpty(message));
+        }
+
+        private void SetLeaderboardText(
+            IReadOnlyList<LeaderboardEntry> topScores,
+            IReadOnlyList<LeaderboardEntry> playerCenteredScores)
+        {
+            if (leaderboardText == null)
+            {
+                return;
+            }
+
+            var builder = new StringBuilder("TOP 10\n\nRANK     PLAYER                         WAVES     SCORE\n");
+            AppendEntries(builder, topScores);
+
+            if (playerCenteredScores != null && playerCenteredScores.Count > 0)
+            {
+                builder.Append("\nYOUR POSITION\n\nRANK     PLAYER                         WAVES     SCORE\n");
+                AppendEntries(builder, playerCenteredScores);
+            }
+
+            leaderboardText.text = builder.ToString();
+        }
+
+        private static void AppendEntries(StringBuilder builder, IReadOnlyList<LeaderboardEntry> entries)
+        {
+            if (entries == null)
+            {
+                return;
+            }
+
+            for (int index = 0; index < entries.Count; index++)
+            {
+                LeaderboardEntry entry = entries[index];
+                if (entry.IsCurrentPlayer)
+                {
+                    builder.Append("<b><color=#FFD54F>");
+                }
+
+                builder.Append(entry.Rank)
+                    .Append("        ")
+                    .Append(entry.PlayerName)
+                    .Append("        ")
+                    .Append(entry.WavesCompleted)
+                    .Append("        ")
+                    .Append(entry.Score.ToString("N0"));
+
+                if (entry.IsCurrentPlayer)
+                {
+                    builder.Append("</color></b>");
+                }
+
+                builder.Append('\n');
             }
         }
     }

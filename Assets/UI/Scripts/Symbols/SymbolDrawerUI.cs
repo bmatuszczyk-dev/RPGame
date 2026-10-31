@@ -1,4 +1,6 @@
 using RPGame.Core.Spells.Symbols;
+using RPGame.Core;
+using RPGame.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -32,19 +34,33 @@ namespace RPGame.UI.Symbols
             SetDrawingImageActive(false);
         }
 
-        private void Update()
-        {
-            SetDrawingImageActive(IsDrawModifierPressed() || isDrawing);
-        }
-
         private void OnEnable()
         {
-            drawModifierAction?.action?.Enable();
+            InputAction drawModifier = drawModifierAction != null ? drawModifierAction.action : null;
+            if (drawModifier == null)
+            {
+                return;
+            }
+
+            drawModifier.Enable();
+            drawModifier.started += HandleDrawModifierChanged;
+            drawModifier.canceled += HandleDrawModifierChanged;
+            UpdateDrawingState();
         }
 
         private void OnDisable()
         {
-            drawModifierAction?.action?.Disable();
+            InputAction drawModifier = drawModifierAction != null ? drawModifierAction.action : null;
+            if (drawModifier == null)
+            {
+                return;
+            }
+
+            drawModifier.started -= HandleDrawModifierChanged;
+            drawModifier.canceled -= HandleDrawModifierChanged;
+            drawModifier.Disable();
+            isDrawing = false;
+            UpdateDrawingState();
         }
 
         private void OnDestroy()
@@ -55,7 +71,8 @@ namespace RPGame.UI.Symbols
 
         public void OnPointerDown(PointerEventData eventData)
         {
-            if (eventData.button != PointerEventData.InputButton.Left || !IsDrawModifierPressed())
+            if (GameplayInputBlocker.IsBlocked
+                || eventData.button != PointerEventData.InputButton.Left || !IsDrawModifierPressed())
             {
                 return;
             }
@@ -72,12 +89,13 @@ namespace RPGame.UI.Symbols
                 ResetDrawingBounds();
                 DrawBrush(previousPixel);
                 drawingTexture.Apply();
+                UpdateDrawingState();
             }
         }
 
         public void OnDrag(PointerEventData eventData)
         {
-            if (!isDrawing || !TryGetPixel(eventData, out Vector2Int currentPixel))
+            if (GameplayInputBlocker.IsBlocked || !isDrawing || !TryGetPixel(eventData, out Vector2Int currentPixel))
             {
                 return;
             }
@@ -95,6 +113,7 @@ namespace RPGame.UI.Symbols
             }
 
             isDrawing = false;
+            UpdateDrawingState();
             Debug.Log("Symbol drawing ended; submitting drawing.", this);
             SubmitDrawing();
         }
@@ -337,6 +356,18 @@ namespace RPGame.UI.Symbols
         private bool IsDrawModifierPressed()
         {
             return drawModifierAction != null && drawModifierAction.action != null && drawModifierAction.action.IsPressed();
+        }
+
+        private void HandleDrawModifierChanged(InputAction.CallbackContext context)
+        {
+            UpdateDrawingState();
+        }
+
+        private void UpdateDrawingState()
+        {
+            bool shouldDraw = !GameplayInputBlocker.IsBlocked && (IsDrawModifierPressed() || isDrawing);
+            SetDrawingImageActive(shouldDraw);
+            CursorController.SetDrawingCursorActive(shouldDraw);
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using RPGame.Combat.Spells;
+using RPGame.Core;
 using RPGame.Core.Damage;
 using RPGame.Core.Spells;
 using RPGame.Core.Statistics;
@@ -150,6 +151,11 @@ namespace RPGame.Player.Spells
 
         private void OnSpellSelected(Spell spell)
         {
+            if (GameplayInputBlocker.IsBlocked)
+            {
+                return;
+            }
+
             if (pendingSpell != null || pendingActivationHandle != null)
             {
                 CancelActivation();
@@ -183,11 +189,21 @@ namespace RPGame.Player.Spells
 
         private void OnConfirmPlacementPerformed(InputAction.CallbackContext context)
         {
+            if (GameplayInputBlocker.IsBlocked)
+            {
+                return;
+            }
+
             ConfirmPlacement();
         }
 
         private void OnCancelPlacementPerformed(InputAction.CallbackContext context)
         {
+            if (GameplayInputBlocker.IsBlocked)
+            {
+                return;
+            }
+
             CancelActivation();
         }
 

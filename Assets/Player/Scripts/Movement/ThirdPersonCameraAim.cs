@@ -1,3 +1,5 @@
+using RPGame.Core.Settings;
+using RPGame.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -17,19 +19,23 @@ namespace RPGame.Player
 
         [Header("Aim")]
         [SerializeField] private float mouseSensitivity = 0.12f;
+        [SerializeField, Min(0f)] private float cameraSpeedMultiplayer = 0.5f;
         [SerializeField] private float stickSensitivity = 120f;
         [SerializeField] private float minPitch = -35f;
         [SerializeField] private float maxPitch = 70f;
-        [SerializeField, Range(0f, 1f)] private float alternativeUseSensitivityMultiplier = 0.35f;
 
         private float yaw;
         private float pitch;
         private InputAction resolvedLookAction;
         private InputAction resolvedAlternativeUseAction;
         private bool isPointerLookInput;
+        private float drawingSensitivity;
 
         private void Awake()
         {
+            mouseSensitivity = GameSettings.GetMouseSensitivity();
+            drawingSensitivity = GameSettings.GetDrawingSensitivity();
+
             if (aimTarget == null)
             {
                 aimTarget = transform;
@@ -49,6 +55,8 @@ namespace RPGame.Player
 
         private void OnEnable()
         {
+            GameSettings.MouseSensitivityChanged += SetMouseSensitivity;
+            GameSettings.DrawingSensitivityChanged += SetDrawingSensitivity;
             ResolveInputActions();
             EnableAction(resolvedLookAction);
             EnableAction(resolvedAlternativeUseAction);
@@ -61,6 +69,9 @@ namespace RPGame.Player
 
         private void OnDisable()
         {
+            GameSettings.MouseSensitivityChanged -= SetMouseSensitivity;
+            GameSettings.DrawingSensitivityChanged -= SetDrawingSensitivity;
+
             if (resolvedLookAction != null)
             {
                 resolvedLookAction.performed -= OnLookPerformed;
@@ -72,7 +83,7 @@ namespace RPGame.Player
 
         private void Update()
         {
-            if (aimTarget == null)
+            if (GameplayInputBlocker.IsBlocked || aimTarget == null)
             {
                 return;
             }
@@ -90,23 +101,26 @@ namespace RPGame.Player
             if (resolvedLookAction != null)
             {
                 Vector2 lookInput = resolvedLookAction.ReadValue<Vector2>();
-                float sensitivityMultiplier = IsAlternativeUsePressed() ? alternativeUseSensitivityMultiplier : 1f;
+                bool isAlternativeUsePressed = IsAlternativeUsePressed();
                 return isPointerLookInput
-                    ? lookInput * mouseSensitivity * sensitivityMultiplier
-                    : lookInput * stickSensitivity * sensitivityMultiplier * Time.deltaTime;
+                    ? lookInput * mouseSensitivity * cameraSpeedMultiplayer * GetDrawingSensitivityMultiplier(isAlternativeUsePressed)
+                    : lookInput * stickSensitivity * GetGamepadSensitivityMultiplier(isAlternativeUsePressed) * Time.deltaTime;
             }
 
             Vector2 delta = Vector2.zero;
-            float fallbackSensitivityMultiplier = IsAlternativeUsePressed() ? alternativeUseSensitivityMultiplier : 1f;
+            bool isFallbackAlternativeUsePressed = IsAlternativeUsePressed();
 
             if (Mouse.current != null)
             {
-                delta += Mouse.current.delta.ReadValue() * mouseSensitivity * fallbackSensitivityMultiplier;
+                delta += Mouse.current.delta.ReadValue()
+                    * mouseSensitivity
+                    * cameraSpeedMultiplayer
+                    * GetDrawingSensitivityMultiplier(isFallbackAlternativeUsePressed);
             }
 
             if (Gamepad.current != null)
             {
-                delta += Gamepad.current.rightStick.ReadValue() * stickSensitivity * fallbackSensitivityMultiplier * Time.deltaTime;
+                delta += Gamepad.current.rightStick.ReadValue() * stickSensitivity * GetGamepadSensitivityMultiplier(isFallbackAlternativeUsePressed) * Time.deltaTime;
             }
 
             return delta;
@@ -116,6 +130,26 @@ namespace RPGame.Player
         {
             InputDevice device = context.control.device;
             isPointerLookInput = device is Mouse || device is Pointer || device is Touchscreen;
+        }
+
+        private void SetMouseSensitivity(float value)
+        {
+            mouseSensitivity = value;
+        }
+
+        private void SetDrawingSensitivity(float value)
+        {
+            drawingSensitivity = value;
+        }
+
+        private float GetDrawingSensitivityMultiplier(bool isAlternativeUsePressed)
+        {
+            return isAlternativeUsePressed ? drawingSensitivity : 1f;
+        }
+
+        private float GetGamepadSensitivityMultiplier(bool isAlternativeUsePressed)
+        {
+            return isAlternativeUsePressed ? cameraSpeedMultiplayer : 1f;
         }
 
         private void ResolveInputActions()
@@ -183,10 +217,10 @@ namespace RPGame.Player
             }
 
             mouseSensitivity = Mathf.Max(0f, mouseSensitivity);
+            cameraSpeedMultiplayer = Mathf.Max(0f, cameraSpeedMultiplayer);
             stickSensitivity = Mathf.Max(0f, stickSensitivity);
             minPitch = Mathf.Clamp(minPitch, -89f, 89f);
             maxPitch = Mathf.Clamp(maxPitch, minPitch, 89f);
-            alternativeUseSensitivityMultiplier = Mathf.Clamp01(alternativeUseSensitivityMultiplier);
         }
     }
 }

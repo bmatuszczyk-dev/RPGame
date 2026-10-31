@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using RPGame.Core;
+using RPGame.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -13,7 +15,7 @@ namespace RPGame.UI.PlayerWindows
 
         private void Update()
         {
-            if (Keyboard.current == null)
+            if (GameplayInputBlocker.IsBlocked || Keyboard.current == null)
             {
                 return;
             }
@@ -33,7 +35,7 @@ namespace RPGame.UI.PlayerWindows
         {
             if (rootWindow != null)
             {
-                rootWindow.SetActive(false);
+                SetRootWindowVisible(false);
             }
         }
 
@@ -44,9 +46,7 @@ namespace RPGame.UI.PlayerWindows
                 return;
             }
 
-            GameObject targetRoot = rootWindow;
-            bool nextState = !targetRoot.activeSelf;
-            targetRoot.SetActive(nextState);
+            SetRootWindowVisible(!rootWindow.activeSelf);
         }
 
         public void ShowWindow(GameObject window)
@@ -59,6 +59,18 @@ namespace RPGame.UI.PlayerWindows
                     currentWindow.SetActive(currentWindow == window);
                 }
             }
+        }
+
+        private void SetRootWindowVisible(bool visible)
+        {
+            rootWindow.SetActive(visible);
+            if (visible)
+            {
+                CursorController.ShowMenuCursor();
+                return;
+            }
+
+            CursorController.ShowGameplayCursor();
         }
     }
 }

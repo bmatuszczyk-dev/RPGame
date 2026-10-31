@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using RPGame.Encounter;
+using RPGame.UI;
 using RPGame.UI.Leaderboard;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -15,10 +16,11 @@ namespace RPGame.UI.Encounter
         [SerializeField] private TMP_Text finalScoreText;
         [SerializeField] private TMP_Text reachedWaveText;
         [SerializeField] private Button restartButton;
+        [SerializeField] private Button returnToMenuButton;
         [SerializeField] private Button scoreboardButton;
         [SerializeField] private LeaderboardScreen leaderboardScreen;
 
-        private Action<int> loadScene = sceneBuildIndex => SceneManager.LoadScene(sceneBuildIndex);
+        private Action<int> loadScene = sceneBuildIndex => GameFlow.RestartGameplayScene(sceneBuildIndex);
         private bool hasDisplayedEnd;
 
         private void Start()
@@ -41,6 +43,11 @@ namespace RPGame.UI.Encounter
                 scoreboardButton.onClick.AddListener(ShowScoreboard);
             }
 
+            if (returnToMenuButton != null)
+            {
+                returnToMenuButton.onClick.RemoveListener(ReturnToMainMenu);
+                returnToMenuButton.onClick.AddListener(ReturnToMainMenu);
+            }
         }
 
         private void OnDisable()
@@ -53,6 +60,11 @@ namespace RPGame.UI.Encounter
             if (scoreboardButton != null)
             {
                 scoreboardButton.onClick.RemoveListener(ShowScoreboard);
+            }
+
+            if (returnToMenuButton != null)
+            {
+                returnToMenuButton.onClick.RemoveListener(ReturnToMainMenu);
             }
 
         }
@@ -75,6 +87,7 @@ namespace RPGame.UI.Encounter
 
             SetPanelVisible(true);
             leaderboardScreen?.Close();
+            GameFlow.ShowMenuCursor();
 
             ScoreSystem scoreSystem = runtime.ScoreSystem;
             if (finalScoreText != null && scoreSystem != null)
@@ -93,6 +106,11 @@ namespace RPGame.UI.Encounter
         public void RestartCurrentScene()
         {
             loadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+
+        private void ReturnToMainMenu()
+        {
+            GameFlow.LoadMainMenu();
         }
 
         private void ShowScoreboard()
