@@ -3,6 +3,7 @@ using NUnit.Framework;
 using RPGame.Combat.Damage;
 using RPGame.Combat.Spells;
 using RPGame.Core.Damage;
+using RPGame.Core.Effects;
 using RPGame.Core.Spells;
 using RPGame.Core.Statistics;
 using RPGame.Core.Statuses;
@@ -149,6 +150,78 @@ namespace RPGame.Combat.Tests
             Assert.AreEqual(0.5f, statusReceiver.GetFirstStatus(suppressionStatus).Value, 0.0001f);
         }
 
+        [Test]
+        public void DeepSuppression_ExtendsSuppressionDuration()
+        {
+            EffectAggregator aggregator = CreateEffectAggregator(
+                suppressionDuration: 3f,
+                suppressionDurationBonus: 2f,
+                includeSuppression: true);
+
+            SuppressionBehavior suppression = GetSuppressionBehavior(
+                aggregator.CreateRuntimeBehaviors(CreateEarthZoneSpell(), caster));
+
+            Assert.AreEqual(5f, suppression.SuppressionDuration, 0.0001f);
+        }
+
+        [Test]
+        public void DeepSuppression_WithoutSuppression_DoesNotApplyOrConsumeMark()
+        {
+            EffectAggregator aggregator = CreateEffectAggregator(
+                suppressionDuration: 3f,
+                suppressionDurationBonus: 2f,
+                includeSuppression: false);
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors =
+                aggregator.CreateRuntimeBehaviors(CreateEarthZoneSpell(), caster);
+            ApplyMark();
+
+            ResolveSuppression(runtimeBehaviors: behaviors);
+
+            Assert.AreEqual(0, behaviors.Count);
+            Assert.IsTrue(statusReceiver.HasStatus(markDefinition));
+            Assert.IsFalse(statusReceiver.HasStatus(suppressionStatus));
+        }
+
+        [Test]
+        public void DeepSuppression_DoesNotCreateSecondSuppressionStatus()
+        {
+            EffectAggregator aggregator = CreateEffectAggregator(
+                suppressionDuration: 3f,
+                suppressionDurationBonus: 2f,
+                includeSuppression: true);
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors =
+                aggregator.CreateRuntimeBehaviors(CreateEarthZoneSpell(), caster);
+            ApplyMark();
+
+            ResolveSuppression(runtimeBehaviors: behaviors);
+
+            Assert.AreEqual(1, CountSuppressionBehaviors(behaviors));
+            Assert.AreEqual(1, statusReceiver.CountStatusInstances(suppressionStatus));
+            Assert.AreEqual(
+                5f,
+                statusReceiver.GetFirstStatus(suppressionStatus).RemainingDuration,
+                0.0001f);
+        }
+
+        [Test]
+        public void DeepSuppression_IsolatedBetweenRuntimeBehaviorCreations()
+        {
+            EffectAggregator aggregator = CreateEffectAggregator(
+                suppressionDuration: 3f,
+                suppressionDurationBonus: 2f,
+                includeSuppression: true);
+            EarthZoneSpell earthZoneSpell = CreateEarthZoneSpell();
+
+            SuppressionBehavior first = GetSuppressionBehavior(
+                aggregator.CreateRuntimeBehaviors(earthZoneSpell, caster));
+            SuppressionBehavior second = GetSuppressionBehavior(
+                aggregator.CreateRuntimeBehaviors(earthZoneSpell, caster));
+
+            Assert.AreNotSame(first, second);
+            Assert.AreEqual(5f, first.SuppressionDuration, 0.0001f);
+            Assert.AreEqual(5f, second.SuppressionDuration, 0.0001f);
+        }
+
         private void ApplyMark()
         {
             statusReceiver.ApplyStatus(
@@ -178,6 +251,89 @@ namespace RPGame.Combat.Tests
                 casterData,
                 suppressedTarget,
                 new SuccessfulResolveBehavior());
+        }
+
+        private EffectAggregator CreateEffectAggregator(
+            float suppressionDuration,
+            float suppressionDurationBonus,
+            bool includeSuppression)
+        {
+            EffectAggregator aggregator = caster.AddComponent<EffectAggregator>();
+            DeepSuppressionEffectDefinition deepSuppression =
+                ScriptableObject.CreateInstance<DeepSuppressionEffectDefinition>();
+            createdObjects.Add(deepSuppression);
+            SetSuppressionDurationBonus(deepSuppression, suppressionDurationBonus);
+            aggregator.Add(deepSuppression);
+
+            if (includeSuppression)
+            {
+                RuntimeBehaviorEffectDefinition suppressionEffect =
+                    ScriptableObject.CreateInstance<RuntimeBehaviorEffectDefinition>();
+                createdObjects.Add(suppressionEffect);
+                SetBehavior(
+                    suppressionEffect,
+                    new SuppressionBehavior(
+                        markDefinition,
+                        suppressionStatus,
+                        suppressionDuration));
+                aggregator.Add(suppressionEffect);
+            }
+
+            return aggregator;
+        }
+
+        private EarthZoneSpell CreateEarthZoneSpell()
+        {
+            EarthZoneSpell spell = ScriptableObject.CreateInstance<EarthZoneSpell>();
+            createdObjects.Add(spell);
+            return spell;
+        }
+
+        private static SuppressionBehavior GetSuppressionBehavior(
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors)
+        {
+            for (int i = 0; i < behaviors.Count; i++)
+            {
+                if (behaviors[i] is SuppressionBehavior suppression)
+                {
+                    return suppression;
+                }
+            }
+
+            return null;
+        }
+
+        private static int CountSuppressionBehaviors(
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors)
+        {
+            int count = 0;
+            for (int i = 0; i < behaviors.Count; i++)
+            {
+                if (behaviors[i] is SuppressionBehavior)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private static void SetBehavior(
+            RuntimeBehaviorEffectDefinition target,
+            IRuntimeSpellBehavior behavior)
+        {
+            SerializedObject serializedEffect = new(target);
+            serializedEffect.FindProperty("behavior").managedReferenceValue = behavior;
+            serializedEffect.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void SetSuppressionDurationBonus(
+            DeepSuppressionEffectDefinition target,
+            float value)
+        {
+            SerializedObject serializedEffect = new(target);
+            serializedEffect.FindProperty("suppressionDurationBonus").floatValue = value;
+            serializedEffect.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private DamageReceiver CreateDamageReceiver(GameObject target, float maxHealth)

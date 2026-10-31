@@ -32,6 +32,11 @@ namespace RPGame.Combat.Spells
         public SpellBehaviorPhase Phase => SpellBehaviorPhase.PostResolve;
         public float SuppressionDuration => suppressionDuration;
 
+        public void AddSuppressionDuration(float durationBonus)
+        {
+            suppressionDuration = Mathf.Max(0f, suppressionDuration + Mathf.Max(0f, durationBonus));
+        }
+
         public bool Supports(Spell spell)
         {
             return spell is EarthZoneSpell
