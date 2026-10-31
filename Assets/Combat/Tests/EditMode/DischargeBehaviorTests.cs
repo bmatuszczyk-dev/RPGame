@@ -4,9 +4,11 @@ using System.Reflection;
 using NUnit.Framework;
 using RPGame.Combat.Spells;
 using RPGame.Core.Damage;
+using RPGame.Core.Effects;
 using RPGame.Core.Spells;
 using RPGame.Core.Statistics.Attributes;
 using RPGame.Core.Statuses;
+using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -134,6 +136,97 @@ namespace RPGame.Combat.Tests
             Assert.IsFalse(behavior.Supports(earthZone));
         }
 
+        [Test]
+        public void Overcharge_IncreasesDischargeDamageByTwentyFivePercent()
+        {
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors = CreateOverchargedDischargeBehaviors(
+                baseDamage: 10f,
+                powerScaling: 0.15f,
+                damageBonus: 0.25f,
+                includeDischarge: true);
+            ApplyMark();
+
+            ResolveDischarge(runtimeBehaviors: behaviors);
+
+            Assert.AreEqual(12.5f, targetDamageable.Results[0].AppliedAmount, 0.0001f);
+        }
+
+        [Test]
+        public void Overcharge_ScalesDischargeDamageAfterPowerScaling()
+        {
+            casterAttributes.Power = 20;
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors = CreateOverchargedDischargeBehaviors(
+                baseDamage: 10f,
+                powerScaling: 0.15f,
+                damageBonus: 0.25f,
+                includeDischarge: true);
+            ApplyMark();
+
+            ResolveDischarge(runtimeBehaviors: behaviors);
+
+            Assert.AreEqual(16.25f, targetDamageable.Results[0].AppliedAmount, 0.0001f);
+        }
+
+        [Test]
+        public void Overcharge_WithoutDischarge_DoesNotConsumeMarkOrDealDamage()
+        {
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors = CreateOverchargedDischargeBehaviors(
+                baseDamage: 10f,
+                powerScaling: 0.15f,
+                damageBonus: 0.25f,
+                includeDischarge: false);
+            ApplyMark();
+
+            ResolveDischarge(runtimeBehaviors: behaviors);
+
+            Assert.AreEqual(0, behaviors.Count);
+            Assert.IsTrue(statusReceiver.HasStatus(markDefinition));
+            Assert.AreEqual(0, targetDamageable.Results.Count);
+        }
+
+        [Test]
+        public void Overcharge_DoesNotConsumeAnAdditionalMark()
+        {
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors = CreateOverchargedDischargeBehaviors(
+                baseDamage: 10f,
+                powerScaling: 0.15f,
+                damageBonus: 0.25f,
+                includeDischarge: true);
+            ApplyMark();
+
+            ResolveDischarge(runtimeBehaviors: behaviors);
+
+            Assert.AreEqual(1, CountDischargeBehaviors(behaviors));
+            Assert.IsFalse(statusReceiver.HasStatus(markDefinition));
+            Assert.AreEqual(1, targetDamageable.Results.Count);
+        }
+
+        [Test]
+        public void Overcharge_IsolatedBetweenRuntimeBehaviorCreations()
+        {
+            EffectAggregator aggregator = CreateOverchargedDischargeAggregator(
+                baseDamage: 10f,
+                powerScaling: 0.15f,
+                damageBonus: 0.25f,
+                includeDischarge: true);
+            LightningZoneSpell lightningZoneSpell = CreateLightningZoneSpell();
+            IReadOnlyList<IRuntimeSpellBehavior> first =
+                aggregator.CreateRuntimeBehaviors(lightningZoneSpell, caster);
+            IReadOnlyList<IRuntimeSpellBehavior> second =
+                aggregator.CreateRuntimeBehaviors(lightningZoneSpell, caster);
+            ApplyMark();
+
+            ResolveDischarge(runtimeBehaviors: first);
+            Assert.AreEqual(12.5f, targetDamageable.Results[0].AppliedAmount, 0.0001f);
+            targetDamageable.SetHealth(100f);
+            ApplyMark();
+
+            ResolveDischarge(runtimeBehaviors: second);
+
+            Assert.AreNotSame(GetDischargeBehavior(first), GetDischargeBehavior(second));
+            Assert.AreEqual(12.5f, targetDamageable.Results[0].AppliedAmount, 0.0001f);
+        }
+
         private void ApplyMark()
         {
             statusReceiver.ApplyStatus(
@@ -161,6 +254,101 @@ namespace RPGame.Combat.Tests
                 casterData,
                 target,
                 new StunResolveBehavior(resolveSucceeds));
+        }
+
+        private IReadOnlyList<IRuntimeSpellBehavior> CreateOverchargedDischargeBehaviors(
+            float baseDamage,
+            float powerScaling,
+            float damageBonus,
+            bool includeDischarge)
+        {
+            EffectAggregator aggregator = CreateOverchargedDischargeAggregator(
+                baseDamage,
+                powerScaling,
+                damageBonus,
+                includeDischarge);
+            return aggregator.CreateRuntimeBehaviors(CreateLightningZoneSpell(), caster);
+        }
+
+        private EffectAggregator CreateOverchargedDischargeAggregator(
+            float baseDamage,
+            float powerScaling,
+            float damageBonus,
+            bool includeDischarge)
+        {
+            EffectAggregator aggregator = caster.AddComponent<EffectAggregator>();
+            OverchargeEffectDefinition overcharge =
+                ScriptableObject.CreateInstance<OverchargeEffectDefinition>();
+            createdObjects.Add(overcharge);
+            SetOverchargeBonus(overcharge, damageBonus);
+            aggregator.Add(overcharge);
+
+            if (includeDischarge)
+            {
+                RuntimeBehaviorEffectDefinition discharge =
+                    ScriptableObject.CreateInstance<RuntimeBehaviorEffectDefinition>();
+                createdObjects.Add(discharge);
+                SetBehavior(
+                    discharge,
+                    new DischargeBehavior(markDefinition, baseDamage, powerScaling, caster));
+                aggregator.Add(discharge);
+            }
+
+            return aggregator;
+        }
+
+        private LightningZoneSpell CreateLightningZoneSpell()
+        {
+            LightningZoneSpell spell = ScriptableObject.CreateInstance<LightningZoneSpell>();
+            createdObjects.Add(spell);
+            return spell;
+        }
+
+        private static DischargeBehavior GetDischargeBehavior(
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors)
+        {
+            for (int i = 0; i < behaviors.Count; i++)
+            {
+                if (behaviors[i] is DischargeBehavior discharge)
+                {
+                    return discharge;
+                }
+            }
+
+            return null;
+        }
+
+        private static int CountDischargeBehaviors(
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors)
+        {
+            int count = 0;
+            for (int i = 0; i < behaviors.Count; i++)
+            {
+                if (behaviors[i] is DischargeBehavior)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private static void SetBehavior(
+            RuntimeBehaviorEffectDefinition target,
+            IRuntimeSpellBehavior behavior)
+        {
+            SerializedObject serializedEffect = new(target);
+            serializedEffect.FindProperty("behavior").managedReferenceValue = behavior;
+            serializedEffect.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void SetOverchargeBonus(
+            OverchargeEffectDefinition target,
+            float damageBonus)
+        {
+            SerializedObject serializedEffect = new(target);
+            serializedEffect.FindProperty("damageBonus").floatValue = damageBonus;
+            serializedEffect.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private GameObject CreateGameObject(string objectName)

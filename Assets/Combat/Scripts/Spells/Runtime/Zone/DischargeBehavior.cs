@@ -18,6 +18,7 @@ namespace RPGame.Combat.Spells
         [SerializeField, Min(0f)] private float powerScaling = 0.15f;
 
         [NonSerialized] private ICharacterAttributes casterAttributes;
+        [NonSerialized] private float damageMultiplier = 1f;
 
         public DischargeBehavior()
         {
@@ -42,6 +43,11 @@ namespace RPGame.Combat.Spells
             baseDamage = Mathf.Max(0f, baseDamage + Mathf.Max(0f, damageBonus));
         }
 
+        public void AddDamageMultiplierBonus(float bonus)
+        {
+            damageMultiplier = Mathf.Max(1f, damageMultiplier + Mathf.Max(0f, bonus));
+        }
+
         public bool Supports(Spell spell)
         {
             return spell is LightningZoneSpell && markDefinition != null;
@@ -54,6 +60,7 @@ namespace RPGame.Combat.Spells
                 : null;
             baseDamage = Mathf.Max(0f, baseDamage);
             powerScaling = Mathf.Max(0f, powerScaling);
+            damageMultiplier = Mathf.Max(1f, damageMultiplier);
         }
 
         public bool TryConsumeMark(SpellBehaviorContext context)
@@ -82,9 +89,9 @@ namespace RPGame.Combat.Spells
                 return;
             }
 
-            float damage = baseDamage + SpellDamageCalculator.CalculatePowerDamageBonus(
+            float damage = (baseDamage + SpellDamageCalculator.CalculatePowerDamageBonus(
                 casterAttributes != null ? casterAttributes.Power : 0,
-                powerScaling);
+                powerScaling)) * damageMultiplier;
             if (damage <= 0f)
             {
                 return;
