@@ -10,7 +10,7 @@ namespace RPGame.Core.Statuses
         [SerializeField] private float amount = 25f;
 
         public float Amount => Mathf.Max(0f, amount);
-        public override ReapplyPolicy ReapplyPolicy => ReapplyPolicy.Stack;
+        public override ReapplyPolicy ReapplyPolicy => ReapplyPolicy.Accumulate;
 
         public override bool CanApply(StatusTarget target)
         {

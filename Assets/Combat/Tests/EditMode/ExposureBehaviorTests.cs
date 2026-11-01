@@ -73,6 +73,7 @@ namespace RPGame.Combat.Tests
             ExecuteSlowZoneResolve(firstCaster);
 
             Assert.AreEqual(1, statusReceiver.CountStatusInstances(weaknessStatus));
+            Assert.AreEqual(1, GetWeakness().CurrentStacks);
             Assert.AreEqual(0.1f, GetWeakness().Value, 0.0001f);
         }
 
@@ -82,6 +83,7 @@ namespace RPGame.Combat.Tests
             ExecuteSlowZoneResolve(firstCaster);
             ExecuteSlowZoneResolve(firstCaster);
 
+            Assert.AreEqual(2, GetWeakness().CurrentStacks);
             Assert.AreEqual(0.2f, GetWeakness().Value, 0.0001f);
         }
 
@@ -93,6 +95,7 @@ namespace RPGame.Combat.Tests
             ExecuteSlowZoneResolve(firstCaster);
             ExecuteSlowZoneResolve(firstCaster);
 
+            Assert.AreEqual(3, GetWeakness().CurrentStacks);
             Assert.AreEqual(0.3f, GetWeakness().Value, 0.0001f);
         }
 
@@ -105,6 +108,38 @@ namespace RPGame.Combat.Tests
             ExecuteSlowZoneResolve(firstCaster, weaknessDuration: 5f);
 
             Assert.AreEqual(5f, GetWeakness().RemainingDuration, 0.0001f);
+        }
+
+        [Test]
+        public void Refresh_WeaknessDoesNotIncreaseStacks()
+        {
+            ExecuteSlowZoneResolve(firstCaster, weaknessDuration: 3f);
+            statusReceiver.Tick(1f);
+
+            statusReceiver.ApplyStatus(
+                weaknessStatus,
+                5f,
+                new StatusContext(
+                    new StatusSourceId(nameof(ExposureBehavior)),
+                    firstCaster,
+                    ReapplyPolicy.Refresh));
+
+            Assert.AreEqual(1, GetWeakness().CurrentStacks);
+            Assert.AreEqual(0.1f, GetWeakness().Value, 0.0001f);
+            Assert.AreEqual(5f, GetWeakness().RemainingDuration, 0.0001f);
+        }
+
+        [Test]
+        public void ExpiredWeakness_NewApplicationStartsWithOneStack()
+        {
+            ExecuteSlowZoneResolve(firstCaster, weaknessDuration: 1f);
+            ExecuteSlowZoneResolve(firstCaster, weaknessDuration: 1f);
+            statusReceiver.Tick(1f);
+
+            ExecuteSlowZoneResolve(firstCaster, weaknessDuration: 1f);
+
+            Assert.AreEqual(1, GetWeakness().CurrentStacks);
+            Assert.AreEqual(0.1f, GetWeakness().Value, 0.0001f);
         }
 
         [Test]

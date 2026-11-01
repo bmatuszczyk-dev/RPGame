@@ -75,14 +75,22 @@ namespace RPGame.Core.Statuses
             hasValueOverride = true;
         }
 
-        public void SetCurrentStacks(int currentStacks)
+        private void SetCurrentStacks(int currentStacks)
         {
             this.currentStacks = Mathf.Max(0, currentStacks);
         }
 
-        public void IncrementCurrentStacks(int maxStacks)
+        private void IncrementCurrentStacks(int maxStacks)
         {
             currentStacks = Mathf.Min(Mathf.Max(1, maxStacks), currentStacks + 1);
+        }
+
+        internal void IncrementCurrentStacks()
+        {
+            if (definition is IStackableStatus stackableStatus)
+            {
+                IncrementCurrentStacks(stackableStatus.MaxStacks);
+            }
         }
 
         public bool HasSameIdentity(StatusDefinition definition, StatusContext context)
@@ -99,31 +107,35 @@ namespace RPGame.Core.Statuses
                 && ReferenceEquals(this.definition, definition);
         }
 
-        public void Refresh(StatusTarget target, float duration)
+        public void Refresh(StatusTarget target, float duration, StatusContext context)
         {
             this.duration = Mathf.Max(0f, duration);
             remainingDuration = this.duration;
             remainingAmount = GetAmount(definition);
             LastLifecycleEvent = StatusLifecycleEvent.Refreshed;
-            definition?.OnRefresh(target, this);
+            definition?.OnRefresh(target, this, context);
         }
 
-        public void Stack(StatusTarget target, float incomingDuration)
+        public void Accumulate(StatusTarget target, float incomingDuration, StatusContext context)
         {
             float stackedDuration = Mathf.Max(0f, incomingDuration);
             duration += stackedDuration;
             remainingDuration += stackedDuration;
             remainingAmount += GetAmount(definition);
             LastLifecycleEvent = StatusLifecycleEvent.Refreshed;
-            definition?.OnRefresh(target, this);
+            definition?.OnRefresh(target, this, context);
         }
 
-        public void StackAndRefresh(StatusTarget target, float incomingDuration)
+        public void StackAndRefresh(StatusTarget target, float incomingDuration, StatusContext context)
         {
-            Refresh(target, incomingDuration);
+            IncrementCurrentStacks();
+            Refresh(target, incomingDuration, context);
         }
 
-        public void KeepLongerDuration(StatusTarget target, float incomingDuration)
+        public void KeepLongerDuration(
+            StatusTarget target,
+            float incomingDuration,
+            StatusContext context)
         {
             float refreshedDuration = Mathf.Max(0f, incomingDuration);
             if (refreshedDuration <= remainingDuration)
@@ -135,7 +147,7 @@ namespace RPGame.Core.Statuses
             remainingDuration = refreshedDuration;
             remainingAmount = GetAmount(definition);
             LastLifecycleEvent = StatusLifecycleEvent.Refreshed;
-            definition?.OnRefresh(target, this);
+            definition?.OnRefresh(target, this, context);
         }
 
         public void Apply(StatusTarget target)
@@ -147,6 +159,11 @@ namespace RPGame.Core.Statuses
 
             wasApplied = true;
             LastLifecycleEvent = StatusLifecycleEvent.Applied;
+            if (definition is IStackableStatus)
+            {
+                SetCurrentStacks(1);
+            }
+
             definition.OnApply(target, this);
         }
 
@@ -216,11 +233,28 @@ namespace RPGame.Core.Statuses
 
         private void TickPeriodicStatus(StatusTarget target, float deltaTime)
         {
-            if (definition is not IPeriodicStatus periodicStatus || deltaTime <= 0f)
+            if (deltaTime <= 0f)
             {
                 return;
             }
 
+            if (definition is IStackablePeriodicStatus stackablePeriodicStatus)
+            {
+                TickPeriodicStatus(target, stackablePeriodicStatus, deltaTime);
+                return;
+            }
+
+            if (definition is IPeriodicStatus periodicStatus)
+            {
+                TickPeriodicStatus(target, periodicStatus, deltaTime);
+            }
+        }
+
+        private void TickPeriodicStatus(
+            StatusTarget target,
+            IPeriodicStatus periodicStatus,
+            float deltaTime)
+        {
             float tickInterval = periodicStatus.TickInterval;
             if (tickInterval <= 0f)
             {
@@ -231,6 +265,25 @@ namespace RPGame.Core.Statuses
             while (periodicTickTimer >= tickInterval)
             {
                 periodicStatus.Tick(target);
+                periodicTickTimer -= tickInterval;
+            }
+        }
+
+        private void TickPeriodicStatus(
+            StatusTarget target,
+            IStackablePeriodicStatus periodicStatus,
+            float deltaTime)
+        {
+            float tickInterval = periodicStatus.TickInterval;
+            if (tickInterval <= 0f)
+            {
+                return;
+            }
+
+            periodicTickTimer += deltaTime;
+            while (periodicTickTimer >= tickInterval)
+            {
+                periodicStatus.Tick(target, currentStacks);
                 periodicTickTimer -= tickInterval;
             }
         }

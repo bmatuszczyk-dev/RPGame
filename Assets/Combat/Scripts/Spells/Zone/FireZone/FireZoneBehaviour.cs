@@ -34,12 +34,14 @@ namespace RPGame.Combat.Spells
                 return false;
             }
 
-            return target.ApplyStatus(
+            StatusContext context = new(
+                new StatusSourceId(nameof(FireZoneBehaviour)),
+                StatusSource);
+            context = StatusApplicationModifierResolver.Apply(
+                CasterData.RuntimeBehaviors,
                 burningStatus,
-                burningDuration,
-                new StatusContext(
-                    new StatusSourceId(nameof(FireZoneBehaviour)),
-                    StatusSource));
+                context);
+            return target.ApplyStatus(burningStatus, burningDuration, context);
         }
 
         private void OnValidate()

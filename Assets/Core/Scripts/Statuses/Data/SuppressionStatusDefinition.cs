@@ -16,7 +16,10 @@ namespace RPGame.Core.Statuses
             instance.SetValue(DamageReductionPercent);
         }
 
-        public override void OnRefresh(StatusTarget target, StatusInstance instance)
+        public override void OnRefresh(
+            StatusTarget target,
+            StatusInstance instance,
+            StatusContext context)
         {
             instance.SetValue(DamageReductionPercent);
         }

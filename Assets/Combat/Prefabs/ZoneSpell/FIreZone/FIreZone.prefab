@@ -9759,7 +9759,7 @@ MonoBehaviour:
     matchZoneRadius: 1
     radiusMultiplier: 1
   burningEffect: {fileID: 11400000, guid: 01444cb7e404bcb4ab30c5f88ef04e76, type: 2}
-  burningDuration: 5
+  burningDuration: 3
   reapplyInterval: 0.5
 --- !u!135 &7196468169943880901
 SphereCollider:

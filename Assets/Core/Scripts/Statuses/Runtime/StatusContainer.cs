@@ -36,22 +36,18 @@ namespace RPGame.Core.Statuses
             }
 
             StatusInstance existingInstance = FindMatchingInstance(definition, context);
-            if (existingInstance != null)
-            {
-                ApplyExistingInstance(definition, existingInstance, duration, context);
-                StatusUpdated?.Invoke(existingInstance);
-                return true;
-            }
-
-            if (definition.ConcurrentStatusPolicy == ConcurrentStatusPolicy.SingleInstance)
+            bool hasMatchingIdentity = existingInstance != null;
+            if (existingInstance == null
+                && definition.ConcurrentStatusPolicy == ConcurrentStatusPolicy.SingleInstance)
             {
                 existingInstance = FindInstance(definition);
-                if (existingInstance != null)
-                {
-                    ApplySingleInstance(definition, existingInstance, duration, context);
-                    StatusUpdated?.Invoke(existingInstance);
-                    return true;
-                }
+            }
+
+            if (existingInstance != null)
+            {
+                ReapplyExisting(definition, existingInstance, duration, context, hasMatchingIdentity);
+                StatusUpdated?.Invoke(existingInstance);
+                return true;
             }
 
             if (!instance.IsFinished)
@@ -64,12 +60,22 @@ namespace RPGame.Core.Statuses
             return true;
         }
 
-        private void ApplyExistingInstance(
+        private void ReapplyExisting(
             StatusDefinition definition,
             StatusInstance existingInstance,
             float duration,
-            StatusContext context)
+            StatusContext context,
+            bool hasMatchingIdentity)
         {
+            if (!hasMatchingIdentity
+                && definition.ConcurrentStatusPolicy == ConcurrentStatusPolicy.SingleInstance
+                && !context.ReapplyPolicyOverride.HasValue
+                && definition.UsesCustomSingleInstanceReapply)
+            {
+                definition.ApplySingleInstanceReapply(target, existingInstance, duration, context);
+                return;
+            }
+
             ReapplyPolicy reapplyPolicy =
                 context.ReapplyPolicyOverride ?? definition.ReapplyPolicy;
             if (reapplyPolicy != ReapplyPolicy.Ignore)
@@ -77,31 +83,7 @@ namespace RPGame.Core.Statuses
                 existingInstance.ApplyValueOverride(context);
             }
 
-            ApplyReapplyPolicy(reapplyPolicy, existingInstance, duration);
-        }
-
-        private void ApplySingleInstance(
-            StatusDefinition definition,
-            StatusInstance existingInstance,
-            float duration,
-            StatusContext context)
-        {
-            if (context.ReapplyPolicyOverride.HasValue)
-            {
-                if (context.ReapplyPolicyOverride.Value != ReapplyPolicy.Ignore)
-                {
-                    existingInstance.ApplyValueOverride(context);
-                }
-
-                ApplyReapplyPolicy(
-                    context.ReapplyPolicyOverride.Value,
-                    existingInstance,
-                    duration);
-                return;
-            }
-
-            existingInstance.ApplyValueOverride(context);
-            definition.ApplySingleInstanceReapply(target, existingInstance, duration, context);
+            ApplyReapplyPolicy(reapplyPolicy, existingInstance, duration, context);
         }
 
         public bool HasStatus(StatusDefinition definition)
@@ -190,20 +172,21 @@ namespace RPGame.Core.Statuses
         private void ApplyReapplyPolicy(
             ReapplyPolicy reapplyPolicy,
             StatusInstance existingInstance,
-            float duration)
+            float duration,
+            StatusContext context)
         {
             switch (reapplyPolicy)
             {
                 case ReapplyPolicy.Refresh:
-                    existingInstance.Refresh(target, duration);
+                    existingInstance.Refresh(target, duration, context);
                     break;
                 case ReapplyPolicy.Ignore:
                     break;
-                case ReapplyPolicy.Stack:
-                    existingInstance.Stack(target, duration);
+                case ReapplyPolicy.Accumulate:
+                    existingInstance.Accumulate(target, duration, context);
                     break;
                 case ReapplyPolicy.StackAndRefresh:
-                    existingInstance.StackAndRefresh(target, duration);
+                    existingInstance.StackAndRefresh(target, duration, context);
                     break;
             }
         }

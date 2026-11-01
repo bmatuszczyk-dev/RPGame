@@ -103,12 +103,35 @@ namespace RPGame.Core.Tests.Statuses
         }
 
         [Test]
+        public void StackAndRefresh_IncrementsOnlyStackableStatusesAndRespectsTheirLimit()
+        {
+            TestStackableStatusDefinition definition =
+                ScriptableObject.CreateInstance<TestStackableStatusDefinition>();
+            StatusContainer container = new(target);
+            StatusContext context = new(new StatusSourceId("Stackable"), firstSource);
+
+            container.Add(definition, 2f, context);
+            container.Tick(1f);
+            container.Add(definition, 3f, context.WithReapplyPolicyOverride(ReapplyPolicy.Refresh));
+
+            Assert.AreEqual(1, container.GetFirstStatus(definition).CurrentStacks);
+            Assert.AreEqual(3f, container.GetFirstStatus(definition).RemainingDuration, 0.0001f);
+
+            container.Add(definition, 3f, context.WithReapplyPolicyOverride(ReapplyPolicy.StackAndRefresh));
+            container.Add(definition, 3f, context.WithReapplyPolicyOverride(ReapplyPolicy.StackAndRefresh));
+
+            Assert.AreEqual(2, container.GetFirstStatus(definition).CurrentStacks);
+            Assert.AreEqual(3f, container.GetFirstStatus(definition).RemainingDuration, 0.0001f);
+            Object.DestroyImmediate(definition);
+        }
+
+        [Test]
         public void RestoreResourceStatus_UsesStackReapplyPolicy()
         {
             RestoreHealthStatusDefinition definition =
                 ScriptableObject.CreateInstance<RestoreHealthStatusDefinition>();
 
-            Assert.AreEqual(ReapplyPolicy.Stack, definition.ReapplyPolicy);
+            Assert.AreEqual(ReapplyPolicy.Accumulate, definition.ReapplyPolicy);
             Assert.AreEqual(ConcurrentStatusPolicy.SingleInstance, definition.ConcurrentStatusPolicy);
             Object.DestroyImmediate(definition);
         }
@@ -201,7 +224,7 @@ namespace RPGame.Core.Tests.Statuses
                 new StatusContext(
                     new StatusSourceId("HeavyConcussion"),
                     firstSource,
-                    ReapplyPolicy.Stack));
+                    ReapplyPolicy.Accumulate));
 
             Assert.AreEqual(1, container.CountStatusInstances(stun));
             Assert.AreEqual(5f, container.GetFirstStatus(stun).RemainingDuration, 0.0001f);
@@ -237,6 +260,89 @@ namespace RPGame.Core.Tests.Statuses
             Assert.AreEqual(15f, damageable.TotalDamage, 0.0001f);
             Object.DestroyImmediate(burn5);
             Object.DestroyImmediate(burn10);
+        }
+
+        [Test]
+        public void Burn_FirstApplicationStartsAtIntensityOne()
+        {
+            BurningStatusDefinition burn = CreateBurningStatus(1.5f);
+            StatusContainer container = new(new StatusTarget(null, null, damageable));
+
+            container.Add(burn, 3f, new StatusContext(new StatusSourceId("FireZone"), firstSource));
+
+            Assert.AreEqual(1, container.Statuses.Count);
+            Assert.AreEqual(1, container.GetFirstStatus(burn).CurrentStacks);
+            Object.DestroyImmediate(burn);
+        }
+
+        [Test]
+        public void Burn_ReapplyWithoutIntensify_OnlyRefreshesDuration()
+        {
+            BurningStatusDefinition burn = CreateBurningStatus(1.5f);
+            StatusContainer container = new(new StatusTarget(null, null, damageable));
+            StatusContext context = new(new StatusSourceId("FireZone"), firstSource);
+
+            container.Add(burn, 3f, context);
+            container.Tick(1f);
+            container.Add(burn, 3f, context);
+
+            Assert.AreEqual(1, container.GetFirstStatus(burn).CurrentStacks);
+            Assert.AreEqual(3f, container.GetFirstStatus(burn).RemainingDuration, 0.0001f);
+            Object.DestroyImmediate(burn);
+        }
+
+        [Test]
+        public void Burn_IntensifyStacksToFiveAndScalesPeriodicDamage()
+        {
+            BurningStatusDefinition burn = CreateBurningStatus(1.5f);
+            StatusContainer container = new(new StatusTarget(null, null, damageable));
+
+            container.Add(burn, 3f, new StatusContext(new StatusSourceId("FireZone"), firstSource));
+            for (int i = 0; i < 5; i++)
+            {
+                container.Add(
+                    burn,
+                    3f,
+                    new StatusContext(
+                        new StatusSourceId("FireZone"),
+                        secondSource,
+                        ReapplyPolicy.StackAndRefresh));
+            }
+
+            container.Tick(1f);
+
+            Assert.AreEqual(1, container.Statuses.Count);
+            Assert.AreEqual(5, container.GetFirstStatus(burn).CurrentStacks);
+            Assert.AreEqual(7.5f, damageable.TotalDamage, 0.0001f);
+            Object.DestroyImmediate(burn);
+        }
+
+        [Test]
+        public void Burn_AtMaximumIntensity_RefreshesAndExpiresBeforeNewApplication()
+        {
+            BurningStatusDefinition burn = CreateBurningStatus(1.5f);
+            StatusContainer container = new(new StatusTarget(null, null, damageable));
+            StatusContext intensified = new(
+                new StatusSourceId("FireZone"),
+                firstSource,
+                ReapplyPolicy.StackAndRefresh);
+
+            container.Add(burn, 3f, intensified);
+            for (int i = 0; i < 5; i++)
+            {
+                container.Add(burn, 3f, intensified);
+            }
+
+            container.Tick(1f);
+            container.Add(burn, 3f, intensified);
+            Assert.AreEqual(5, container.GetFirstStatus(burn).CurrentStacks);
+            Assert.AreEqual(3f, container.GetFirstStatus(burn).RemainingDuration, 0.0001f);
+
+            container.Tick(3f);
+            Assert.IsFalse(container.HasStatus(burn));
+            container.Add(burn, 3f, intensified);
+            Assert.AreEqual(1, container.GetFirstStatus(burn).CurrentStacks);
+            Object.DestroyImmediate(burn);
         }
 
         [Test]
@@ -301,11 +407,11 @@ namespace RPGame.Core.Tests.Statuses
             return definition;
         }
 
-        private static BurningStatusDefinition CreateBurningStatus(float amount)
+        private static BurningStatusDefinition CreateBurningStatus(float damagePerSecond)
         {
             BurningStatusDefinition definition = ScriptableObject.CreateInstance<BurningStatusDefinition>();
             SerializedObject serializedDefinition = new(definition);
-            serializedDefinition.FindProperty("amountPerInterval").floatValue = amount;
+            serializedDefinition.FindProperty("baseDamagePerSecond").floatValue = damagePerSecond;
             serializedDefinition.FindProperty("tickInterval").floatValue = 1f;
             serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
             return definition;
@@ -380,7 +486,10 @@ namespace RPGame.Core.Tests.Statuses
             instance.RegisterCleanup(() => CleanupCount++);
         }
 
-        public override void OnRefresh(StatusTarget target, StatusInstance instance)
+        public override void OnRefresh(
+            StatusTarget target,
+            StatusInstance instance,
+            StatusContext context)
         {
             RefreshCount++;
         }
@@ -406,14 +515,17 @@ namespace RPGame.Core.Tests.Statuses
         public int RefreshCount { get; private set; }
 
         public float Amount => AmountValue;
-        public override ReapplyPolicy ReapplyPolicy => ReapplyPolicy.Stack;
+        public override ReapplyPolicy ReapplyPolicy => ReapplyPolicy.Accumulate;
 
         public void Tick(StatusTarget target, float deltaTime, float amount)
         {
             AppliedAmount += amount;
         }
 
-        public override void OnRefresh(StatusTarget target, StatusInstance instance)
+        public override void OnRefresh(
+            StatusTarget target,
+            StatusInstance instance,
+            StatusContext context)
         {
             RefreshCount++;
         }
@@ -421,6 +533,16 @@ namespace RPGame.Core.Tests.Statuses
         public override string ToString()
         {
             return "Test Amount Status";
+        }
+    }
+
+    public sealed class TestStackableStatusDefinition : StatusDefinition, IStackableStatus
+    {
+        public int MaxStacks => 2;
+
+        public override string ToString()
+        {
+            return "Test Stackable Status";
         }
     }
 }

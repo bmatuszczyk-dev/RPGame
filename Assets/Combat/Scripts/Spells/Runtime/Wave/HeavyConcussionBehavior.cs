@@ -52,7 +52,7 @@ namespace RPGame.Combat.Spells
                 new StatusContext(
                     HeavyConcussionSourceId,
                     source,
-                    ReapplyPolicy.Stack));
+                    ReapplyPolicy.Accumulate));
         }
     }
 }

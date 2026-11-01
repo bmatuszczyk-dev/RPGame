@@ -9,6 +9,7 @@ namespace RPGame.Core.Statuses
     {
         public override ReapplyPolicy ReapplyPolicy => ReapplyPolicy.Ignore;
         public override ConcurrentStatusPolicy ConcurrentStatusPolicy => ConcurrentStatusPolicy.SingleInstance;
+        public override bool UsesCustomSingleInstanceReapply => true;
 
         public override bool CanApply(StatusTarget target)
         {
@@ -27,7 +28,7 @@ namespace RPGame.Core.Statuses
             float incomingDuration,
             StatusContext incomingContext)
         {
-            existingInstance.KeepLongerDuration(target, incomingDuration);
+            existingInstance.KeepLongerDuration(target, incomingDuration, incomingContext);
         }
 
         public override string ToString()

@@ -8,6 +8,7 @@ namespace RPGame.Core.Statuses
     {
         public virtual ReapplyPolicy ReapplyPolicy => ReapplyPolicy.Refresh;
         public virtual ConcurrentStatusPolicy ConcurrentStatusPolicy => ConcurrentStatusPolicy.SingleInstance;
+        public virtual bool UsesCustomSingleInstanceReapply => false;
 
         public virtual bool CanApply(StatusTarget target)
         {
@@ -18,7 +19,10 @@ namespace RPGame.Core.Statuses
         {
         }
 
-        public virtual void OnRefresh(StatusTarget target, StatusInstance instance)
+        public virtual void OnRefresh(
+            StatusTarget target,
+            StatusInstance instance,
+            StatusContext context)
         {
         }
 
@@ -44,7 +48,7 @@ namespace RPGame.Core.Statuses
             float incomingDuration,
             StatusContext incomingContext)
         {
-            existingInstance.Refresh(target, incomingDuration);
+            existingInstance.Refresh(target, incomingDuration, incomingContext);
         }
 
         public abstract override string ToString();

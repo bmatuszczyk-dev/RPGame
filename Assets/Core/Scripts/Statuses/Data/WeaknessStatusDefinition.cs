@@ -3,37 +3,43 @@ using UnityEngine;
 namespace RPGame.Core.Statuses
 {
     [CreateAssetMenu(fileName = "WeaknessStatus", menuName = "RPGame/Statuses/Weakness")]
-    public sealed class WeaknessStatusDefinition : StatusDefinition
+    public sealed class WeaknessStatusDefinition : StatusDefinition, IStackableStatus
     {
         [SerializeField] private float stackValue = 0.1f;
         [SerializeField] private int maxStack = 3;
 
-        public override ReapplyPolicy ReapplyPolicy => ReapplyPolicy.Refresh;
+        public override ReapplyPolicy ReapplyPolicy => ReapplyPolicy.StackAndRefresh;
         public override ConcurrentStatusPolicy ConcurrentStatusPolicy => ConcurrentStatusPolicy.SingleInstance;
+        public int MaxStacks => Mathf.Max(1, maxStack);
 
         public override void OnApply(StatusTarget target, StatusInstance instance)
         {
-            instance.SetValue(Mathf.Min(MaxValue, StackValue));
+            UpdateValue(instance);
         }
 
-        public override void OnRefresh(StatusTarget target, StatusInstance instance)
+        public override void OnRefresh(
+            StatusTarget target,
+            StatusInstance instance,
+            StatusContext context)
         {
-            instance.SetValue(Mathf.Min(MaxValue, instance.Value + StackValue));
+            UpdateValue(instance);
         }
 
         public override string ToString()
         {
-            return $"Weakness +{StackValue * 100f:0.#}% x{MaxStack}";
+            return $"Weakness +{StackValue * 100f:0.#}% x{MaxStacks}";
         }
 
         private float StackValue => Mathf.Max(0f, stackValue);
-        private int MaxStack => Mathf.Max(0, maxStack);
-        private float MaxValue => StackValue * MaxStack;
+        private void UpdateValue(StatusInstance instance)
+        {
+            instance.SetValue(instance.CurrentStacks * StackValue);
+        }
 
         private void OnValidate()
         {
             stackValue = Mathf.Max(0f, stackValue);
-            maxStack = Mathf.Max(0, maxStack);
+            maxStack = Mathf.Max(1, maxStack);
         }
     }
 }
