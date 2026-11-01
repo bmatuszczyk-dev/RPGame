@@ -17,6 +17,7 @@ namespace RPGame.Core.Statuses
         [SerializeField] private float remainingAmount;
         [SerializeField] private float periodicTickTimer;
         private readonly List<Action> cleanupActions = new();
+        private bool hasValueOverride;
         private bool wasApplied;
         private bool wasRemoved;
 
@@ -28,6 +29,7 @@ namespace RPGame.Core.Statuses
             this.duration = Mathf.Max(0f, duration);
             remainingDuration = this.duration;
             remainingAmount = GetAmount(definition);
+            ApplyValueOverride(context);
         }
 
         public StatusDefinition Definition => definition;
@@ -42,6 +44,7 @@ namespace RPGame.Core.Statuses
         public float Duration => duration;
         public float RemainingDuration => remainingDuration;
         public float Value => value;
+        public bool HasValueOverride => hasValueOverride;
         public int CurrentStacks => currentStacks;
         public float RemainingAmount => remainingAmount;
         public StatusLifecycleEvent LastLifecycleEvent { get; private set; }
@@ -59,6 +62,17 @@ namespace RPGame.Core.Statuses
         public void SetValue(float value)
         {
             this.value = Mathf.Max(0f, value);
+        }
+
+        public void ApplyValueOverride(StatusContext context)
+        {
+            if (!context.ValueOverride.HasValue)
+            {
+                return;
+            }
+
+            SetValue(context.ValueOverride.Value);
+            hasValueOverride = true;
         }
 
         public void SetCurrentStacks(int currentStacks)

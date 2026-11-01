@@ -70,10 +70,14 @@ namespace RPGame.Core.Statuses
             float duration,
             StatusContext context)
         {
-            ApplyReapplyPolicy(
-                context.ReapplyPolicyOverride ?? definition.ReapplyPolicy,
-                existingInstance,
-                duration);
+            ReapplyPolicy reapplyPolicy =
+                context.ReapplyPolicyOverride ?? definition.ReapplyPolicy;
+            if (reapplyPolicy != ReapplyPolicy.Ignore)
+            {
+                existingInstance.ApplyValueOverride(context);
+            }
+
+            ApplyReapplyPolicy(reapplyPolicy, existingInstance, duration);
         }
 
         private void ApplySingleInstance(
@@ -84,6 +88,11 @@ namespace RPGame.Core.Statuses
         {
             if (context.ReapplyPolicyOverride.HasValue)
             {
+                if (context.ReapplyPolicyOverride.Value != ReapplyPolicy.Ignore)
+                {
+                    existingInstance.ApplyValueOverride(context);
+                }
+
                 ApplyReapplyPolicy(
                     context.ReapplyPolicyOverride.Value,
                     existingInstance,
@@ -91,6 +100,7 @@ namespace RPGame.Core.Statuses
                 return;
             }
 
+            existingInstance.ApplyValueOverride(context);
             definition.ApplySingleInstanceReapply(target, existingInstance, duration, context);
         }
 

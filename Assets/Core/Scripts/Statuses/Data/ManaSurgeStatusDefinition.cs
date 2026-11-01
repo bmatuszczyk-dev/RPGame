@@ -13,10 +13,15 @@ namespace RPGame.Core.Statuses
         public override ConcurrentStatusPolicy ConcurrentStatusPolicy => ConcurrentStatusPolicy.SingleInstance;
         public EffectStat Stat => EffectStat.ManaRegeneration;
         public EffectModifierType ModifierType => EffectModifierType.Flat;
+        public float ManaRegenerationPerStack => Mathf.Max(0f, manaRegenerationPerStack);
 
         public override void OnApply(StatusTarget target, StatusInstance instance)
         {
             instance.SetCurrentStacks(1);
+            if (!instance.HasValueOverride)
+            {
+                instance.SetValue(ManaRegenerationPerStack);
+            }
         }
 
         public override void OnRefresh(StatusTarget target, StatusInstance instance)
@@ -35,7 +40,7 @@ namespace RPGame.Core.Statuses
 
         public float GetValue(StatusInstance instance)
         {
-            return instance != null ? instance.CurrentStacks * ManaRegenerationPerStack : 0f;
+            return instance != null ? instance.CurrentStacks * instance.Value : 0f;
         }
 
         public override string ToString()
@@ -43,7 +48,6 @@ namespace RPGame.Core.Statuses
             return $"Mana Surge +{ManaRegenerationPerStack:0.##} Mana/s x{MaxStacks}";
         }
 
-        private float ManaRegenerationPerStack => Mathf.Max(0f, manaRegenerationPerStack);
         private int MaxStacks => Mathf.Max(1, maxStacks);
 
         private void OnValidate()

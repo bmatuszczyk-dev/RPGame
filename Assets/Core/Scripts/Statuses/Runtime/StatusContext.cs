@@ -7,15 +7,18 @@ namespace RPGame.Core.Statuses
         public StatusContext(
             StatusSourceId sourceId,
             GameObject source,
-            ReapplyPolicy? reapplyPolicyOverride = null)
+            ReapplyPolicy? reapplyPolicyOverride = null,
+            float? valueOverride = null)
         {
             SourceId = sourceId;
             Source = source;
             ReapplyPolicyOverride = reapplyPolicyOverride;
+            ValueOverride = valueOverride;
         }
 
         public StatusSourceId SourceId { get; }
         public GameObject Source { get; }
         public ReapplyPolicy? ReapplyPolicyOverride { get; }
+        public float? ValueOverride { get; }
     }
 }

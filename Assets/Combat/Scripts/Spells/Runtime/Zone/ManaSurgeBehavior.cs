@@ -12,6 +12,7 @@ namespace RPGame.Combat.Spells
         [SerializeField, Min(0f)] private float duration = 5f;
 
         [NonSerialized] private IStatusReceiver casterStatusReceiver;
+        [NonSerialized] private float manaRegenerationMultiplier = 1f;
 
         public ManaSurgeBehavior()
         {
@@ -26,6 +27,13 @@ namespace RPGame.Combat.Spells
 
         public SpellBehaviorPhase Phase => SpellBehaviorPhase.PostResolve;
 
+        public void AddManaRegenerationMultiplierBonus(float bonus)
+        {
+            manaRegenerationMultiplier = Mathf.Max(
+                1f,
+                manaRegenerationMultiplier + Mathf.Max(0f, bonus));
+        }
+
         public bool Supports(Spell spell)
         {
             return spell is LightningZoneSpell && manaSurgeStatus != null;
@@ -37,6 +45,7 @@ namespace RPGame.Combat.Spells
                 ? caster.GetComponentInParent<IStatusReceiver>()
                 : null;
             duration = Mathf.Max(0f, duration);
+            manaRegenerationMultiplier = Mathf.Max(1f, manaRegenerationMultiplier);
         }
 
         public void Execute(SpellBehaviorContext context)
@@ -52,7 +61,11 @@ namespace RPGame.Combat.Spells
             casterStatusReceiver.ApplyStatus(
                 manaSurgeStatus,
                 duration,
-                new StatusContext(new StatusSourceId(nameof(ManaSurgeBehavior)), context.Source));
+                new StatusContext(
+                    new StatusSourceId(nameof(ManaSurgeBehavior)),
+                    context.Source,
+                    valueOverride: manaSurgeStatus.ManaRegenerationPerStack
+                        * manaRegenerationMultiplier));
         }
     }
 }
