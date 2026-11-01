@@ -388,6 +388,72 @@ namespace RPGame.Core.Tests.Statuses
             Object.DestroyImmediate(definition);
         }
 
+        [Test]
+        public void HandleOwnerDeath_InvokesActiveApplicationHandlerOnceAndResetsAfterClear()
+        {
+            TestStatusDefinition definition = CreateTestStatus(
+                ReapplyPolicy.Refresh,
+                ConcurrentStatusPolicy.SingleInstance);
+            StatusContainer container = new(target);
+            TestOwnerDeathHandler handler = new();
+            StatusContext context = new(
+                new StatusSourceId("Detonation"),
+                firstSource,
+                applicationData: handler);
+
+            container.Add(definition, 2f, context);
+            container.HandleOwnerDeath();
+            container.HandleOwnerDeath();
+
+            Assert.AreEqual(1, handler.InvocationCount);
+
+            container.Clear();
+            container.Add(definition, 2f, context);
+            container.HandleOwnerDeath();
+
+            Assert.AreEqual(2, handler.InvocationCount);
+            Object.DestroyImmediate(definition);
+        }
+
+        [Test]
+        public void HandleOwnerDeath_SkipsStatusRemovedByEarlierHandler()
+        {
+            TestStatusDefinition first = CreateTestStatus(
+                ReapplyPolicy.Refresh,
+                ConcurrentStatusPolicy.Independent);
+            TestStatusDefinition second = CreateTestStatus(
+                ReapplyPolicy.Refresh,
+                ConcurrentStatusPolicy.Independent);
+            StatusContainer container = new(target);
+            TestOwnerDeathHandler secondHandler = new();
+            TestOwnerDeathHandler firstHandler = new()
+            {
+                OnHandle = () => container.TryConsumeStatus(second)
+            };
+
+            container.Add(
+                first,
+                2f,
+                new StatusContext(
+                    new StatusSourceId("First"),
+                    firstSource,
+                    applicationData: firstHandler));
+            container.Add(
+                second,
+                2f,
+                new StatusContext(
+                    new StatusSourceId("Second"),
+                    secondSource,
+                    applicationData: secondHandler));
+
+            container.HandleOwnerDeath();
+
+            Assert.AreEqual(1, firstHandler.InvocationCount);
+            Assert.AreEqual(0, secondHandler.InvocationCount);
+            Object.DestroyImmediate(first);
+            Object.DestroyImmediate(second);
+        }
+
         private static TestStatusDefinition CreateTestStatus(
             ReapplyPolicy reapplyPolicy,
             ConcurrentStatusPolicy concurrentStatusPolicy)
@@ -543,6 +609,18 @@ namespace RPGame.Core.Tests.Statuses
         public override string ToString()
         {
             return "Test Stackable Status";
+        }
+    }
+
+    public sealed class TestOwnerDeathHandler : IStatusOwnerDeathHandler
+    {
+        public int InvocationCount { get; private set; }
+        public System.Action OnHandle { get; set; }
+
+        public void HandleOwnerDied(StatusTarget target, StatusInstance instance)
+        {
+            InvocationCount++;
+            OnHandle?.Invoke();
         }
     }
 }

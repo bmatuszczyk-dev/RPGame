@@ -7,7 +7,11 @@ using UnityEngine;
 
 namespace RPGame.Core.Statistics
 {
-    public sealed class StatisticsController : MonoBehaviour, IStatisticsController, IPooledEnemyResettable
+    public sealed class StatisticsController :
+        MonoBehaviour,
+        IStatisticsController,
+        IBeforeDeathNotifier,
+        IPooledEnemyResettable
     {
         private const float AttributeVitalBonus = 5f;
 
@@ -23,6 +27,7 @@ namespace RPGame.Core.Statistics
         public event Action<float, float> HealthChanged;
         public event Action<float, float> StaminaChanged;
         public event Action<float, float> OnManaChanged;
+        public event Action BeforeDied;
         public event Action Died;
 
         public float CurrentHealth { get; private set; }
@@ -243,6 +248,7 @@ namespace RPGame.Core.Statistics
 
             if (previousHealth > 0f && CurrentHealth <= 0f)
             {
+                BeforeDied?.Invoke();
                 Died?.Invoke();
             }
         }

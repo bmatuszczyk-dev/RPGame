@@ -29,6 +29,7 @@ namespace RPGame.Core.Statuses
             this.duration = Mathf.Max(0f, duration);
             remainingDuration = this.duration;
             remainingAmount = GetAmount(definition);
+            LastApplicationContext = context;
             ApplyValueOverride(context);
         }
 
@@ -47,6 +48,7 @@ namespace RPGame.Core.Statuses
         public bool HasValueOverride => hasValueOverride;
         public int CurrentStacks => currentStacks;
         public float RemainingAmount => remainingAmount;
+        public StatusContext LastApplicationContext { get; private set; }
         public StatusLifecycleEvent LastLifecycleEvent { get; private set; }
         public bool IsFinished => remainingDuration <= 0f;
         public bool IsInstant => duration <= 0f;
@@ -73,6 +75,11 @@ namespace RPGame.Core.Statuses
 
             SetValue(context.ValueOverride.Value);
             hasValueOverride = true;
+        }
+
+        internal void UpdateLastApplicationContext(StatusContext context)
+        {
+            LastApplicationContext = context;
         }
 
         private void SetCurrentStacks(int currentStacks)

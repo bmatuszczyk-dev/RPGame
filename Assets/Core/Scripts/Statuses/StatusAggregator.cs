@@ -18,6 +18,7 @@ namespace RPGame.Core.Statuses
         private IDamageable damageable;
         private StatusTarget statusTarget;
         private IStatisticsController subscribedStatisticsController;
+        private IBeforeDeathNotifier subscribedBeforeDeathNotifier;
         private readonly Dictionary<StatusInstance, StatusModifierEntry> statusModifiers = new();
         private readonly Dictionary<EffectStat, float> flatModifierValues = new();
         private readonly Dictionary<EffectStat, float> percentModifierValues = new();
@@ -34,17 +35,17 @@ namespace RPGame.Core.Statuses
 
         private void OnEnable()
         {
-            SubscribeToDied(GetStatisticsController());
+            SubscribeToDeath(GetStatisticsController());
         }
 
         private void OnDisable()
         {
-            UnsubscribeFromDied();
+            UnsubscribeFromDeath();
         }
 
         private void OnDestroy()
         {
-            UnsubscribeFromDied();
+            UnsubscribeFromDeath();
         }
 
         private void Update()
@@ -109,7 +110,7 @@ namespace RPGame.Core.Statuses
             {
                 statisticsController = GetComponent<IStatisticsController>();
                 CacheStatusTarget();
-                SubscribeToDied(statisticsController);
+                SubscribeToDeath(statisticsController);
             }
 
             return statisticsController;
@@ -127,32 +128,51 @@ namespace RPGame.Core.Statuses
             statusTarget = new StatusTarget(statisticsController, movement, damageable);
         }
 
-        private void SubscribeToDied(IStatisticsController targetStatisticsController)
+        private void SubscribeToDeath(IStatisticsController targetStatisticsController)
         {
             if (targetStatisticsController == null || subscribedStatisticsController == targetStatisticsController)
             {
                 return;
             }
 
-            UnsubscribeFromDied();
+            UnsubscribeFromDeath();
+            if (targetStatisticsController is IBeforeDeathNotifier beforeDeathNotifier)
+            {
+                beforeDeathNotifier.BeforeDied += HandleBeforeDied;
+                subscribedBeforeDeathNotifier = beforeDeathNotifier;
+            }
+
             targetStatisticsController.Died += HandleDied;
             subscribedStatisticsController = targetStatisticsController;
         }
 
-        private void UnsubscribeFromDied()
+        private void UnsubscribeFromDeath()
         {
             if (subscribedStatisticsController == null)
             {
                 return;
             }
 
+            if (subscribedBeforeDeathNotifier != null)
+            {
+                subscribedBeforeDeathNotifier.BeforeDied -= HandleBeforeDied;
+                subscribedBeforeDeathNotifier = null;
+            }
+
             subscribedStatisticsController.Died -= HandleDied;
             subscribedStatisticsController = null;
         }
 
+        private void HandleBeforeDied()
+        {
+            EnsureStatusContainer();
+            statusContainer.HandleOwnerDeath();
+        }
+
         private void HandleDied()
         {
-            ClearStatuses();
+            EnsureStatusContainer();
+            statusContainer.Clear(StatusLifecycleEvent.OwnerDied);
         }
 
         private void SubscribeToStatusChanges()
