@@ -3,6 +3,7 @@ using System.Reflection;
 using NUnit.Framework;
 using RPGame.Combat.Spells;
 using RPGame.Core.Damage;
+using RPGame.Core.Effects;
 using RPGame.Core.Spells;
 using RPGame.Core.Statistics;
 using RPGame.Core.Statuses;
@@ -142,6 +143,137 @@ namespace RPGame.Combat.Tests
 
             Assert.AreEqual(4.5f, insideDamageable.TotalDamage, 0.0001f);
             Assert.AreEqual(0f, outside.TotalDamage, 0.0001f);
+        }
+
+        [Test]
+        public void Explosion_WithoutBlastRadius_DoesNotHitTargetOutsideBaseRadius()
+        {
+            StatusAggregator origin = CreateTarget("Origin", Vector3.zero, out _);
+            CreateTarget("Outside Base Radius", new Vector3(4f, 0f, 0f), out TestDamageable outside);
+
+            ApplyBurn(CreateZone(CreateRuntimeBehaviorsWithEffects(
+                caster,
+                includeDetonation: true,
+                includeBlastRadius: false)), origin);
+            Physics.SyncTransforms();
+            TriggerDeath(origin);
+
+            Assert.AreEqual(0f, outside.TotalDamage, 0.0001f);
+        }
+
+        [Test]
+        public void Explosion_WithBlastRadius_HitsTargetInsideFourPointFiveMetersOnly()
+        {
+            StatusAggregator origin = CreateTarget("Origin", Vector3.zero, out _);
+            CreateTarget("Inside Blast Radius", new Vector3(4f, 0f, 0f), out TestDamageable inside);
+            CreateTarget("Outside Blast Radius", new Vector3(5.1f, 0f, 0f), out TestDamageable outside);
+
+            ApplyBurn(CreateZone(CreateRuntimeBehaviorsWithEffects(
+                caster,
+                includeDetonation: true,
+                includeBlastRadius: true)), origin);
+            Physics.SyncTransforms();
+            TriggerDeath(origin);
+
+            Assert.AreEqual(4.5f, inside.TotalDamage, 0.0001f);
+            Assert.AreEqual(0f, outside.TotalDamage, 0.0001f);
+        }
+
+        [Test]
+        public void Explosion_WithBlastRadius_DoesNotIncreaseDamage()
+        {
+            StatusAggregator origin = CreateTarget("Origin", Vector3.zero, out _);
+            CreateTarget("Nearby", Vector3.one, out TestDamageable nearby);
+
+            ApplyBurn(CreateZone(CreateRuntimeBehaviorsWithEffects(
+                caster,
+                includeDetonation: true,
+                includeBlastRadius: true)), origin);
+            Physics.SyncTransforms();
+            TriggerDeath(origin);
+
+            Assert.AreEqual(4.5f, nearby.TotalDamage, 0.0001f);
+        }
+
+        [Test]
+        public void BlastRadius_WithoutDetonation_DoesNotExplode()
+        {
+            StatusAggregator origin = CreateTarget("Origin", Vector3.zero, out _);
+            CreateTarget("Nearby", Vector3.one, out TestDamageable nearby);
+
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors = CreateRuntimeBehaviorsWithEffects(
+                caster,
+                includeDetonation: false,
+                includeBlastRadius: true);
+            ApplyBurn(CreateZone(behaviors), origin);
+            Physics.SyncTransforms();
+            TriggerDeath(origin);
+
+            Assert.IsEmpty(behaviors);
+            Assert.AreEqual(0f, nearby.TotalDamage, 0.0001f);
+        }
+
+        [Test]
+        public void BlastRadius_SupportsOnlyFireZoneSpell()
+        {
+            BlastRadiusEffectDefinition blastRadius = CreateObject<BlastRadiusEffectDefinition>();
+            FireZoneSpell fireZone = CreateObject<FireZoneSpell>();
+            EarthZoneSpell earthZone = CreateObject<EarthZoneSpell>();
+
+            Assert.IsTrue(blastRadius.Supports(fireZone));
+            Assert.IsFalse(blastRadius.Supports(earthZone));
+        }
+
+        [Test]
+        public void BlastRadius_CompositionOrder_DoesNotChangeExplosionRadius()
+        {
+            StatusAggregator firstOrigin = CreateTarget("First Origin", Vector3.zero, out _);
+            CreateTarget("First Target", new Vector3(4f, 0f, 0f), out TestDamageable firstTarget);
+            IReadOnlyList<IRuntimeSpellBehavior> modifierFirst = CreateRuntimeBehaviorsWithEffects(
+                caster,
+                includeDetonation: true,
+                includeBlastRadius: true,
+                modifierFirst: true);
+            ApplyBurn(CreateZone(modifierFirst), firstOrigin);
+
+            GameObject secondCaster = CreateGameObject("Second Caster");
+            StatusAggregator secondOrigin = CreateTarget("Second Origin", new Vector3(10f, 0f, 0f), out _);
+            CreateTarget("Second Target", new Vector3(14f, 0f, 0f), out TestDamageable secondTarget);
+            IReadOnlyList<IRuntimeSpellBehavior> behaviorFirst = CreateRuntimeBehaviorsWithEffects(
+                secondCaster,
+                includeDetonation: true,
+                includeBlastRadius: true,
+                modifierFirst: false);
+            ApplyBurn(CreateZone(behaviorFirst, caster: secondCaster), secondOrigin);
+
+            Physics.SyncTransforms();
+            TriggerDeath(firstOrigin);
+            TriggerDeath(secondOrigin);
+
+            Assert.AreEqual(4.5f, firstTarget.TotalDamage, 0.0001f);
+            Assert.AreEqual(4.5f, secondTarget.TotalDamage, 0.0001f);
+        }
+
+        [Test]
+        public void Explosion_WithBlastRadius_CanTriggerDetonationChain()
+        {
+            StatusAggregator first = CreateTarget("First", Vector3.zero, out _);
+            StatusAggregator second = CreateTarget("Second", new Vector3(4f, 0f, 0f), out TestDamageable secondDamageable);
+            CreateTarget("Third", new Vector3(8f, 0f, 0f), out TestDamageable thirdDamageable);
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors = CreateRuntimeBehaviorsWithEffects(
+                caster,
+                includeDetonation: true,
+                includeBlastRadius: true);
+            FireZoneBehaviour zone = CreateZone(behaviors);
+
+            ApplyBurn(zone, first);
+            ApplyBurn(zone, second);
+            secondDamageable.DieWhenDamaged = true;
+
+            Physics.SyncTransforms();
+            TriggerDeath(first);
+
+            Assert.AreEqual(4.5f, thirdDamageable.TotalDamage, 0.0001f);
         }
 
         [Test]
@@ -316,6 +448,42 @@ namespace RPGame.Combat.Tests
             return zone;
         }
 
+        private IReadOnlyList<IRuntimeSpellBehavior> CreateRuntimeBehaviorsWithEffects(
+            GameObject effectOwner,
+            bool includeDetonation,
+            bool includeBlastRadius,
+            bool modifierFirst = false)
+        {
+            EffectAggregator effects = effectOwner.AddComponent<EffectAggregator>();
+            RuntimeBehaviorEffectDefinition detonation = null;
+            BlastRadiusEffectDefinition blastRadius = null;
+
+            if (includeDetonation)
+            {
+                detonation = CreateObject<RuntimeBehaviorEffectDefinition>();
+                SetRuntimeBehavior(detonation, new DetonationBehavior());
+            }
+
+            if (includeBlastRadius)
+            {
+                blastRadius = CreateObject<BlastRadiusEffectDefinition>();
+            }
+
+            if (modifierFirst)
+            {
+                effects.Add(blastRadius);
+                effects.Add(detonation);
+            }
+            else
+            {
+                effects.Add(detonation);
+                effects.Add(blastRadius);
+            }
+
+            FireZoneSpell spell = CreateObject<FireZoneSpell>();
+            return effects.CreateRuntimeBehaviors(spell, effectOwner);
+        }
+
         private static void ApplyBurn(FireZoneBehaviour zone, StatusAggregator target)
         {
             typeof(FireZoneBehaviour).GetMethod(
@@ -347,6 +515,22 @@ namespace RPGame.Combat.Tests
             GameObject gameObject = new(objectName);
             createdObjects.Add(gameObject);
             return gameObject;
+        }
+
+        private T CreateObject<T>() where T : ScriptableObject
+        {
+            T createdObject = ScriptableObject.CreateInstance<T>();
+            createdObjects.Add(createdObject);
+            return createdObject;
+        }
+
+        private static void SetRuntimeBehavior(
+            RuntimeBehaviorEffectDefinition effect,
+            IRuntimeSpellBehavior behavior)
+        {
+            SerializedObject serializedEffect = new(effect);
+            serializedEffect.FindProperty("behavior").managedReferenceValue = behavior;
+            serializedEffect.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void TriggerDeath(StatusAggregator statuses)
