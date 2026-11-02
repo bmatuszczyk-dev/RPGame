@@ -277,6 +277,168 @@ namespace RPGame.Combat.Tests
         }
 
         [Test]
+        public void Explosion_WithOverpressure_IncreasesDamageByFiftyPercent()
+        {
+            StatusAggregator origin = CreateTarget("Origin", Vector3.zero, out _);
+            CreateTarget("Nearby", Vector3.one, out TestDamageable nearby);
+
+            ApplyBurn(CreateZone(CreateRuntimeBehaviorsWithEffects(
+                caster,
+                includeDetonation: true,
+                includeBlastRadius: false,
+                includeOverpressure: true)), origin);
+            Physics.SyncTransforms();
+            TriggerDeath(origin);
+
+            Assert.AreEqual(6.75f, nearby.TotalDamage, 0.0001f);
+        }
+
+        [Test]
+        public void Explosion_WithOverpressure_DoesNotIncreaseRadiusOrBurnDamage()
+        {
+            StatusAggregator origin = CreateTarget("Origin", Vector3.zero, out TestDamageable originDamageable);
+            CreateTarget("Outside Base Radius", new Vector3(4f, 0f, 0f), out TestDamageable outside);
+            FireZoneBehaviour zone = CreateZone(CreateRuntimeBehaviorsWithEffects(
+                caster,
+                includeDetonation: true,
+                includeBlastRadius: false,
+                includeOverpressure: true));
+
+            ApplyBurn(zone, origin);
+            TickStatuses(origin, 1f);
+            Physics.SyncTransforms();
+            TriggerDeath(origin);
+
+            Assert.AreEqual(1.5f, originDamageable.TotalDamage, 0.0001f);
+            Assert.AreEqual(0f, outside.TotalDamage, 0.0001f);
+        }
+
+        [Test]
+        public void Overpressure_WithoutDetonation_DoesNotExplode()
+        {
+            StatusAggregator origin = CreateTarget("Origin", Vector3.zero, out _);
+            CreateTarget("Nearby", Vector3.one, out TestDamageable nearby);
+
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors = CreateRuntimeBehaviorsWithEffects(
+                caster,
+                includeDetonation: false,
+                includeBlastRadius: false,
+                includeOverpressure: true);
+            ApplyBurn(CreateZone(behaviors), origin);
+            Physics.SyncTransforms();
+            TriggerDeath(origin);
+
+            Assert.IsEmpty(behaviors);
+            Assert.AreEqual(0f, nearby.TotalDamage, 0.0001f);
+        }
+
+        [Test]
+        public void Overpressure_SupportsOnlyFireZoneSpell()
+        {
+            OverpressureEffectDefinition overpressure = CreateObject<OverpressureEffectDefinition>();
+            FireZoneSpell fireZone = CreateObject<FireZoneSpell>();
+            EarthZoneSpell earthZone = CreateObject<EarthZoneSpell>();
+
+            Assert.IsTrue(overpressure.Supports(fireZone));
+            Assert.IsFalse(overpressure.Supports(earthZone));
+        }
+
+        [Test]
+        public void Explosion_WithIntensifyAndOverpressure_UsesCurrentIntensity()
+        {
+            StatusAggregator origin = CreateTarget("Origin", Vector3.zero, out _);
+            CreateTarget("Nearby", Vector3.one, out TestDamageable nearby);
+            List<IRuntimeSpellBehavior> behaviors = new(CreateRuntimeBehaviorsWithEffects(
+                caster,
+                includeDetonation: true,
+                includeBlastRadius: false,
+                includeOverpressure: true))
+            {
+                new IntensifyBehavior()
+            };
+            FireZoneBehaviour zone = CreateZone(behaviors);
+
+            ApplyBurn(zone, origin);
+            ApplyBurn(zone, origin);
+            Physics.SyncTransforms();
+            TriggerDeath(origin);
+
+            Assert.AreEqual(13.5f, nearby.TotalDamage, 0.0001f);
+        }
+
+        [Test]
+        public void Explosion_WithBlastRadiusAndOverpressure_ModifiesRadiusAndDamageIndependently()
+        {
+            StatusAggregator origin = CreateTarget("Origin", Vector3.zero, out _);
+            CreateTarget("Inside Blast Radius", new Vector3(4f, 0f, 0f), out TestDamageable inside);
+            CreateTarget("Outside Blast Radius", new Vector3(5.1f, 0f, 0f), out TestDamageable outside);
+
+            ApplyBurn(CreateZone(CreateRuntimeBehaviorsWithEffects(
+                caster,
+                includeDetonation: true,
+                includeBlastRadius: true,
+                includeOverpressure: true)), origin);
+            Physics.SyncTransforms();
+            TriggerDeath(origin);
+
+            Assert.AreEqual(6.75f, inside.TotalDamage, 0.0001f);
+            Assert.AreEqual(0f, outside.TotalDamage, 0.0001f);
+        }
+
+        [Test]
+        public void Overpressure_CompositionOrder_DoesNotChangeExplosionDamage()
+        {
+            StatusAggregator firstOrigin = CreateTarget("First Origin", Vector3.zero, out _);
+            CreateTarget("First Target", Vector3.one, out TestDamageable firstTarget);
+            ApplyBurn(CreateZone(CreateRuntimeBehaviorsWithEffects(
+                caster,
+                includeDetonation: true,
+                includeBlastRadius: true,
+                includeOverpressure: true,
+                modifierFirst: true)), firstOrigin);
+
+            GameObject secondCaster = CreateGameObject("Second Caster");
+            StatusAggregator secondOrigin = CreateTarget("Second Origin", new Vector3(10f, 0f, 0f), out _);
+            CreateTarget("Second Target", new Vector3(11f, 0f, 0f), out TestDamageable secondTarget);
+            ApplyBurn(CreateZone(CreateRuntimeBehaviorsWithEffects(
+                secondCaster,
+                includeDetonation: true,
+                includeBlastRadius: true,
+                includeOverpressure: true,
+                modifierFirst: false), caster: secondCaster), secondOrigin);
+
+            Physics.SyncTransforms();
+            TriggerDeath(firstOrigin);
+            TriggerDeath(secondOrigin);
+
+            Assert.AreEqual(6.75f, firstTarget.TotalDamage, 0.0001f);
+            Assert.AreEqual(6.75f, secondTarget.TotalDamage, 0.0001f);
+        }
+
+        [Test]
+        public void Explosion_WithOverpressure_CanTriggerDetonationChain()
+        {
+            StatusAggregator first = CreateTarget("First", Vector3.zero, out _);
+            StatusAggregator second = CreateTarget("Second", Vector3.one, out TestDamageable secondDamageable);
+            CreateTarget("Third", new Vector3(3.6f, 0f, 0f), out TestDamageable thirdDamageable);
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors = CreateRuntimeBehaviorsWithEffects(
+                caster,
+                includeDetonation: true,
+                includeBlastRadius: false,
+                includeOverpressure: true);
+            FireZoneBehaviour zone = CreateZone(behaviors);
+
+            ApplyBurn(zone, first);
+            ApplyBurn(zone, second);
+            secondDamageable.DieWhenDamaged = true;
+
+            Physics.SyncTransforms();
+            TriggerDeath(first);
+
+            Assert.AreEqual(6.75f, thirdDamageable.TotalDamage, 0.0001f);
+        }
+
+        [Test]
         public void Explosion_CanTriggerOneDetonationChain()
         {
             StatusAggregator first = CreateTarget("First", Vector3.zero, out _);
@@ -452,11 +614,13 @@ namespace RPGame.Combat.Tests
             GameObject effectOwner,
             bool includeDetonation,
             bool includeBlastRadius,
+            bool includeOverpressure = false,
             bool modifierFirst = false)
         {
             EffectAggregator effects = effectOwner.AddComponent<EffectAggregator>();
             RuntimeBehaviorEffectDefinition detonation = null;
             BlastRadiusEffectDefinition blastRadius = null;
+            OverpressureEffectDefinition overpressure = null;
 
             if (includeDetonation)
             {
@@ -469,15 +633,22 @@ namespace RPGame.Combat.Tests
                 blastRadius = CreateObject<BlastRadiusEffectDefinition>();
             }
 
+            if (includeOverpressure)
+            {
+                overpressure = CreateObject<OverpressureEffectDefinition>();
+            }
+
             if (modifierFirst)
             {
                 effects.Add(blastRadius);
+                effects.Add(overpressure);
                 effects.Add(detonation);
             }
             else
             {
                 effects.Add(detonation);
                 effects.Add(blastRadius);
+                effects.Add(overpressure);
             }
 
             FireZoneSpell spell = CreateObject<FireZoneSpell>();
