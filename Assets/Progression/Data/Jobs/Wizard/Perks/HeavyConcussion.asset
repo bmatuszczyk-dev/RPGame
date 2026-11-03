@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5145033cfde049c88a0cd28b4579eb12, type: 3}
+  m_Name: HeavyConcussion
+  m_EditorClassIdentifier: RPGame.Progression::RPGame.Progression.PerkDefinition
+  perkId: HeavyConcussion
+  displayName: Heavy Concussion
+  description: Dodaje Stun na 2 s przy uderzeniu po knockbacku.
+  connectedPerkIds:
+  - Concussion
+  cost: 1
+  isStartingPerk: 0
+  uiPosition: {x: -90, y: 505}
+  effects:
+  - {fileID: 11400000, guid: ea7df6a9452447eaa44ba1dfee1e08e6, type: 2}

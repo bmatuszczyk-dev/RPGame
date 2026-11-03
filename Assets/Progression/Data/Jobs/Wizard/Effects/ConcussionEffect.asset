@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58fbf8eef72921841b9370df56e95851, type: 3}
+  m_Name: ConcussionEffect
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.RuntimeBehaviorEffectDefinition
+  behavior:
+    rid: 2006
+  executionOrder: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 2006
+      type: {class: ConcussionOnImpactCollisionBehavior, ns: RPGame.Combat.Spells, asm: RPGame.Combat}
+      data:
+        stunStatus: {fileID: 11400000, guid: 8198d50c246fdac48963b6007635a244, type: 2}
+        stunDuration: 1
