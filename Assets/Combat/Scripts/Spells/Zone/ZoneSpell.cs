@@ -25,9 +25,7 @@ namespace RPGame.Combat.Spells
 
         public override ISpellActivationHandle OnActivation(CasterData casterData)
         {
-            float effectiveRadius = SpellPropertyModifierResolver.ResolveZoneRadius(
-                this,
-                casterData.PropertyModifiers);
+            float effectiveRadius = ResolveEffectiveRadius(casterData.PropertyModifiers);
             return new PlacementActivationHandle(this, effectiveRadius);
         }
 
@@ -53,15 +51,13 @@ namespace RPGame.Combat.Spells
                 return;
             }
 
-            float effectiveRadius = SpellPropertyModifierResolver.ResolveZoneRadius(
-                this,
-                casterData.PropertyModifiers);
+            float effectiveRadius = ResolveEffectiveRadius(casterData.PropertyModifiers);
             float effectiveDuration = activeDuration;
             if (this is IDurationCapability durationCapability)
             {
-                effectiveDuration = SpellPropertyModifierResolver.ResolveDuration(
-                    durationCapability,
-                    casterData.PropertyModifiers);
+                effectiveDuration = casterData.PropertyModifiers.Resolve(
+                    durationCapability.Duration,
+                    SpellProperty.Duration);
             }
 
             zoneController.Initialize(casterData, effectiveRadius, activationDelay, effectiveDuration);
@@ -73,6 +69,15 @@ namespace RPGame.Combat.Spells
             radius = Mathf.Max(0f, radius);
             activationDelay = Mathf.Max(0f, activationDelay);
             activeDuration = Mathf.Max(0f, activeDuration);
+        }
+
+        private float ResolveEffectiveRadius(SpellPropertyModifiers modifiers)
+        {
+            return modifiers.Resolve(
+                       Radius,
+                       SpellProperty.Radius,
+                       SpellProperty.ZoneRadius)
+                   * Mathf.Sqrt(modifiers.GetPercentMultiplier(SpellProperty.Area));
         }
 
     }

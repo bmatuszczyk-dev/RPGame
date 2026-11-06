@@ -163,7 +163,7 @@ namespace RPGame.Core.Tests.Effects
         }
 
         [Test]
-        public void Resolver_UsesCapabilityValuesAndModifiers()
+        public void Modifiers_ResolveCapabilityValues()
         {
             SpellPropertyModifierEffectDefinition radius = CreateModifier(SpellProperty.Radius, 2.5f);
             SpellPropertyModifierEffectDefinition duration = CreateModifier(SpellProperty.Duration, -2f);
@@ -179,10 +179,11 @@ namespace RPGame.Core.Tests.Effects
 
             SpellPropertyModifiers modifiers = aggregator.CreateSpellPropertyModifiers(spell);
 
-            Assert.AreEqual(3.5f, SpellPropertyModifierResolver.ResolveRadius(spell, modifiers));
-            Assert.AreEqual(0f, SpellPropertyModifierResolver.ResolveDuration(spell, modifiers));
-            Assert.AreEqual(4f, SpellPropertyModifierResolver.ResolveControlPower(spell, modifiers));
-            Assert.AreEqual(3, SpellPropertyModifierResolver.ResolveOrbCount(spell, modifiers));
+            Assert.AreEqual(3.5f, modifiers.Resolve(spell.Radius, SpellProperty.Radius));
+            Assert.AreEqual(0f, modifiers.Resolve(spell.Duration, SpellProperty.Duration));
+            Assert.AreEqual(4f, modifiers.Resolve(spell.ControlPower, SpellProperty.ControlPower));
+            Assert.AreEqual(3, Mathf.Max(1, Mathf.RoundToInt(
+                modifiers.Resolve(spell.OrbCount, SpellProperty.OrbCount))));
             Object.DestroyImmediate(radius);
             Object.DestroyImmediate(duration);
             Object.DestroyImmediate(controlPower);

@@ -51,15 +51,19 @@ namespace RPGame.Combat.Spells
             }
 
             Vector3 forward = castOrigin != null ? castOrigin.forward : Vector3.forward;
-            float effectiveRange = SpellPropertyModifierResolver.ResolveWaveRange(
-                this,
-                casterData.PropertyModifiers);
-            float effectiveAngle = SpellPropertyModifierResolver.ResolveWaveAngle(
-                this,
-                casterData.PropertyModifiers);
-            float effectiveKnockbackDistance = SpellPropertyModifierResolver.ResolveControlPower(
-                this,
-                casterData.PropertyModifiers);
+            SpellPropertyModifiers modifiers = casterData.PropertyModifiers;
+            float effectiveRange = modifiers.Resolve(
+                Radius,
+                SpellProperty.Radius,
+                SpellProperty.WaveRange);
+            float effectiveAngle = Mathf.Clamp(
+                modifiers.Resolve(WaveAngle, SpellProperty.WaveAngle)
+                * modifiers.GetPercentMultiplier(SpellProperty.Area),
+                0f,
+                360f);
+            float effectiveKnockbackDistance = modifiers.Resolve(
+                ControlPower,
+                SpellProperty.ControlPower);
             waveController.Initialize(
                 position,
                 forward,

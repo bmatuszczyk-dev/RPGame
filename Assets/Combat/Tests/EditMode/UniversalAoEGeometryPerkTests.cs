@@ -37,7 +37,7 @@ namespace RPGame.Combat.Tests
             effects.Add(CreateModifier(SpellProperty.Area, EffectModifierType.Percent, 0.2f));
             WaveSpell wave = CreateWave(5f, 90f);
 
-            Assert.AreEqual(108f, SpellPropertyModifierResolver.ResolveWaveAngle(
+            Assert.AreEqual(108f, ResolveWaveAngle(
                 wave,
                 effects.CreateSpellPropertyModifiers(wave)), 0.0001f);
 
@@ -53,8 +53,8 @@ namespace RPGame.Combat.Tests
             WaveSpell wave = CreateWave(5f, 90f);
             SpellPropertyModifiers modifiers = effects.CreateSpellPropertyModifiers(wave);
 
-            Assert.AreEqual(110f, SpellPropertyModifierResolver.ResolveWaveAngle(wave, modifiers));
-            Assert.AreEqual(5f, SpellPropertyModifierResolver.ResolveWaveRange(wave, modifiers));
+            Assert.AreEqual(110f, ResolveWaveAngle(wave, modifiers));
+            Assert.AreEqual(5f, ResolveWaveRange(wave, modifiers));
         }
 
         [Test]
@@ -64,8 +64,8 @@ namespace RPGame.Combat.Tests
             WaveSpell wave = CreateWave(5f, 90f);
             SpellPropertyModifiers modifiers = effects.CreateSpellPropertyModifiers(wave);
 
-            Assert.AreEqual(5.75f, SpellPropertyModifierResolver.ResolveWaveRange(wave, modifiers));
-            Assert.AreEqual(90f, SpellPropertyModifierResolver.ResolveWaveAngle(wave, modifiers));
+            Assert.AreEqual(5.75f, ResolveWaveRange(wave, modifiers));
+            Assert.AreEqual(90f, ResolveWaveAngle(wave, modifiers));
         }
 
         [Test]
@@ -74,7 +74,7 @@ namespace RPGame.Combat.Tests
             effects.Add(CreateModifier(SpellProperty.ZoneRadius, EffectModifierType.Percent, 0.15f));
             EarthZoneSpell zone = CreateZone<EarthZoneSpell>();
 
-            Assert.AreEqual(5.75f, SpellPropertyModifierResolver.ResolveZoneRadius(
+            Assert.AreEqual(5.75f, ResolveZoneRadius(
                 zone,
                 effects.CreateSpellPropertyModifiers(zone)), 0.0001f);
         }
@@ -88,8 +88,8 @@ namespace RPGame.Combat.Tests
             WaveSpell wave = CreateWave(5f, 90f);
             SpellPropertyModifiers modifiers = effects.CreateSpellPropertyModifiers(wave);
 
-            Assert.AreEqual(132f, SpellPropertyModifierResolver.ResolveWaveAngle(wave, modifiers));
-            Assert.AreEqual(5.75f, SpellPropertyModifierResolver.ResolveWaveRange(wave, modifiers));
+            Assert.AreEqual(132f, ResolveWaveAngle(wave, modifiers));
+            Assert.AreEqual(5.75f, ResolveWaveRange(wave, modifiers));
         }
 
         [Test]
@@ -101,7 +101,7 @@ namespace RPGame.Combat.Tests
             EarthZoneSpell zone = CreateZone<EarthZoneSpell>();
 
             float expectedRadius = (5f + 2f) * 1.15f * Mathf.Sqrt(1.2f);
-            Assert.AreEqual(expectedRadius, SpellPropertyModifierResolver.ResolveZoneRadius(
+            Assert.AreEqual(expectedRadius, ResolveZoneRadius(
                 zone,
                 effects.CreateSpellPropertyModifiers(zone)), 0.0001f);
         }
@@ -115,7 +115,7 @@ namespace RPGame.Combat.Tests
             WaveSpell wave = CreateWave(5f, 90f);
             EarthZoneSpell zone = CreateZone<EarthZoneSpell>();
 
-            Assert.AreEqual(8.05f, SpellPropertyModifierResolver.ResolveWaveRange(
+            Assert.AreEqual(8.05f, ResolveWaveRange(
                 wave,
                 effects.CreateSpellPropertyModifiers(wave)), 0.0001f);
             SpellPropertyModifiers zoneModifiers = effects.CreateSpellPropertyModifiers(zone);
@@ -129,7 +129,7 @@ namespace RPGame.Combat.Tests
             effects.Add(CreateModifier(SpellProperty.WaveAngle, EffectModifierType.Flat, 20f));
             WaveSpell wave = CreateWave(5f, 350f);
 
-            Assert.AreEqual(360f, SpellPropertyModifierResolver.ResolveWaveAngle(
+            Assert.AreEqual(360f, ResolveWaveAngle(
                 wave,
                 effects.CreateSpellPropertyModifiers(wave)));
         }
@@ -167,13 +167,39 @@ namespace RPGame.Combat.Tests
 
         private void AssertZoneAreaExpansion(ZoneSpell zone)
         {
-            float effectiveRadius = SpellPropertyModifierResolver.ResolveZoneRadius(
+            float effectiveRadius = ResolveZoneRadius(
                 zone,
                 effects.CreateSpellPropertyModifiers(zone));
             Assert.AreEqual(5f * Mathf.Sqrt(1.2f), effectiveRadius, 0.0001f);
             Assert.AreEqual(Mathf.PI * 5f * 5f * 1.2f,
                 Mathf.PI * effectiveRadius * effectiveRadius,
                 0.0001f);
+        }
+
+        private static float ResolveWaveRange(WaveSpell wave, SpellPropertyModifiers modifiers)
+        {
+            return modifiers.Resolve(
+                wave.Radius,
+                SpellProperty.Radius,
+                SpellProperty.WaveRange);
+        }
+
+        private static float ResolveWaveAngle(WaveSpell wave, SpellPropertyModifiers modifiers)
+        {
+            return Mathf.Clamp(
+                modifiers.Resolve(wave.WaveAngle, SpellProperty.WaveAngle)
+                * modifiers.GetPercentMultiplier(SpellProperty.Area),
+                0f,
+                360f);
+        }
+
+        private static float ResolveZoneRadius(IZoneCapability zone, SpellPropertyModifiers modifiers)
+        {
+            return modifiers.Resolve(
+                       zone.Radius,
+                       SpellProperty.Radius,
+                       SpellProperty.ZoneRadius)
+                   * Mathf.Sqrt(modifiers.GetPercentMultiplier(SpellProperty.Area));
         }
 
         private WaveSpell CreateWave(float range, float angle)
