@@ -7,7 +7,7 @@ using UnityEngine;
 namespace RPGame.Combat.Spells
 {
     [CreateAssetMenu(fileName = "WaveSpell", menuName = "RPGame/Spells/Wave Spell")]
-    public sealed class WaveSpell : Spell, ICasterDamageRangeProvider, IAoECapability, IControlCapability
+    public sealed class WaveSpell : Spell, ICasterDamageRangeProvider, IWaveCapability, IControlCapability
     {
         [SerializeField] private PartialDamageRange baseDamageRange = new(1f, 3f, DamageType.Magical, DamageElement.None);
         [SerializeField] private float powerDamageScaling;
@@ -18,7 +18,18 @@ namespace RPGame.Combat.Spells
         [SerializeField] private float knockbackDuration = 0.25f;
 
         public float Radius => range;
+        public float WaveRange => range;
+        public float WaveAngle => angle;
         public float ControlPower => knockbackDistance;
+
+        public override bool SupportsProperty(SpellProperty property)
+        {
+            return property is SpellProperty.Radius
+                or SpellProperty.Area
+                or SpellProperty.WaveAngle
+                or SpellProperty.WaveRange
+                or SpellProperty.ControlPower;
+        }
 
         public override void OnCast(CasterData casterData)
         {
@@ -40,7 +51,12 @@ namespace RPGame.Combat.Spells
             }
 
             Vector3 forward = castOrigin != null ? castOrigin.forward : Vector3.forward;
-            float effectiveRange = SpellPropertyModifierResolver.ResolveRadius(this, casterData.PropertyModifiers);
+            float effectiveRange = SpellPropertyModifierResolver.ResolveWaveRange(
+                this,
+                casterData.PropertyModifiers);
+            float effectiveAngle = SpellPropertyModifierResolver.ResolveWaveAngle(
+                this,
+                casterData.PropertyModifiers);
             float effectiveKnockbackDistance = SpellPropertyModifierResolver.ResolveControlPower(
                 this,
                 casterData.PropertyModifiers);
@@ -48,7 +64,7 @@ namespace RPGame.Combat.Spells
                 position,
                 forward,
                 effectiveRange,
-                angle,
+                effectiveAngle,
                 propagationSpeed,
                 effectiveKnockbackDistance,
                 knockbackDuration,

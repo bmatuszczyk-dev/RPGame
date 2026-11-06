@@ -1,36 +1,42 @@
+using System.Collections.Generic;
+using RPGame.Core.Effects;
+
 namespace RPGame.Core.Spells
 {
     public sealed class SpellPropertyModifiers
     {
-        public static SpellPropertyModifiers Empty { get; } = new(0f, 0f, 0f, 0f);
+        public static SpellPropertyModifiers Empty { get; } = new(null, null);
 
-        private readonly float radius;
-        private readonly float duration;
-        private readonly float controlPower;
-        private readonly float orbCount;
+        private readonly IReadOnlyDictionary<SpellProperty, float> flatValues;
+        private readonly IReadOnlyDictionary<SpellProperty, float> percentValues;
 
         internal SpellPropertyModifiers(
-            float radius,
-            float duration,
-            float controlPower,
-            float orbCount)
+            IReadOnlyDictionary<SpellProperty, float> flatValues,
+            IReadOnlyDictionary<SpellProperty, float> percentValues)
         {
-            this.radius = radius;
-            this.duration = duration;
-            this.controlPower = controlPower;
-            this.orbCount = orbCount;
+            this.flatValues = flatValues != null
+                ? new Dictionary<SpellProperty, float>(flatValues)
+                : new Dictionary<SpellProperty, float>();
+            this.percentValues = percentValues != null
+                ? new Dictionary<SpellProperty, float>(percentValues)
+                : new Dictionary<SpellProperty, float>();
         }
 
-        public float GetValue(SpellProperty property)
+        public float GetFlatValue(SpellProperty property)
         {
-            return property switch
-            {
-                SpellProperty.Radius => radius,
-                SpellProperty.Duration => duration,
-                SpellProperty.ControlPower => controlPower,
-                SpellProperty.OrbCount => orbCount,
-                _ => 0f
-            };
+            return GetValue(property, EffectModifierType.Flat);
+        }
+
+        public float GetPercentValue(SpellProperty property)
+        {
+            return GetValue(property, EffectModifierType.Percent);
+        }
+
+        private float GetValue(SpellProperty property, EffectModifierType modifierType)
+        {
+            IReadOnlyDictionary<SpellProperty, float> values =
+                modifierType == EffectModifierType.Flat ? flatValues : percentValues;
+            return values.TryGetValue(property, out float value) ? value : 0f;
         }
     }
 }

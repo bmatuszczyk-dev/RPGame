@@ -52,10 +52,8 @@ namespace RPGame.Core.Effects
 
         public SpellPropertyModifiers CreateSpellPropertyModifiers(Spell spell)
         {
-            float radius = 0f;
-            float duration = 0f;
-            float controlPower = 0f;
-            float orbCount = 0f;
+            Dictionary<SpellProperty, float> flatValues = new();
+            Dictionary<SpellProperty, float> percentValues = new();
 
             foreach (EffectInstance effect in effects)
             {
@@ -64,7 +62,7 @@ namespace RPGame.Core.Effects
                     continue;
                 }
 
-                if (!SpellPropertyModifierResolver.Supports(spell, modifier.Property))
+                if (spell == null || !spell.SupportsProperty(modifier.Property))
                 {
                     continue;
                 }
@@ -74,29 +72,17 @@ namespace RPGame.Core.Effects
                     continue;
                 }
 
-                switch (modifier.Property)
-                {
-                    case SpellProperty.Radius:
-                        radius += modifier.Value;
-                        break;
-                    case SpellProperty.Duration:
-                        duration += modifier.Value;
-                        break;
-                    case SpellProperty.ControlPower:
-                        controlPower += modifier.Value;
-                        break;
-                    case SpellProperty.OrbCount:
-                        orbCount += modifier.Value;
-                        break;
-                }
+                Dictionary<SpellProperty, float> values =
+                    modifier.ModifierType == EffectModifierType.Flat
+                        ? flatValues
+                        : percentValues;
+                values.TryGetValue(modifier.Property, out float currentValue);
+                values[modifier.Property] = currentValue + modifier.Value;
             }
 
-            return radius == 0f
-                && duration == 0f
-                && controlPower == 0f
-                && orbCount == 0f
+            return flatValues.Count == 0 && percentValues.Count == 0
                 ? SpellPropertyModifiers.Empty
-                : new SpellPropertyModifiers(radius, duration, controlPower, orbCount);
+                : new SpellPropertyModifiers(flatValues, percentValues);
         }
 
         public IReadOnlyList<IRuntimeSpellBehavior> CreateRuntimeBehaviors(

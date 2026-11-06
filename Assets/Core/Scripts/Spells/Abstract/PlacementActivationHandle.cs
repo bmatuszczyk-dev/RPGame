@@ -5,11 +5,13 @@ namespace RPGame.Core.Spells
     public sealed class PlacementActivationHandle : ISpellActivationHandle
     {
         private readonly IIndicatorSpell spell;
+        private readonly float placementRadius;
         private ISpellActivationService service;
 
-        public PlacementActivationHandle(IIndicatorSpell spell)
+        public PlacementActivationHandle(IIndicatorSpell spell, float placementRadius)
         {
             this.spell = spell;
+            this.placementRadius = Mathf.Max(0f, placementRadius);
         }
 
         public void Activate(ISpellActivationService service, CasterData casterData)
@@ -21,7 +23,7 @@ namespace RPGame.Core.Spells
 
             this.service = service;
             Transform caster = casterData.CasterObject != null ? casterData.CasterObject.transform : null;
-            service.BeginPlacement(spell, caster);
+            service.BeginPlacement(spell, caster, placementRadius);
         }
 
         public void Deactivate(ISpellActivationService service)

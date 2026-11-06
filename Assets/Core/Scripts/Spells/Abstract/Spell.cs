@@ -21,6 +21,8 @@ namespace RPGame.Core.Spells
             return null;
         }
 
+        public abstract bool SupportsProperty(SpellProperty property);
+
         public abstract void OnCast(CasterData casterData);
 
         private void OnValidate()

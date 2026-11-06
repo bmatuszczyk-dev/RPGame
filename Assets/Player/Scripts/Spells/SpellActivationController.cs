@@ -38,10 +38,10 @@ namespace RPGame.Player.Spells
             activeHandle = null;
         }
 
-        public void BeginPlacement(IIndicatorSpell spell, Transform caster)
+        public void BeginPlacement(IIndicatorSpell spell, Transform caster, float placementRadius)
         {
             ResolveReferences();
-            spellPlacementController?.Begin(spell, caster);
+            spellPlacementController?.Begin(spell, caster, placementRadius);
         }
 
         public void EndPlacement()

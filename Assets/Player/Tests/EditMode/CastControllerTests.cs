@@ -206,7 +206,7 @@ namespace RPGame.Player.Tests
 
             InvokeCastSpell(spell);
 
-            Assert.AreEqual(2f, spell.LastCasterData.PropertyModifiers.GetValue(SpellProperty.Radius));
+            Assert.AreEqual(2f, spell.LastCasterData.PropertyModifiers.GetFlatValue(SpellProperty.Radius));
             Object.DestroyImmediate(effect);
         }
 
@@ -226,7 +226,7 @@ namespace RPGame.Player.Tests
 
             InvokeSpellSelected(activationSpell);
 
-            Assert.AreEqual(2f, activationSpell.ActivationCasterData.PropertyModifiers.GetValue(SpellProperty.Radius));
+            Assert.AreEqual(2f, activationSpell.ActivationCasterData.PropertyModifiers.GetFlatValue(SpellProperty.Radius));
             Assert.AreEqual(0, activationSpell.ActivationCasterData.RuntimeBehaviors.Count);
             Object.DestroyImmediate(effect);
             Object.DestroyImmediate(activationSpell);
@@ -307,6 +307,11 @@ namespace RPGame.Player.Tests
 
             public float Radius => 1f;
 
+            public override bool SupportsProperty(SpellProperty property)
+            {
+                return property is SpellProperty.Radius or SpellProperty.Area;
+            }
+
             public override void OnCast(CasterData casterData)
             {
                 LastCasterData = casterData;
@@ -319,6 +324,8 @@ namespace RPGame.Player.Tests
             {
                 new PartialDamageRange(3f, 7f, DamageType.Magical, DamageElement.Fire)
             };
+
+            public override bool SupportsProperty(SpellProperty property) => false;
 
             public override void OnCast(CasterData casterData)
             {
@@ -335,6 +342,11 @@ namespace RPGame.Player.Tests
             public CasterData ActivationCasterData { get; private set; }
 
             public float Radius => 1f;
+
+            public override bool SupportsProperty(SpellProperty property)
+            {
+                return property is SpellProperty.Radius or SpellProperty.Area;
+            }
 
             public override ISpellActivationHandle OnActivation(CasterData casterData)
             {

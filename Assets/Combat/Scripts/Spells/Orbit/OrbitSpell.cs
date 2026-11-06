@@ -21,6 +21,11 @@ namespace RPGame.Combat.Spells
         public int OrbCount => projectileCount;
         public float Duration => lifetime;
 
+        public override bool SupportsProperty(SpellProperty property)
+        {
+            return property is SpellProperty.Duration or SpellProperty.OrbCount;
+        }
+
         public override void OnCast(CasterData casterData)
         {
             if (SpellPrefab == null)

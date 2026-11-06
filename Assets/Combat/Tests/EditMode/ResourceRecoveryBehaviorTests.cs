@@ -414,6 +414,8 @@ namespace RPGame.Combat.Tests
 
         private sealed class TestSpell : Spell
         {
+            public override bool SupportsProperty(SpellProperty property) => false;
+
             public override void OnCast(CasterData casterData)
             {
             }
