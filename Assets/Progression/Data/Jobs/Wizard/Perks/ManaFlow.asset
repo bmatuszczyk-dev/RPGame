@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5145033cfde049c88a0cd28b4579eb12, type: 3}
+  m_Name: ManaFlow
+  m_EditorClassIdentifier: RPGame.Progression::RPGame.Progression.PerkDefinition
+  perkId: ManaFlow
+  displayName: Mana Flow
+  description: Zwieksza regeneracje many o 15%.
+  connectedPerkIds:
+  - ManaSurge
+  cost: 1
+  isStartingPerk: 1
+  uiPosition: {x: 120, y: 150}
+  effects:
+  - {fileID: 11400000, guid: 3edf51c574004126944441c6cbeb7402, type: 2}

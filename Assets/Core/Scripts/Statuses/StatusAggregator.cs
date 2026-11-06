@@ -55,7 +55,14 @@ namespace RPGame.Core.Statuses
 
         public bool ApplyStatus(StatusDefinition status, float duration, StatusContext context)
         {
-            return statusContainer.Add(status, duration, context);
+            EnsureStatusContainer();
+            float effectiveDuration = status is INegativeStatus
+                ? EffectSourceValueResolver.Resolve(
+                    duration,
+                    context.Source,
+                    EffectStat.NegativeStatusDuration)
+                : Mathf.Max(0f, duration);
+            return statusContainer.Add(status, effectiveDuration, context);
         }
 
         public bool HasStatus(StatusDefinition status)

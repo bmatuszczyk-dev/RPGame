@@ -10,7 +10,8 @@ namespace RPGame.Core.Statuses
     public sealed class BurningStatusDefinition :
         StatusDefinition,
         IStackablePeriodicStatus,
-        IStackableStatus
+        IStackableStatus,
+        INegativeStatus
     {
         private const float MinimumTickInterval = 0.0001f;
 
@@ -31,7 +32,7 @@ namespace RPGame.Core.Statuses
             return target.Damageable != null;
         }
 
-        public void Tick(StatusTarget target, int currentStacks)
+        public void Tick(StatusTarget target, int currentStacks, GameObject source)
         {
             IDamageable damageable = target.Damageable;
             float damage = BaseDamagePerSecond * TickInterval * Mathf.Max(1, currentStacks);
@@ -43,7 +44,7 @@ namespace RPGame.Core.Statuses
             damageable.ApplyDamage(new DamageData(new[]
             {
                 new PartialDamage(damage, DamageType.Magical, DamageElement.Fire)
-            }));
+            }, source, DamageApplicationType.Periodic));
         }
 
         public override string ToString()

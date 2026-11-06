@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using RPGame.Core.Effects;
 using RPGame.Core.Spells;
 using RPGame.Core.Statuses;
 
@@ -12,11 +14,17 @@ namespace RPGame.Combat.Spells
         private readonly IStatusReceiver statusReceiver;
         private readonly MarkStatusDefinition markDefinition;
         private readonly HashSet<SpellId> successfulSpellIds = new();
+        private readonly Func<float> getTime;
+        private float windowStartedAt = -1f;
 
-        public MarkProgressTracker(IStatusReceiver statusReceiver, MarkStatusDefinition markDefinition)
+        public MarkProgressTracker(
+            IStatusReceiver statusReceiver,
+            MarkStatusDefinition markDefinition,
+            Func<float> getTime = null)
         {
             this.statusReceiver = statusReceiver;
             this.markDefinition = markDefinition;
+            this.getTime = getTime ?? (() => UnityEngine.Time.time);
         }
 
         public bool RecordSuccessfulSpell(SpellId spellId, StatusContext context)
@@ -30,8 +38,20 @@ namespace RPGame.Combat.Spells
 
             if (statusReceiver.HasStatus(markDefinition))
             {
-                successfulSpellIds.Clear();
+                ClearProgress();
                 return false;
+            }
+
+            float currentTime = getTime();
+            if (successfulSpellIds.Count > 0
+                && currentTime - windowStartedAt > GetComboWindow(context.Source))
+            {
+                ClearProgress();
+            }
+
+            if (successfulSpellIds.Count == 0)
+            {
+                windowStartedAt = currentTime;
             }
 
             if (!successfulSpellIds.Add(spellId))
@@ -44,8 +64,8 @@ namespace RPGame.Combat.Spells
                 return true;
             }
 
-            successfulSpellIds.Clear();
-            statusReceiver.ApplyStatus(markDefinition, MarkDuration, context);
+            ClearProgress();
+            statusReceiver.ApplyStatus(markDefinition, GetMarkDuration(context.Source), context);
             return true;
         }
 
@@ -53,5 +73,22 @@ namespace RPGame.Combat.Spells
         {
             return spell != null && RecordSuccessfulSpell(spell.Id, context);
         }
+
+        public void ClearProgress()
+        {
+            successfulSpellIds.Clear();
+            windowStartedAt = -1f;
+        }
+
+        private float GetComboWindow(UnityEngine.GameObject source)
+        {
+            return EffectSourceValueResolver.Resolve(MarkDuration, source, EffectStat.MarkComboWindow);
+        }
+
+        private float GetMarkDuration(UnityEngine.GameObject source)
+        {
+            return EffectSourceValueResolver.Resolve(MarkDuration, source, EffectStat.MarkDuration);
+        }
+
     }
 }

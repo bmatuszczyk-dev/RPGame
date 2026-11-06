@@ -5,7 +5,7 @@ namespace RPGame.Core.Statuses
 {
     [CreateAssetMenu(fileName = "SlowEffect", menuName = "RPGame/Statuses/Slow")]
     [MovedFrom(true, null, null, "SlowEffectDefinition")]
-    public sealed class SlowStatusDefinition : StatusDefinition
+    public sealed class SlowStatusDefinition : StatusDefinition, INegativeStatus
     {
         [SerializeField] private float movementSpeedMultiplier = 0.7f;
 

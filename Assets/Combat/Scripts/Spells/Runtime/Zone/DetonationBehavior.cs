@@ -1,4 +1,5 @@
 using System;
+using RPGame.Core.Effects;
 using RPGame.Core.Spells;
 using RPGame.Core.Statuses;
 using UnityEngine;
@@ -71,6 +72,9 @@ namespace RPGame.Combat.Spells
             float damage = burn.BaseDamagePerSecond
                 * Mathf.Max(1, instance.CurrentStacks)
                 * Mathf.Max(0f, instance.RemainingDuration)
+                * EffectSourceValueResolver.GetMultiplier(
+                    instance.LastApplicationContext.Source,
+                    EffectStat.PeriodicSpellDamage)
                 * DamageMultiplier;
             if (damage <= 0f)
             {

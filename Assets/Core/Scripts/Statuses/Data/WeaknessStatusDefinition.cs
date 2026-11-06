@@ -3,7 +3,7 @@ using UnityEngine;
 namespace RPGame.Core.Statuses
 {
     [CreateAssetMenu(fileName = "WeaknessStatus", menuName = "RPGame/Statuses/Weakness")]
-    public sealed class WeaknessStatusDefinition : StatusDefinition, IStackableStatus
+    public sealed class WeaknessStatusDefinition : StatusDefinition, IStackableStatus, INegativeStatus
     {
         [SerializeField] private float stackValue = 0.1f;
         [SerializeField] private int maxStack = 3;

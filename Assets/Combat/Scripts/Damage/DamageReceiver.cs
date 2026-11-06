@@ -134,7 +134,7 @@ namespace RPGame.Combat.Damage
                     part.DamageElement));
             }
 
-            return new DamageData(modifiedParts, data.Source);
+            return data.WithParts(modifiedParts);
         }
 
         private float GetWeaknessValue()

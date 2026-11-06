@@ -4,7 +4,7 @@ using UnityEngine;
 namespace RPGame.Core.Statuses
 {
     [CreateAssetMenu(fileName = "Poison", menuName = "RPGame/Progression/Statuses/Poison")]
-    public sealed class PoisonStatusDefinition : StatusDefinition, IPeriodicStatus
+    public sealed class PoisonStatusDefinition : StatusDefinition, IPeriodicStatus, INegativeStatus
     {
         private const float MinimumTickInterval = 0.0001f;
 
@@ -21,7 +21,7 @@ namespace RPGame.Core.Statuses
             return target.Damageable != null;
         }
 
-        public void Tick(StatusTarget target)
+        public void Tick(StatusTarget target, GameObject source)
         {
             IDamageable damageable = target.Damageable;
             if (damageable == null || !damageable.CanReceiveDamage || damagePerTick <= 0f)
@@ -32,7 +32,7 @@ namespace RPGame.Core.Statuses
             damageable.ApplyDamage(new DamageData(new[]
             {
                 new PartialDamage(damagePerTick, DamageType.Magical, DamageElement.None)
-            }));
+            }, source, DamageApplicationType.Periodic));
         }
 
         public override string ToString()

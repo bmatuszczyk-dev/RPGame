@@ -9,6 +9,11 @@ namespace RPGame.Core.Effects
         Intelligence = 4,
         Power = 5,
         MaxHealth = 6,
-        ManaRegeneration = 7
+        ManaRegeneration = 7,
+        MarkComboWindow = 8,
+        MarkDuration = 9,
+        NegativeStatusDuration = 10,
+        PeriodicSpellDamage = 11,
+        SpellDamage = 12
     }
 }

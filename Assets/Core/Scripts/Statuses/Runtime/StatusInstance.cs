@@ -271,7 +271,7 @@ namespace RPGame.Core.Statuses
             periodicTickTimer += deltaTime;
             while (periodicTickTimer >= tickInterval)
             {
-                periodicStatus.Tick(target);
+                periodicStatus.Tick(target, LastApplicationContext.Source);
                 periodicTickTimer -= tickInterval;
             }
         }
@@ -290,7 +290,7 @@ namespace RPGame.Core.Statuses
             periodicTickTimer += deltaTime;
             while (periodicTickTimer >= tickInterval)
             {
-                periodicStatus.Tick(target, currentStacks);
+                periodicStatus.Tick(target, currentStacks, LastApplicationContext.Source);
                 periodicTickTimer -= tickInterval;
             }
         }

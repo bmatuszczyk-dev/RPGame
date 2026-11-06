@@ -3,7 +3,7 @@ using UnityEngine;
 namespace RPGame.Core.Statuses
 {
     [CreateAssetMenu(fileName = "SuppressionStatus", menuName = "RPGame/Statuses/Suppression")]
-    public sealed class SuppressionStatusDefinition : StatusDefinition
+    public sealed class SuppressionStatusDefinition : StatusDefinition, INegativeStatus
     {
         [SerializeField, Range(0f, 1f)] private float damageReductionPercent = 0.25f;
 
