@@ -73,6 +73,21 @@ namespace RPGame.UI.Tests
             Assert.AreEqual("No bonuses", bonusesText.text);
         }
 
+        [Test]
+        public void Show_NearBottomOfScreen_ShowsTooltipAboveCursor()
+        {
+            PerkDefinition perk = CreatePerk("spark", "Spark", "Small burst");
+            PerkTooltipUI tooltip = CreateTooltip(out _);
+            RectTransform tooltipTransform = (RectTransform)tooltip.transform;
+            tooltipTransform.sizeDelta = new Vector2(200f, 100f);
+
+            Vector2 cursorPosition = new Vector2(Screen.width * 0.5f, 80f);
+            tooltip.Show(perk, cursorPosition);
+
+            float tooltipBottom = tooltipTransform.position.y - tooltipTransform.rect.height * tooltipTransform.pivot.y;
+            Assert.Greater(tooltipBottom, cursorPosition.y);
+        }
+
         private PerkTooltipUI CreateTooltip(out CanvasGroup canvasGroup)
         {
             return CreateTooltip(out canvasGroup, out _, out _, out _);

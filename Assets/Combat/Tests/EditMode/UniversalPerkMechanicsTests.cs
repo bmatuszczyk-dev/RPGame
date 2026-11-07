@@ -185,11 +185,16 @@ namespace RPGame.Combat.Tests
         {
             StatEffectDefinition effect = ScriptableObject.CreateInstance<StatEffectDefinition>();
             SerializedObject serialized = new(effect);
-            serialized.FindProperty("stat").enumValueIndex = (int)stat;
+            serialized.FindProperty("stat").enumValueIndex = GetEffectStatIndex(stat);
             serialized.FindProperty("modifierType").enumValueIndex = (int)modifierType;
             serialized.FindProperty("value").floatValue = value;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             return effect;
+        }
+
+        private static int GetEffectStatIndex(EffectStat stat)
+        {
+            return System.Array.IndexOf((EffectStat[])System.Enum.GetValues(typeof(EffectStat)), stat);
         }
 
         private static StatusDurationModifierEffectDefinition CreateStatusDurationEffect(

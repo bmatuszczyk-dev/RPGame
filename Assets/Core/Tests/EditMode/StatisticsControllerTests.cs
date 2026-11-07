@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using RPGame.Core.Effects;
 using RPGame.Core.Statistics;
@@ -34,6 +35,7 @@ namespace RPGame.Core.Tests
             effects = gameObject.AddComponent<EffectAggregator>();
             controller = gameObject.AddComponent<StatisticsController>();
             SetControllerConfig(controller, config);
+            InvokeAwake(controller);
             controller.ResetToConfig();
         }
 
@@ -397,6 +399,13 @@ namespace RPGame.Core.Tests
             serializedController.ApplyModifiedPropertiesWithoutUndo();
         }
 
+        private static void InvokeAwake(StatisticsController statisticsController)
+        {
+            typeof(StatisticsController)
+                .GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(statisticsController, null);
+        }
+
         private static void SetRegeneration(StatisticsController statisticsController, bool regenerateHealth, bool regenerateStamina)
         {
             SerializedObject serializedController = new SerializedObject(statisticsController);
@@ -412,7 +421,7 @@ namespace RPGame.Core.Tests
         {
             StatEffectDefinition definition = ScriptableObject.CreateInstance<StatEffectDefinition>();
             SerializedObject serialized = new(definition);
-            serialized.FindProperty("stat").enumValueIndex = (int)stat;
+            serialized.FindProperty("stat").enumValueIndex = GetEffectStatIndex(stat);
             serialized.FindProperty("modifierType").enumValueIndex = (int)modifierType;
             serialized.FindProperty("value").floatValue = value;
             serialized.ApplyModifiedPropertiesWithoutUndo();
@@ -424,6 +433,11 @@ namespace RPGame.Core.Tests
             StatEffectDefinition definition = CreateStatEffect(stat, modifierType, value);
             effectDefinitions.Add(definition);
             effects.Add(definition);
+        }
+
+        private static int GetEffectStatIndex(EffectStat stat)
+        {
+            return System.Array.IndexOf((EffectStat[])System.Enum.GetValues(typeof(EffectStat)), stat);
         }
     }
 }

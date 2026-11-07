@@ -172,12 +172,17 @@ namespace RPGame.Core.Tests
         {
             StatEffectDefinition definition = ScriptableObject.CreateInstance<StatEffectDefinition>();
             SerializedObject serialized = new(definition);
-            serialized.FindProperty("stat").enumValueIndex = (int)stat;
+            serialized.FindProperty("stat").enumValueIndex = GetEffectStatIndex(stat);
             serialized.FindProperty("modifierType").enumValueIndex = (int)modifierType;
             serialized.FindProperty("value").floatValue = value;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             effectDefinitions.Add(definition);
             effects.Add(definition);
+        }
+
+        private static int GetEffectStatIndex(EffectStat stat)
+        {
+            return System.Array.IndexOf((EffectStat[])System.Enum.GetValues(typeof(EffectStat)), stat);
         }
     }
 }
