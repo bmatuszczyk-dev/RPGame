@@ -15,8 +15,7 @@ MonoBehaviour:
   perkId: Overpressure
   displayName: Overpressure
   description: Zwieksza obrazenia Detonation o 50%.
-  connectedPerkIds:
-  - Detonation
+  connectedPerkIds: []
   cost: 1
   isStartingPerk: 0
   uiPosition: {x: 500, y: 100}

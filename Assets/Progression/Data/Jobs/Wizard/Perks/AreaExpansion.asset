@@ -15,8 +15,7 @@ MonoBehaviour:
   perkId: AreaExpansion
   displayName: Area Expansion
   description: Zwieksza powierzchnie dzialania zaklec AoE o 20%.
-  connectedPerkIds:
-  - FlatSpellDamageII
+  connectedPerkIds: []
   cost: 1
   isStartingPerk: 0
   uiPosition: {x: -200, y: 200}

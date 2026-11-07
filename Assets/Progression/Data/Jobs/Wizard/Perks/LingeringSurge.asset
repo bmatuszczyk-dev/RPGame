@@ -15,8 +15,7 @@ MonoBehaviour:
   perkId: LingeringSurge
   displayName: Lingering Surge
   description: Wydluza czas trwania Mana Surge o 50%.
-  connectedPerkIds:
-  - ManaSurge
+  connectedPerkIds: []
   cost: 1
   isStartingPerk: 0
   uiPosition: {x: 300, y: 550}

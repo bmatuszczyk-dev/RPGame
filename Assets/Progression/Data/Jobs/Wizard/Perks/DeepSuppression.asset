@@ -15,8 +15,7 @@ MonoBehaviour:
   perkId: DeepSuppression
   displayName: Deep Suppression
   description: Wydluza czas trwania Suppression o 2 s.
-  connectedPerkIds:
-  - Suppression
+  connectedPerkIds: []
   cost: 1
   isStartingPerk: 0
   uiPosition: {x: 500, y: 450}

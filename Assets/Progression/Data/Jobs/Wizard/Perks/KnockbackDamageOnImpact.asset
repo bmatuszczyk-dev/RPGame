@@ -15,8 +15,7 @@ MonoBehaviour:
   perkId: KnockbackDamageOnImpact
   displayName: Impact Damage
   description: Knockback zadaje 1 obrazenie przy uderzeniu w przeszkode.
-  connectedPerkIds:
-  - Concussion
+  connectedPerkIds: []
   cost: 1
   isStartingPerk: 0
   uiPosition: {x: -225, y: 550}

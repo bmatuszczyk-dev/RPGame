@@ -16,7 +16,6 @@ MonoBehaviour:
   displayName: Flat Spell Damage II
   description: Zwieksza bezposrednie obrazenia zaklec o 2.
   connectedPerkIds:
-  - FlatSpellDamageI
   - ArcanePower
   - AreaExpansion
   cost: 1

@@ -15,8 +15,7 @@ MonoBehaviour:
   perkId: HeavyConcussion
   displayName: Heavy Concussion
   description: Dodaje Stun na 2 s przy uderzeniu po knockbacku.
-  connectedPerkIds:
-  - Concussion
+  connectedPerkIds: []
   cost: 1
   isStartingPerk: 0
   uiPosition: {x: -125, y: 550}

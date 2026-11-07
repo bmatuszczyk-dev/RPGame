@@ -15,8 +15,7 @@ MonoBehaviour:
   perkId: MaxMana
   displayName: Maximum Mana
   description: Zwieksza maksymalna mane o 50.
-  connectedPerkIds:
-  - ManaRegenerationII
+  connectedPerkIds: []
   cost: 1
   isStartingPerk: 0
   uiPosition: {x: 200, y: 200}

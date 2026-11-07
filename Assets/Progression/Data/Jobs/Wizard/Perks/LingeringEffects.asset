@@ -15,8 +15,7 @@ MonoBehaviour:
   perkId: LingeringEffects
   displayName: Lingering Effects
   description: Wydluza negatywne statusy o 15%.
-  connectedPerkIds:
-  - Suppression
+  connectedPerkIds: []
   cost: 1
   isStartingPerk: 0
   uiPosition: {x: 450, y: 500}

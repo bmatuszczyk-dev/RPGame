@@ -16,7 +16,6 @@ MonoBehaviour:
   displayName: Mana Regeneration II
   description: Zwieksza regeneracje many o 1 Mana/s.
   connectedPerkIds:
-  - ManaRegenerationI
   - ManaFlow
   - MaxMana
   cost: 1

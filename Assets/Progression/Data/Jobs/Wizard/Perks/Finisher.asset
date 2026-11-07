@@ -15,10 +15,9 @@ MonoBehaviour:
   perkId: Finisher
   displayName: Finisher
   description: Dobija markowane cele ponizej 25% zdrowia.
-  connectedPerkIds:
-  - StatusExploitation
+  connectedPerkIds: []
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: -450, y: 450}
+  uiPosition: {x: -350, y: 392}
   effects:
   - {fileID: 11400000, guid: 84af991ca80e4c3abc703c95c2d4b218, type: 2}

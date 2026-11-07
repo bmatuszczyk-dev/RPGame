@@ -15,10 +15,9 @@ MonoBehaviour:
   perkId: ArcaneTempo
   displayName: Arcane Tempo
   description: Wydluza okno kombinacji Mark do 6 s.
-  connectedPerkIds:
-  - ExtendedMark
+  connectedPerkIds: []
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: 0, y: 537}
+  uiPosition: {x: 0, y: 550}
   effects:
   - {fileID: 11400000, guid: fb58e41660804dc4ad55d6596ad4a60c, type: 2}

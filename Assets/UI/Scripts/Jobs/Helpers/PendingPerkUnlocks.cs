@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using RPGame.Progression;
 using UnityEngine;
 
@@ -92,7 +93,7 @@ namespace RPGame.UI.Jobs
                 return PerkUnlockState.Locked;
             }
 
-            return IsPerkConnectedToUnlockedOrPendingPerk(job, perk)
+            return !HasPredecessor(job, perk) || HasUnlockedOrPendingPredecessor(job, perk)
                 ? PerkUnlockState.Available
                 : PerkUnlockState.Locked;
         }
@@ -139,7 +140,7 @@ namespace RPGame.UI.Jobs
                 return false;
             }
 
-            return perk.IsStartingPerk || HasUnlockedOrOtherPendingConnection(job, perk);
+            return !HasPredecessor(job, perk) || HasUnlockedOrPendingPredecessor(job, perk);
         }
 
         private static bool IsPerkDefinedForJob(JobInstance job, PerkDefinition perk)
@@ -161,23 +162,33 @@ namespace RPGame.UI.Jobs
             return false;
         }
 
-        private bool IsPerkConnectedToUnlockedOrPendingPerk(JobInstance job, PerkDefinition perk)
-        {
-            return perk.IsStartingPerk || HasUnlockedOrOtherPendingConnection(job, perk);
-        }
-
-        private bool HasUnlockedOrOtherPendingConnection(JobInstance job, PerkDefinition perk)
+        private static bool HasPredecessor(JobInstance job, PerkDefinition perk)
         {
             IReadOnlyList<PerkDefinition> jobPerks = job.Definition.JobPerks;
             for (int i = 0; i < jobPerks.Count; i++)
             {
-                PerkDefinition connectedPerk = jobPerks[i];
-                if (connectedPerk == null || connectedPerk.PerkId == perk.PerkId || !AreConnected(perk, connectedPerk))
+                PerkDefinition candidate = jobPerks[i];
+                if (candidate != null && candidate.NextPerkIds.Contains(perk.PerkId))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool HasUnlockedOrPendingPredecessor(JobInstance job, PerkDefinition perk)
+        {
+            IReadOnlyList<PerkDefinition> jobPerks = job.Definition.JobPerks;
+            for (int i = 0; i < jobPerks.Count; i++)
+            {
+                PerkDefinition predecessor = jobPerks[i];
+                if (predecessor == null || !predecessor.NextPerkIds.Contains(perk.PerkId))
                 {
                     continue;
                 }
 
-                if (IsPerkUnlocked(job, connectedPerk.PerkId) || pendingPerkIds.Contains(connectedPerk.PerkId))
+                if (IsPerkUnlocked(job, predecessor.PerkId) || pendingPerkIds.Contains(predecessor.PerkId))
                 {
                     return true;
                 }
@@ -199,23 +210,5 @@ namespace RPGame.UI.Jobs
             return false;
         }
 
-        private static bool AreConnected(PerkDefinition firstPerk, PerkDefinition secondPerk)
-        {
-            return ContainsPerkId(firstPerk.ConnectedPerkIds, secondPerk.PerkId)
-                || ContainsPerkId(secondPerk.ConnectedPerkIds, firstPerk.PerkId);
-        }
-
-        private static bool ContainsPerkId(IReadOnlyList<string> perkIds, string perkId)
-        {
-            for (int i = 0; i < perkIds.Count; i++)
-            {
-                if (perkIds[i] == perkId)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
     }
 }

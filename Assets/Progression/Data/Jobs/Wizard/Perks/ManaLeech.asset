@@ -17,7 +17,6 @@ MonoBehaviour:
   description: Przywraca mane rowna 50% obrazen pocisku.
   connectedPerkIds:
   - ResourceRecovery
-  - StatusExploitation
   cost: 1
   isStartingPerk: 0
   uiPosition: {x: -425, y: 300}

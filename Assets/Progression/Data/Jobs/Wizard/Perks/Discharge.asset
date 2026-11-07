@@ -19,6 +19,6 @@ MonoBehaviour:
   - Overcharge
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: 100, y: 406}
+  uiPosition: {x: 100, y: 400}
   effects:
   - {fileID: 11400000, guid: 0e8981a2b795425ab5ecf6cf9d8f5992, type: 2}

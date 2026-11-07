@@ -15,8 +15,7 @@ MonoBehaviour:
   perkId: Overcharge
   displayName: Overcharge
   description: Zwieksza obrazenia Discharge o 25%.
-  connectedPerkIds:
-  - Discharge
+  connectedPerkIds: []
   cost: 1
   isStartingPerk: 0
   uiPosition: {x: 100, y: 550}

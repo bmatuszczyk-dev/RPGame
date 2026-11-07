@@ -17,6 +17,7 @@ MonoBehaviour:
   description: Markowane cele zyskuja czasowa redukcje zadawanych obrazen.
   connectedPerkIds:
   - DeepSuppression
+  - LingeringEffects
   cost: 1
   isStartingPerk: 0
   uiPosition: {x: 362, y: 400}

@@ -11376,7 +11376,6 @@ MonoBehaviour:
   perkNodesParent: {fileID: 1286486012}
   connectionsGraphic: {fileID: 1286486013}
   perkTooltip: {fileID: 1366714107}
-  rootNodePrefab: {fileID: 3217969536564949742, guid: d47f540014452fd47a48b751c619de76, type: 3}
   perkNodePrefab: {fileID: 3072268963816896140, guid: 82aa86a914ee8c043a8c21127c9e6a1d, type: 3}
   confirmPerkUnlocksButton: {fileID: 1613803251}
   cancelPerkUnlocksButton: {fileID: 1194187629}

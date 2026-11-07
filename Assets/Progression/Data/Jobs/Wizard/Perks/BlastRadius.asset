@@ -15,8 +15,7 @@ MonoBehaviour:
   perkId: BlastRadius
   displayName: Blast Radius
   description: Zwieksza promien Detonation o 50%.
-  connectedPerkIds:
-  - Detonation
+  connectedPerkIds: []
   cost: 1
   isStartingPerk: 0
   uiPosition: {x: 500, y: 200}

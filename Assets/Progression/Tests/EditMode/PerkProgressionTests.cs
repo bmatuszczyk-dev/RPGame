@@ -97,11 +97,21 @@ namespace RPGame.Progression.Tests
         }
 
         [Test]
-        public void GetUnlockState_WhenPerkHasNoUnlockedNeighbor_ReturnsLocked()
+        public void GetUnlockState_WhenPerkHasNoPredecessor_ReturnsAvailable()
         {
             JobInstance job = CreateJob(jobPoints: 1);
 
             PerkUnlockState state = service.GetUnlockState(job, isolatedPerk);
+
+            Assert.AreEqual(PerkUnlockState.Available, state);
+        }
+
+        [Test]
+        public void GetUnlockState_WhenPredecessorIsLocked_ReturnsLocked()
+        {
+            JobInstance job = CreateJob(jobPoints: 1);
+
+            PerkUnlockState state = service.GetUnlockState(job, outgoingConnectedPerk);
 
             Assert.AreEqual(PerkUnlockState.Locked, state);
         }

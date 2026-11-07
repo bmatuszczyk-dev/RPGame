@@ -15,10 +15,9 @@ MonoBehaviour:
   perkId: DeepExposure
   displayName: Deep Exposure
   description: Wydluza Weakness z Exposure o 2 s.
-  connectedPerkIds:
-  - Exposure
+  connectedPerkIds: []
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: 500, y: 299}
+  uiPosition: {x: 500, y: 300}
   effects:
   - {fileID: 11400000, guid: 93d6808b4d444c2db1efb462deae7d62, type: 2}

@@ -15,8 +15,7 @@ MonoBehaviour:
   perkId: LingeringZone
   displayName: Lingering Zone
   description: Wydluza Earth Zone i Fire Zone o 20%.
-  connectedPerkIds:
-  - AreaExpansion
+  connectedPerkIds: []
   cost: 1
   isStartingPerk: 0
   uiPosition: {x: 220, y: 300}

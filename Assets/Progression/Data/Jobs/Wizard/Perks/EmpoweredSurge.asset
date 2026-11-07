@@ -15,8 +15,7 @@ MonoBehaviour:
   perkId: EmpoweredSurge
   displayName: Empowered Surge
   description: Zwieksza regeneracje many z Mana Surge o 50%.
-  connectedPerkIds:
-  - ManaSurge
+  connectedPerkIds: []
   cost: 1
   isStartingPerk: 0
   uiPosition: {x: 200, y: 550}
