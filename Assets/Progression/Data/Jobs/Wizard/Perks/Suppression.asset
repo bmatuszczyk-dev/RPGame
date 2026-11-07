@@ -19,7 +19,7 @@ MonoBehaviour:
   - DeepSuppression
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: 407, y: 241}
+  uiPosition: {x: 362, y: 400}
   effects:
   - {fileID: 11400000, guid: 0f61e4aab26c4f6199200e14f8c477b4, type: 2}
   - {fileID: 0}

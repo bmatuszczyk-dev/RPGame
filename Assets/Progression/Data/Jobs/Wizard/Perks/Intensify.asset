@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Kolejne aplikacje Burn zwiekszaja jego intensywnosc.
   connectedPerkIds: []
   cost: 1
-  isStartingPerk: 1
-  uiPosition: {x: 486, y: -34}
+  isStartingPerk: 0
+  uiPosition: {x: 500, y: 0}
   effects:
   - {fileID: 11400000, guid: b57b2c642e434410a234b9eb6a070661, type: 2}

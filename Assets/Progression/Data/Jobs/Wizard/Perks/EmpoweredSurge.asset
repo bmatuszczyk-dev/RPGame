@@ -19,6 +19,6 @@ MonoBehaviour:
   - ManaSurge
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: 182, y: 343}
+  uiPosition: {x: 200, y: 550}
   effects:
   - {fileID: 11400000, guid: 343229e64d594b25baf611aa8850440d, type: 2}

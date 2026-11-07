@@ -16,9 +16,9 @@ MonoBehaviour:
   displayName: Mana Flow
   description: Zwieksza regeneracje many o 15%.
   connectedPerkIds:
-  - ManaSurge
+  - ManaRegenerationII
   cost: 1
-  isStartingPerk: 1
-  uiPosition: {x: 120, y: 150}
+  isStartingPerk: 0
+  uiPosition: {x: 100, y: 200}
   effects:
   - {fileID: 11400000, guid: 3edf51c574004126944441c6cbeb7402, type: 2}

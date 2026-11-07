@@ -17,8 +17,9 @@ MonoBehaviour:
   description: Uderzenie po knockbacku naklada Stun na 1 s.
   connectedPerkIds:
   - HeavyConcussion
+  - KnockbackDamageOnImpact
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: -202, y: 389}
+  uiPosition: {x: -175, y: 400}
   effects:
   - {fileID: 11400000, guid: 4ec0c4c00763459189a0d0eda9ed8282, type: 2}

@@ -146,8 +146,8 @@ namespace RPGame.Combat.Tests
             sourceEffects.Add(CreateStatEffect(EffectStat.PeriodicSpellDamage, 0.2f));
             PartialDamage[] parts = { new(100f, DamageType.Magical, DamageElement.Fire) };
 
-            DamageData direct = new(parts, source);
-            DamageData periodic = new(parts, source, DamageApplicationType.Periodic);
+            DamageData direct = new(parts, source, DamageApplicationType.Direct, DamageOrigin.Spell);
+            DamageData periodic = new(parts, source, DamageApplicationType.Periodic, DamageOrigin.Spell);
 
             Assert.AreEqual(110f, direct.Amount, 0.0001f);
             Assert.AreEqual(132f, periodic.Amount, 0.0001f);
@@ -162,7 +162,10 @@ namespace RPGame.Combat.Tests
             sourceEffects.Add(CreateStatEffect(EffectStat.SpellDamage, EffectModifierType.Percent, 0.1f));
             PartialDamage[] parts = { new(100f, DamageType.Magical, DamageElement.Fire) };
 
-            Assert.AreEqual(121f, new DamageData(parts, source).Amount, 0.0001f);
+            Assert.AreEqual(
+                121f,
+                new DamageData(parts, source, DamageApplicationType.Direct, DamageOrigin.Spell).Amount,
+                0.0001f);
         }
 
         private static StatusContext CreateContext(GameObject caster)

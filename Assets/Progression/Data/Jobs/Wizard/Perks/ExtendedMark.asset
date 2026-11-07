@@ -19,6 +19,6 @@ MonoBehaviour:
   - ArcaneTempo
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: 90, y: -200}
+  uiPosition: {x: 0, y: 350}
   effects:
-  - {fileID: 11400000, guid: 75b723367a0243beb28c3e9934cc76dd, type: 2}
+  - {fileID: 0}

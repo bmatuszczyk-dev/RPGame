@@ -19,7 +19,7 @@ MonoBehaviour:
   - Overpressure
   - BlastRadius
   cost: 1
-  isStartingPerk: 1
-  uiPosition: {x: 479, y: 82}
+  isStartingPerk: 0
+  uiPosition: {x: 350, y: 150}
   effects:
   - {fileID: 11400000, guid: 6e2e5719907445e9b8888983a62db311, type: 2}

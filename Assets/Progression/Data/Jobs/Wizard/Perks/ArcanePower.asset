@@ -16,9 +16,9 @@ MonoBehaviour:
   displayName: Arcane Power
   description: Zwieksza obrazenia zaklec o 10%.
   connectedPerkIds:
-  - Detonation
+  - FlatSpellDamageII
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: 300, y: 100}
+  uiPosition: {x: -100, y: 200}
   effects:
   - {fileID: 11400000, guid: c81e80c27dce4cf0a89a0a4825dde646, type: 2}

@@ -289,7 +289,9 @@ namespace RPGame.Combat.Spells
                 DamageResult result = damageable.ApplyDamage(
                     new DamageData(
                         DamageRangeRoller.Roll(wave.casterData.DamageRanges),
-                        wave.casterData.CasterObject));
+                        wave.casterData.CasterObject,
+                        DamageApplicationType.Direct,
+                        DamageOrigin.Spell));
                 context.AddResolveResult(result);
 
                 wave.ApplyKnockback(targetCollider, targetPosition, targetObject);

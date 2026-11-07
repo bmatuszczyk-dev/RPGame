@@ -13,6 +13,7 @@ namespace RPGame.Core.Effects
         MarkComboWindow = 8,
         MarkDuration = 9,
         PeriodicSpellDamage = 11,
-        SpellDamage = 12
+        SpellDamage = 12,
+        MaxMana = 13
     }
 }

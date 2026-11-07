@@ -18,6 +18,6 @@ MonoBehaviour:
   connectedPerkIds: []
   cost: 1
   isStartingPerk: 1
-  uiPosition: {x: -150, y: -100}
+  uiPosition: {x: -1058, y: -287}
   effects:
   - {fileID: 11400000, guid: a3bb35809d624948ba55cb1bca1dc428, type: 2}

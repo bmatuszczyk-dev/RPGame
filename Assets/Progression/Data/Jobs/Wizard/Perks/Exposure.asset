@@ -19,6 +19,6 @@ MonoBehaviour:
   - DeepExposure
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: 512, y: 206}
+  uiPosition: {x: 350, y: 300}
   effects:
   - {fileID: 11400000, guid: c600c226141342f1ba9d4bbf55cdf379, type: 2}

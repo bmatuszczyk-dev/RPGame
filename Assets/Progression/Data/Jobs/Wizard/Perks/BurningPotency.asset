@@ -19,6 +19,6 @@ MonoBehaviour:
   - Intensify
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: 350, y: -60}
+  uiPosition: {x: 350, y: 0}
   effects:
   - {fileID: 11400000, guid: 5730390b25904230836f76a2d9eb893a, type: 2}

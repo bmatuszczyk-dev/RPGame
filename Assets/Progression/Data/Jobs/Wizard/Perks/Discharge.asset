@@ -18,7 +18,7 @@ MonoBehaviour:
   connectedPerkIds:
   - Overcharge
   cost: 1
-  isStartingPerk: 1
-  uiPosition: {x: 134, y: 233}
+  isStartingPerk: 0
+  uiPosition: {x: 100, y: 406}
   effects:
   - {fileID: 11400000, guid: 0e8981a2b795425ab5ecf6cf9d8f5992, type: 2}

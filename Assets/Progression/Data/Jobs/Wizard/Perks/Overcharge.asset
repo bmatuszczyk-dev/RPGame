@@ -19,6 +19,6 @@ MonoBehaviour:
   - Discharge
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: 56, y: 349}
+  uiPosition: {x: 100, y: 550}
   effects:
   - {fileID: 11400000, guid: db3f870a91b345cfb444e6f6d53adc2a, type: 2}

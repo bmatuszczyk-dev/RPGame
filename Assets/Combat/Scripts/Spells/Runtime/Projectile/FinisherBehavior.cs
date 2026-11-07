@@ -95,7 +95,9 @@ namespace RPGame.Combat.Spells
                         DamageType.Magical,
                         DamageElement.None)
                 },
-                caster));
+                caster,
+                DamageApplicationType.Direct,
+                DamageOrigin.Spell));
             context.AddResolveResult(result);
         }
     }

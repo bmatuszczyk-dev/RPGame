@@ -19,7 +19,7 @@ MonoBehaviour:
   - AreaExpansion
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: 160, y: -100}
+  uiPosition: {x: 220, y: 300}
   effects:
   - {fileID: 11400000, guid: c0ef6cc7acec4d12a1567817bef2e9e5, type: 2}
   - {fileID: 11400000, guid: c7e1e0bd2da74f4d9589b8d8c0ac15f4, type: 2}

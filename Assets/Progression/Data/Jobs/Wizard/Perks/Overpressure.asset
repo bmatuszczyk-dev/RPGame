@@ -19,6 +19,6 @@ MonoBehaviour:
   - Detonation
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: 607, y: 51}
+  uiPosition: {x: 500, y: 100}
   effects:
   - {fileID: 11400000, guid: dc2309c6c79a4ddca0dcacd429f69a2b, type: 2}

@@ -111,7 +111,9 @@ namespace RPGame.Combat.Spells
                         DamageType.Magical,
                         DamageElement.Thunder)
                 },
-                context.Source));
+                context.Source,
+                DamageApplicationType.Direct,
+                DamageOrigin.Spell));
             context.AddResolveResult(result);
         }
     }

@@ -18,7 +18,7 @@ MonoBehaviour:
   connectedPerkIds:
   - ExtendedMark
   cost: 1
-  isStartingPerk: 1
-  uiPosition: {x: -80, y: -200}
+  isStartingPerk: 0
+  uiPosition: {x: 0, y: 537}
   effects:
   - {fileID: 11400000, guid: fb58e41660804dc4ad55d6596ad4a60c, type: 2}

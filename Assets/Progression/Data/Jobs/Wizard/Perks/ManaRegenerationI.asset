@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5145033cfde049c88a0cd28b4579eb12, type: 3}
+  m_Name: ManaRegenerationI
+  m_EditorClassIdentifier: RPGame.Progression::RPGame.Progression.PerkDefinition
+  perkId: ManaRegenerationI
+  displayName: Mana Regeneration I
+  description: Zwieksza regeneracje many o 1 Mana/s.
+  connectedPerkIds:
+  - ManaRegenerationII
+  cost: 1
+  isStartingPerk: 0
+  uiPosition: {x: 100, y: 0}
+  effects:
+  - {fileID: 11400000, guid: ec2d8e5cb01f4a4f8e09da73bc0acd23, type: 2}

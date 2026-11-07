@@ -15,10 +15,9 @@ MonoBehaviour:
   perkId: ForcefulWave
   displayName: Forceful Wave
   description: Zwieksza sile kontroli Wave o 20%.
-  connectedPerkIds:
-  - Momentum
+  connectedPerkIds: []
   cost: 1
-  isStartingPerk: 1
-  uiPosition: {x: -180, y: 250}
+  isStartingPerk: 0
+  uiPosition: {x: -1054, y: -221}
   effects:
   - {fileID: 11400000, guid: df619e84c19348ebab763b30617f3d0c, type: 2}

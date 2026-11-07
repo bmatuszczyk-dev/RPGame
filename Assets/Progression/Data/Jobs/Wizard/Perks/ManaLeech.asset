@@ -20,6 +20,6 @@ MonoBehaviour:
   - StatusExploitation
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: -543, y: 431}
+  uiPosition: {x: -425, y: 300}
   effects:
   - {fileID: 11400000, guid: 9c8b9c0efbcf472e92a22ccaaf8714c8, type: 2}

@@ -20,6 +20,6 @@ MonoBehaviour:
   - EmpoweredSurge
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: 268, y: 237}
+  uiPosition: {x: 250, y: 400}
   effects:
   - {fileID: 11400000, guid: 772e2c25597743958e3779c6e50ae6e6, type: 2}

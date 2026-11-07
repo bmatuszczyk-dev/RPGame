@@ -18,7 +18,7 @@ MonoBehaviour:
   connectedPerkIds:
   - Suppression
   cost: 1
-  isStartingPerk: 1
-  uiPosition: {x: 360, y: 300}
+  isStartingPerk: 0
+  uiPosition: {x: 450, y: 500}
   effects:
   - {fileID: 11400000, guid: 1653667c482f41d69660ef534b957684, type: 2}

@@ -68,7 +68,9 @@ namespace RPGame.Combat.Spells
                             DamageType.Magical,
                             DamageElement.Fire)
                     },
-                    explosion.Source));
+                    explosion.Source,
+                    DamageApplicationType.Direct,
+                    DamageOrigin.Spell));
             }
         }
 

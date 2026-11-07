@@ -12,6 +12,12 @@ namespace RPGame.Core.Damage
         Periodic
     }
 
+    public enum DamageOrigin
+    {
+        Other,
+        Spell
+    }
+
     public readonly struct DamageData
     {
         private static readonly IReadOnlyList<PartialDamage> EmptyParts = Array.Empty<PartialDamage>();
@@ -19,8 +25,9 @@ namespace RPGame.Core.Damage
         public DamageData(
             IReadOnlyList<PartialDamage> parts,
             GameObject source = null,
-            DamageApplicationType applicationType = DamageApplicationType.Direct)
-            : this(parts, source, applicationType, true)
+            DamageApplicationType applicationType = DamageApplicationType.Direct,
+            DamageOrigin origin = DamageOrigin.Other)
+            : this(parts, source, applicationType, origin, true)
         {
         }
 
@@ -28,13 +35,15 @@ namespace RPGame.Core.Damage
             IReadOnlyList<PartialDamage> parts,
             GameObject source,
             DamageApplicationType applicationType,
+            DamageOrigin origin,
             bool applySourceModifiers)
         {
             Source = source;
             ApplicationType = applicationType;
+            Origin = origin;
             IReadOnlyList<PartialDamage> copiedParts = CopyDamageParts(parts);
             Parts = applySourceModifiers
-                ? ApplySourceDamageModifiers(copiedParts, source, applicationType)
+                ? ApplySourceDamageModifiers(copiedParts, source, applicationType, origin)
                 : copiedParts;
             Amount = CalculateAmount(Parts);
         }
@@ -42,13 +51,14 @@ namespace RPGame.Core.Damage
         public float Amount { get; }
         public GameObject Source { get; }
         public DamageApplicationType ApplicationType { get; }
+        public DamageOrigin Origin { get; }
         public IReadOnlyList<PartialDamage> Parts { get; }
 
         public bool HasDamage => Amount > 0f;
 
         public DamageData WithParts(IReadOnlyList<PartialDamage> parts)
         {
-            return new DamageData(parts, Source, ApplicationType, false);
+            return new DamageData(parts, Source, ApplicationType, Origin, false);
         }
 
         private static IReadOnlyList<PartialDamage> CopyDamageParts(IReadOnlyList<PartialDamage> parts)
@@ -85,7 +95,8 @@ namespace RPGame.Core.Damage
         private static IReadOnlyList<PartialDamage> ApplySourceDamageModifiers(
             IReadOnlyList<PartialDamage> parts,
             GameObject source,
-            DamageApplicationType applicationType)
+            DamageApplicationType applicationType,
+            DamageOrigin origin)
         {
             IStatusReader statusReader = source != null
                 ? source.GetComponentInParent<IStatusReader>()
@@ -95,26 +106,40 @@ namespace RPGame.Core.Damage
                 return parts;
             }
 
+            float flatSpellDamage = applicationType == DamageApplicationType.Direct
+                && origin == DamageOrigin.Spell
+                ? EffectSourceValueResolver.GetFlatValue(source, EffectStat.SpellDamage)
+                : 0f;
             float multiplier = 1f - GetSuppressionValue(statusReader);
-            multiplier *= EffectSourceValueResolver.GetMultiplier(source, EffectStat.SpellDamage);
-            if (applicationType == DamageApplicationType.Periodic)
+            if (origin == DamageOrigin.Spell)
             {
-                multiplier *= EffectSourceValueResolver.GetMultiplier(
+                multiplier *= EffectSourceValueResolver.GetPercentMultiplier(
                     source,
-                    EffectStat.PeriodicSpellDamage);
+                    EffectStat.SpellDamage);
+                if (applicationType == DamageApplicationType.Periodic)
+                {
+                    multiplier *= EffectSourceValueResolver.GetPercentMultiplier(
+                        source,
+                        EffectStat.PeriodicSpellDamage);
+                }
             }
 
-            if (Mathf.Approximately(multiplier, 1f))
+            if (Mathf.Approximately(flatSpellDamage, 0f)
+                && Mathf.Approximately(multiplier, 1f))
             {
                 return parts;
             }
 
             List<PartialDamage> modifiedParts = new(parts.Count);
+            float baseAmount = CalculateAmount(parts);
             for (int i = 0; i < parts.Count; i++)
             {
                 PartialDamage part = parts[i];
+                float flatPart = baseAmount > 0f
+                    ? flatSpellDamage * part.Amount / baseAmount
+                    : 0f;
                 modifiedParts.Add(new PartialDamage(
-                    part.Amount * multiplier,
+                    (part.Amount + flatPart) * multiplier,
                     part.DamageType,
                     part.DamageElement));
             }

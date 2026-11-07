@@ -43,7 +43,7 @@ namespace RPGame.Core.Statuses
             damageable.ApplyDamage(new DamageData(new[]
             {
                 new PartialDamage(damage, DamageType.Magical, DamageElement.Fire)
-            }, source, DamageApplicationType.Periodic));
+            }, source, DamageApplicationType.Periodic, DamageOrigin.Spell));
         }
 
         public override string ToString()

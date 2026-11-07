@@ -21,7 +21,9 @@ namespace RPGame.Combat.Spells
         {
             Result = damageable.ApplyDamage(new DamageData(
                 DamageRangeRoller.Roll(casterData.DamageRanges),
-                casterData.CasterObject));
+                casterData.CasterObject,
+                DamageApplicationType.Direct,
+                DamageOrigin.Spell));
             context.AddResolveResult(Result);
             return Result.WasApplied;
         }

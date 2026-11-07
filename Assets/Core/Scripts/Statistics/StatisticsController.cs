@@ -35,7 +35,7 @@ namespace RPGame.Core.Statistics
         public float CurrentMana { get; private set; }
         public float MaxHealth => GetBaseMaxHealth() + GetAttributeVitalBonus(CharacterAttributeType.Vitality);
         public float MaxStamina => GetBaseMaxStamina() + GetAttributeVitalBonus(CharacterAttributeType.Endurance);
-        public float MaxMana => GetBaseMaxMana() + GetAttributeVitalBonus(CharacterAttributeType.Intelligence);
+        public float MaxMana => GetFinalMaxMana();
         public float HealthRegenerationPerSecond => config != null ? config.HealthRegenerationPerSecond : 0f;
         public float StaminaRegenerationPerSecond => config != null ? config.StaminaRegenerationPerSecond : 0f;
         public float StaminaRegenerationDelay => config != null ? config.StaminaRegenerationDelay : 0f;
@@ -57,6 +57,8 @@ namespace RPGame.Core.Statistics
         private void Awake()
         {
             ResolveAttributes();
+            ResolveModifierSources();
+            SubscribeModifierSources();
 
             if (initializeOnAwake)
             {
@@ -68,16 +70,20 @@ namespace RPGame.Core.Statistics
         {
             ResolveAttributes();
             SubscribeAttributes();
+            ResolveModifierSources();
+            SubscribeModifierSources();
         }
 
         private void OnDisable()
         {
             UnsubscribeAttributes();
+            UnsubscribeModifierSources();
         }
 
         private void OnDestroy()
         {
             UnsubscribeAttributes();
+            UnsubscribeModifierSources();
         }
 
         private void Update()
@@ -317,6 +323,11 @@ namespace RPGame.Core.Statistics
             SetMana(CurrentMana);
         }
 
+        private void OnEffectsChanged()
+        {
+            SetMana(CurrentMana);
+        }
+
         private float GetBaseMaxHealth()
         {
             return config != null ? config.MaxHealth : 0f;
@@ -330,6 +341,13 @@ namespace RPGame.Core.Statistics
         private float GetBaseMaxMana()
         {
             return config != null ? config.MaxMana : 0f;
+        }
+
+        private float GetFinalMaxMana()
+        {
+            float baseMana = GetBaseMaxMana()
+                + GetAttributeVitalBonus(CharacterAttributeType.Intelligence);
+            return EffectSourceValueResolver.Resolve(baseMana, gameObject, EffectStat.MaxMana);
         }
 
         private float GetAttributeVitalBonus(CharacterAttributeType attributeType)
@@ -368,6 +386,25 @@ namespace RPGame.Core.Statistics
             if (statusAggregator == null)
             {
                 TryGetComponent(out statusAggregator);
+            }
+        }
+
+        private void SubscribeModifierSources()
+        {
+            if (effectAggregator == null)
+            {
+                return;
+            }
+
+            effectAggregator.EffectsChanged -= OnEffectsChanged;
+            effectAggregator.EffectsChanged += OnEffectsChanged;
+        }
+
+        private void UnsubscribeModifierSources()
+        {
+            if (effectAggregator != null)
+            {
+                effectAggregator.EffectsChanged -= OnEffectsChanged;
             }
         }
     }

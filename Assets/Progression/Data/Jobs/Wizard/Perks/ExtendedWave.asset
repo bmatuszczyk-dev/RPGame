@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Zwieksza zasieg Wave o 15%.
   connectedPerkIds: []
   cost: 1
-  isStartingPerk: 1
-  uiPosition: {x: -150, y: 100}
+  isStartingPerk: 0
+  uiPosition: {x: -150, y: 300}
   effects:
   - {fileID: 11400000, guid: c04d07b3a91542de996dc0ac24620f48, type: 2}

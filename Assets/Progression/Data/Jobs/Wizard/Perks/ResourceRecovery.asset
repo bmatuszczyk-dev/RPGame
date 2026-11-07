@@ -19,6 +19,6 @@ MonoBehaviour:
   - ManaLeech
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: -519, y: 531}
+  uiPosition: {x: -550, y: 300}
   effects:
   - {fileID: 11400000, guid: f88a969d4ec84bb6921a41270c95e31f, type: 2}

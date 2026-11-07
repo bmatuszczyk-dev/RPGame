@@ -19,6 +19,6 @@ MonoBehaviour:
   - Concussion
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: -90, y: 505}
+  uiPosition: {x: -125, y: 550}
   effects:
   - {fileID: 11400000, guid: ea7df6a9452447eaa44ba1dfee1e08e6, type: 2}

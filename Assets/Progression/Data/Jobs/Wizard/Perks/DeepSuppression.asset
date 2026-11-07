@@ -19,6 +19,6 @@ MonoBehaviour:
   - Suppression
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: 478, y: 348}
+  uiPosition: {x: 500, y: 450}
   effects:
   - {fileID: 11400000, guid: 53fe26b1b33d48a49d342001f82036a5, type: 2}

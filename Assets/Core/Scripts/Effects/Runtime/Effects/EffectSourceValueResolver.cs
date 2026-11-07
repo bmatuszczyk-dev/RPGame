@@ -22,7 +22,24 @@ namespace RPGame.Core.Effects
 
         public static float GetMultiplier(GameObject source, EffectStat stat)
         {
-            return Resolve(1f, source, stat);
+            return GetPercentMultiplier(source, stat);
+        }
+
+        public static float GetFlatValue(GameObject source, EffectStat stat)
+        {
+            EffectAggregator aggregator = GetEffectAggregator(source);
+            return aggregator != null
+                ? aggregator.GetEffectValue(stat, EffectModifierType.Flat)
+                : 0f;
+        }
+
+        public static float GetPercentMultiplier(GameObject source, EffectStat stat)
+        {
+            EffectAggregator aggregator = GetEffectAggregator(source);
+            float percent = aggregator != null
+                ? aggregator.GetEffectValue(stat, EffectModifierType.Percent)
+                : 0f;
+            return Mathf.Max(0f, 1f + percent);
         }
 
         public static float ResolveStatusDuration(
@@ -30,12 +47,17 @@ namespace RPGame.Core.Effects
             float duration,
             GameObject source)
         {
-            EffectAggregator aggregator = source != null
-                ? source.GetComponentInParent<EffectAggregator>()
-                : null;
+            EffectAggregator aggregator = GetEffectAggregator(source);
             return aggregator != null
                 ? aggregator.ResolveStatusDuration(status, duration)
                 : Mathf.Max(0f, duration);
+        }
+
+        private static EffectAggregator GetEffectAggregator(GameObject source)
+        {
+            return source != null
+                ? source.GetComponentInParent<EffectAggregator>()
+                : null;
         }
     }
 }
