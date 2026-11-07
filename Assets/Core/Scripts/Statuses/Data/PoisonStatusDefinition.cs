@@ -4,7 +4,7 @@ using UnityEngine;
 namespace RPGame.Core.Statuses
 {
     [CreateAssetMenu(fileName = "Poison", menuName = "RPGame/Progression/Statuses/Poison")]
-    public sealed class PoisonStatusDefinition : StatusDefinition, IPeriodicStatus, INegativeStatus
+    public sealed class PoisonStatusDefinition : StatusDefinition, IPeriodicStatus
     {
         private const float MinimumTickInterval = 0.0001f;
 

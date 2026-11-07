@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using RPGame.Core.Spells;
 using RPGame.Core.Statistics;
+using RPGame.Core.Statuses;
 using UnityEngine;
 
 namespace RPGame.Core.Effects
@@ -31,6 +32,11 @@ namespace RPGame.Core.Effects
         public float GetEffectValue(EffectStat stat, EffectModifierType modifierType)
         {
             return permanentContainer.GetEffectValue(stat, modifierType);
+        }
+
+        public float ResolveStatusDuration(StatusDefinition status, float duration)
+        {
+            return permanentContainer.ResolveStatusDuration(status, duration);
         }
 
         public IReadOnlyList<IRuntimeSpellBehavior> CreateRuntimeBehaviors(

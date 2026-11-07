@@ -9,9 +9,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bed36caaac624fad9bfd42816345e8a0, type: 3}
+  m_Script: {fileID: 11500000, guid: 2a0414ccb8c94d008bd3a44d732c7ea7, type: 3}
   m_Name: LingeringEffectsEffect
-  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.StatEffectDefinition
-  stat: 10
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.StatusDurationModifierEffectDefinition
+  statuses:
+  - {fileID: 11400000, guid: 01444cb7e404bcb4ab30c5f88ef04e76, type: 2}
+  - {fileID: 11400000, guid: fe10ce20add14fb0a1f5a5cace24a25c, type: 2}
+  - {fileID: 11400000, guid: 1658e98fef9f20549abfa48980310834, type: 2}
+  - {fileID: 11400000, guid: 8198d50c246fdac48963b6007635a244, type: 2}
+  - {fileID: 11400000, guid: 0c92465c8c8e4dca93d2a69e4c5e6918, type: 2}
+  - {fileID: 11400000, guid: 59256a8ff71849809021f4a7cdfbacae, type: 2}
   modifierType: 1
   value: 0.15

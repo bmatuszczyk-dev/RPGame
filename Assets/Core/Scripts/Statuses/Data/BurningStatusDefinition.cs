@@ -10,8 +10,7 @@ namespace RPGame.Core.Statuses
     public sealed class BurningStatusDefinition :
         StatusDefinition,
         IStackablePeriodicStatus,
-        IStackableStatus,
-        INegativeStatus
+        IStackableStatus
     {
         private const float MinimumTickInterval = 0.0001f;
 

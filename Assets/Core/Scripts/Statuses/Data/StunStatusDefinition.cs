@@ -5,7 +5,7 @@ namespace RPGame.Core.Statuses
 {
     [CreateAssetMenu(fileName = "StunEffect", menuName = "RPGame/Statuses/Stun")]
     [MovedFrom(true, null, null, "StunEffectDefinition")]
-    public sealed class StunStatusDefinition : StatusDefinition, INegativeStatus
+    public sealed class StunStatusDefinition : StatusDefinition
     {
         public override ReapplyPolicy ReapplyPolicy => ReapplyPolicy.Ignore;
         public override ConcurrentStatusPolicy ConcurrentStatusPolicy => ConcurrentStatusPolicy.SingleInstance;

@@ -12,7 +12,6 @@ namespace RPGame.Core.Effects
         ManaRegeneration = 7,
         MarkComboWindow = 8,
         MarkDuration = 9,
-        NegativeStatusDuration = 10,
         PeriodicSpellDamage = 11,
         SpellDamage = 12
     }

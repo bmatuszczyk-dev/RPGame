@@ -1,5 +1,6 @@
 using System.Reflection;
 using NUnit.Framework;
+using RPGame.Combat.Spells;
 using RPGame.Core.Damage;
 using RPGame.Core.Effects;
 using RPGame.Core.Spells;
@@ -116,7 +117,7 @@ namespace RPGame.Combat.Tests
         [Test]
         public void LingeringEffects_ExtendsOnlyNegativeStatusesAndRefreshesFromBaseDuration()
         {
-            sourceEffects.Add(CreateStatEffect(EffectStat.NegativeStatusDuration, 0.15f));
+            sourceEffects.Add(CreateStatusDurationEffect(suppression, 0.15f));
             StatusContext context = CreateContext(source);
 
             statuses.ApplyStatus(suppression, 2f, context);
@@ -184,6 +185,22 @@ namespace RPGame.Combat.Tests
             serialized.FindProperty("stat").enumValueIndex = (int)stat;
             serialized.FindProperty("modifierType").enumValueIndex = (int)modifierType;
             serialized.FindProperty("value").floatValue = value;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return effect;
+        }
+
+        private static StatusDurationModifierEffectDefinition CreateStatusDurationEffect(
+            StatusDefinition status,
+            float percent)
+        {
+            StatusDurationModifierEffectDefinition effect =
+                ScriptableObject.CreateInstance<StatusDurationModifierEffectDefinition>();
+            SerializedObject serialized = new(effect);
+            SerializedProperty statuses = serialized.FindProperty("statuses");
+            statuses.arraySize = 1;
+            statuses.GetArrayElementAtIndex(0).objectReferenceValue = status;
+            serialized.FindProperty("modifierType").enumValueIndex = (int)EffectModifierType.Percent;
+            serialized.FindProperty("value").floatValue = percent;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             return effect;
         }

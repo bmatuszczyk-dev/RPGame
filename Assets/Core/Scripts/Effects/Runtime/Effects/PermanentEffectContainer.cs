@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using RPGame.Core.Spells;
+using RPGame.Core.Statuses;
+using UnityEngine;
 
 namespace RPGame.Core.Effects
 {
@@ -48,6 +50,31 @@ namespace RPGame.Core.Effects
                 ? flatEffectValues
                 : percentEffectValues;
             return values.TryGetValue(stat, out float value) ? value : 0f;
+        }
+
+        public float ResolveStatusDuration(StatusDefinition status, float duration)
+        {
+            float flat = 0f;
+            float percent = 0f;
+            foreach (EffectInstance effect in effects)
+            {
+                if (effect.Definition is not StatusDurationModifierEffectDefinition modifier
+                    || !modifier.Supports(status))
+                {
+                    continue;
+                }
+
+                if (modifier.ModifierType == EffectModifierType.Flat)
+                {
+                    flat += modifier.Value;
+                }
+                else
+                {
+                    percent += modifier.Value;
+                }
+            }
+
+            return Mathf.Max(0f, (duration + flat) * Mathf.Max(0f, 1f + percent));
         }
 
         public SpellPropertyModifiers CreateSpellPropertyModifiers(Spell spell)
