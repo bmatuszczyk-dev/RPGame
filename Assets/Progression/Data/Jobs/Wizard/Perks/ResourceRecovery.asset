@@ -15,8 +15,7 @@ MonoBehaviour:
   perkId: ResourceRecovery
   displayName: Resource Recovery
   description: Markowane trafienia przywracaja zdrowie rowne 50% obrazen.
-  connectedPerkIds:
-  - ManaLeech
+  connectedPerkIds: []
   cost: 1
   isStartingPerk: 0
   uiPosition: {x: -550, y: 300}

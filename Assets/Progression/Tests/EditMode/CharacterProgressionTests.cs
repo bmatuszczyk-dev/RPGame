@@ -139,6 +139,39 @@ namespace RPGame.Progression.Tests
 
             Assert.IsTrue(progression.Jobs.HasJob(WizardJobId));
             Assert.AreEqual(1, progression.Jobs.GetJobLevel(WizardJobId));
+            Assert.AreEqual(1, progression.Jobs.GetJob(WizardJobId).JobPoints);
+        }
+
+        [Test]
+        public void JobInstance_WithExplicitJobPoints_DoesNotAddStartingPoint()
+        {
+            JobInstance job = new JobInstance(
+                wizardDefinition,
+                currentLevel: 1,
+                currentXP: 0,
+                totalInvestedXP: 0,
+                jobPoints: 4);
+
+            Assert.AreEqual(4, job.JobPoints);
+        }
+
+        [Test]
+        public void JobInstance_RecreatedWithExplicitJobPoints_DoesNotDuplicatePoints()
+        {
+            JobInstance restoredJob = new JobInstance(
+                wizardDefinition,
+                currentLevel: 10,
+                currentXP: 25,
+                totalInvestedXP: 500,
+                jobPoints: 7);
+            JobInstance recreatedJob = new JobInstance(
+                wizardDefinition,
+                currentLevel: restoredJob.CurrentLevel,
+                currentXP: restoredJob.CurrentXP,
+                totalInvestedXP: restoredJob.TotalInvestedXP,
+                jobPoints: restoredJob.JobPoints);
+
+            Assert.AreEqual(7, recreatedJob.JobPoints);
         }
 
         [Test]
@@ -194,7 +227,7 @@ namespace RPGame.Progression.Tests
 
             progression.Jobs.AddXPToJob(WizardJobId, 100);
 
-            Assert.AreEqual(1, progression.Jobs.GetJob(WizardJobId).JobPoints);
+            Assert.AreEqual(2, progression.Jobs.GetJob(WizardJobId).JobPoints);
         }
 
         [Test]
@@ -205,7 +238,20 @@ namespace RPGame.Progression.Tests
 
             progression.Jobs.AddXPToJob(WizardJobId, 300);
 
-            Assert.AreEqual(2, progression.Jobs.GetJob(WizardJobId).JobPoints);
+            Assert.AreEqual(3, progression.Jobs.GetJob(WizardJobId).JobPoints);
+        }
+
+        [Test]
+        public void JobInstance_WhenAdvancedToLevelTwenty_HasTwentyJobPoints()
+        {
+            JobDefinition definition = CreateJobDefinition("LevelTwenty", maxLevel: 20, baseXP: 1, xpGrowthRate: 1f);
+            JobInstance job = new JobInstance(definition);
+
+            job.AddExperience(job.GetRemainingXPToMaxLevel());
+
+            Assert.AreEqual(20, job.CurrentLevel);
+            Assert.AreEqual(20, job.JobPoints);
+            Object.DestroyImmediate(definition);
         }
 
         [Test]
@@ -243,7 +289,6 @@ namespace RPGame.Progression.Tests
             AddPerksToJobDefinition(wizardDefinition, perk);
             progression.Jobs.UnlockJob(wizardDefinition);
             JobInstance job = progression.Jobs.GetJob(WizardJobId);
-            job.AddExperience(job.GetXPToNextLevel());
 
             bool unlocked = progression.TryUnlockPerk(job, perk);
 
