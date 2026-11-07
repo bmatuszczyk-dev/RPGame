@@ -115,6 +115,19 @@ namespace RPGame.Combat.Tests
         }
 
         [Test]
+        public void MarkProgressReceiver_AppliesBaseFiveSecondDuration()
+        {
+            MarkProgressTracker tracker = new(statuses, mark, () => 0f);
+            StatusContext context = CreateContext(source);
+
+            tracker.RecordSuccessfulSpell(new SpellId("wave"), context);
+            tracker.RecordSuccessfulSpell(new SpellId("orbit"), context);
+            tracker.RecordSuccessfulSpell(new SpellId("fire"), context);
+
+            Assert.AreEqual(5f, statuses.Statuses[0].Duration, 0.0001f);
+        }
+
+        [Test]
         public void LingeringEffects_ExtendsOnlyNegativeStatusesAndRefreshesFromBaseDuration()
         {
             sourceEffects.Add(CreateStatusDurationEffect(suppression, 0.15f));

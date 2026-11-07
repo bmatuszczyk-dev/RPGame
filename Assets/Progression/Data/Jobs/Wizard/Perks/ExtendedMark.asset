@@ -21,4 +21,4 @@ MonoBehaviour:
   isStartingPerk: 0
   uiPosition: {x: 0, y: 400}
   effects:
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 75b723367a0243beb28c3e9934cc76dd, type: 2}
