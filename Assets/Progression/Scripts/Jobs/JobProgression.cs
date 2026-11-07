@@ -10,6 +10,9 @@ namespace RPGame.Progression
         private readonly Func<int> getAvailableXP;
         private readonly Action<int> spendXP;
 
+        public event Action<JobExperienceAllocation> ExperienceAllocated;
+        public event Action<JobInstance> JobUnlocked;
+
         public JobProgression(JobContainer jobs, Func<int> getAvailableXP, Action<int> spendXP)
         {
             this.jobs = jobs;
@@ -21,7 +24,13 @@ namespace RPGame.Progression
 
         public void UnlockJob(JobDefinition definition, Action<JobInstance> onAdvanced = null)
         {
+            if (definition == null || jobs.HasJob(definition.JobId))
+            {
+                return;
+            }
+
             jobs.AddJob(definition, onAdvanced);
+            JobUnlocked?.Invoke(jobs.GetJob(definition.JobId));
         }
 
         public bool HasJob(string jobId)
@@ -46,6 +55,9 @@ namespace RPGame.Progression
                 return false;
             }
 
+            JobInstance job = jobs.GetJob(jobId);
+            int previousLevel = job.CurrentLevel;
+            int previousJobPoints = job.JobPoints;
             int unspentXP = jobs.AddExperience(jobId, amount);
             int spentXP = amount - unspentXP;
 
@@ -55,6 +67,11 @@ namespace RPGame.Progression
             }
 
             spendXP(spentXP);
+            ExperienceAllocated?.Invoke(new JobExperienceAllocation(
+                job,
+                spentXP,
+                previousLevel,
+                previousJobPoints));
             return true;
         }
 
@@ -78,5 +95,21 @@ namespace RPGame.Progression
         {
             jobs.Clear();
         }
+    }
+
+    public readonly struct JobExperienceAllocation
+    {
+        public JobExperienceAllocation(JobInstance job, int experience, int previousLevel, int previousJobPoints)
+        {
+            Job = job;
+            Experience = experience;
+            PreviousLevel = previousLevel;
+            PreviousJobPoints = previousJobPoints;
+        }
+
+        public JobInstance Job { get; }
+        public int Experience { get; }
+        public int PreviousLevel { get; }
+        public int PreviousJobPoints { get; }
     }
 }

@@ -418,6 +418,7 @@ GameObject:
   - component: {fileID: 7254131839462751042}
   - component: {fileID: 5501000000000000003}
   - component: {fileID: 7704111723200341487}
+  - component: {fileID: 5501000000000000005}
   - component: {fileID: 9106253214432637820}
   - component: {fileID: 1105072201663407447}
   - component: {fileID: 9104286350229094230}
@@ -781,6 +782,20 @@ MonoBehaviour:
   availableXP: 3000
   effectAggregator: {fileID: 1105072201663407447}
   attributes: {fileID: 9106253214432637820}
+--- !u!114 &5501000000000000005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4069a48b70854cac947d3d5e8d1e7d25, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RPGame.Progression::RPGame.Progression.ProgressionTelemetry
+  monitoringEnabled: 0
+  progression: {fileID: 7704111723200341487}
 --- !u!114 &9106253214432637820
 MonoBehaviour:
   m_ObjectHideFlags: 0

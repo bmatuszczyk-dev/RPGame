@@ -48474,6 +48474,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8024470455656626075, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1536372347364793637}
+    - targetCorrespondingSourceObject: {fileID: 8024470455656626075, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1536372347364793645}
   m_SourcePrefab: {fileID: 100100000, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
 --- !u!114 &1536372347364793587 stripped
 MonoBehaviour:
@@ -48566,6 +48569,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52dcd7dcdbd845009746511bd0f1f8ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Buildup.BuildupAggregator
+--- !u!114 &1536372347364793645
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 40626252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4069a48b70854cac947d3d5e8d1e7d25, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Progression::RPGame.Progression.ProgressionTelemetry
+  monitoringEnabled: 1
+  progression: {fileID: 1536372347364793587}
 --- !u!1001 &5385227195477497174
 PrefabInstance:
   m_ObjectHideFlags: 0
