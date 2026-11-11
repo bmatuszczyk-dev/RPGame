@@ -15,7 +15,11 @@ namespace RPGame.Combat.Spells
         private readonly MarkStatusDefinition markDefinition;
         private readonly HashSet<SpellId> successfulSpellIds = new();
         private readonly Func<float> getTime;
-        private float windowStartedAt = -1f;
+
+        public int CurrentUniqueSpellProgress => successfulSpellIds.Count;
+        public float ComboWindowExpiresAt { get; private set; } = -1f;
+        public event Action ProgressChanged;
+        public event Action ProgressExpired;
 
         public MarkProgressTracker(
             IStatusReceiver statusReceiver,
@@ -43,15 +47,11 @@ namespace RPGame.Combat.Spells
             }
 
             float currentTime = getTime();
-            if (successfulSpellIds.Count > 0
-                && currentTime - windowStartedAt > GetComboWindow(context.Source))
-            {
-                ClearProgress();
-            }
+            ExpireIfNecessary(currentTime, context.Source);
 
             if (successfulSpellIds.Count == 0)
             {
-                windowStartedAt = currentTime;
+                ComboWindowExpiresAt = currentTime + GetComboWindow(context.Source);
             }
 
             if (!successfulSpellIds.Add(spellId))
@@ -61,6 +61,7 @@ namespace RPGame.Combat.Spells
 
             if (successfulSpellIds.Count < RequiredUniqueSpellCount)
             {
+                ProgressChanged?.Invoke();
                 return true;
             }
 
@@ -76,8 +77,26 @@ namespace RPGame.Combat.Spells
 
         public void ClearProgress()
         {
+            bool hadProgress = successfulSpellIds.Count > 0;
             successfulSpellIds.Clear();
-            windowStartedAt = -1f;
+            ComboWindowExpiresAt = -1f;
+            if (hadProgress)
+            {
+                ProgressChanged?.Invoke();
+            }
+        }
+
+        public bool ExpireIfNecessary(float currentTime, UnityEngine.GameObject source)
+        {
+            if (successfulSpellIds.Count == 0
+                || currentTime < ComboWindowExpiresAt)
+            {
+                return false;
+            }
+
+            ClearProgress();
+            ProgressExpired?.Invoke();
+            return true;
         }
 
         private float GetComboWindow(UnityEngine.GameObject source)

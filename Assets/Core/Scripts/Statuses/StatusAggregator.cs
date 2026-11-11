@@ -24,6 +24,9 @@ namespace RPGame.Core.Statuses
         private readonly Dictionary<EffectStat, float> percentModifierValues = new();
 
         public IReadOnlyList<StatusInstance> Statuses => statusContainer.Statuses;
+        public event System.Action<StatusInstance> StatusAdded;
+        public event System.Action<StatusInstance> StatusUpdated;
+        public event System.Action<StatusInstance> StatusRemoved;
 
         private void Awake()
         {
@@ -182,9 +185,27 @@ namespace RPGame.Core.Statuses
 
         private void SubscribeToStatusChanges()
         {
-            statusContainer.StatusAdded += AddStatusModifier;
-            statusContainer.StatusUpdated += UpdateStatusModifier;
-            statusContainer.StatusRemoved += RemoveStatusModifier;
+            statusContainer.StatusAdded += HandleStatusAdded;
+            statusContainer.StatusUpdated += HandleStatusUpdated;
+            statusContainer.StatusRemoved += HandleStatusRemoved;
+        }
+
+        private void HandleStatusAdded(StatusInstance instance)
+        {
+            AddStatusModifier(instance);
+            StatusAdded?.Invoke(instance);
+        }
+
+        private void HandleStatusUpdated(StatusInstance instance)
+        {
+            UpdateStatusModifier(instance);
+            StatusUpdated?.Invoke(instance);
+        }
+
+        private void HandleStatusRemoved(StatusInstance instance)
+        {
+            RemoveStatusModifier(instance);
+            StatusRemoved?.Invoke(instance);
         }
 
         private void AddStatusModifier(StatusInstance instance)

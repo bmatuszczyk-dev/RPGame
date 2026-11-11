@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: ExtendedMarkEffect
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.StatEffectDefinition
   stat: 9
-  modifierType: 1
-  value: 0.2
+  modifierType: 0
+  value: 2

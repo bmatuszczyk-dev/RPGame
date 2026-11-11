@@ -101,6 +101,57 @@ namespace RPGame.Combat.Tests
         }
 
         [Test]
+        public void MarkProgressReceiver_ReportsPerSourceProgressWithoutCombiningSources()
+        {
+            MarkProgressReceiver receiver = CreateMarkProgressReceiver();
+
+            receiver.RecordSuccessfulSpell(new SpellId("wave"), CreateContext(source));
+            receiver.RecordSuccessfulSpell(new SpellId("orbit"), CreateContext(otherSource));
+
+            Assert.AreEqual(1, receiver.CurrentUniqueSpellProgress);
+
+            receiver.RecordSuccessfulSpell(new SpellId("fire"), CreateContext(source));
+
+            Assert.AreEqual(2, receiver.CurrentUniqueSpellProgress);
+            Assert.IsFalse(receiver.IsMarkActive);
+        }
+
+        [Test]
+        public void MarkProgressReceiver_WhenMarkExpiresOrIsConsumed_ReportsInactive()
+        {
+            MarkProgressReceiver receiver = CreateMarkProgressReceiver();
+            ApplyMark(receiver);
+
+            Assert.IsTrue(receiver.IsMarkActive);
+
+            TickStatuses(statuses, MarkProgressTracker.MarkDuration);
+
+            Assert.IsFalse(receiver.IsMarkActive);
+
+            ApplyMark(receiver);
+            Assert.IsTrue(statuses.TryConsumeStatus(mark));
+
+            Assert.IsFalse(receiver.IsMarkActive);
+        }
+
+        [Test]
+        public void MarkProgressReceiver_ResetForDespawnClearsProgress()
+        {
+            MarkProgressReceiver receiver = CreateMarkProgressReceiver();
+            receiver.RecordSuccessfulSpell(new SpellId("wave"), CreateContext(source));
+
+            receiver.ResetForDespawn();
+            receiver.ResetForSpawn();
+
+            Assert.AreEqual(0, receiver.CurrentUniqueSpellProgress);
+
+            receiver.RecordSuccessfulSpell(new SpellId("orbit"), CreateContext(source));
+
+            Assert.AreEqual(1, receiver.CurrentUniqueSpellProgress);
+            Assert.IsFalse(receiver.IsMarkActive);
+        }
+
+        [Test]
         public void ExtendedMark_AppliesSixSecondDuration()
         {
             sourceEffects.Add(CreateStatEffect(EffectStat.MarkDuration, 0.2f));
@@ -184,6 +235,30 @@ namespace RPGame.Combat.Tests
         private static StatusContext CreateContext(GameObject caster)
         {
             return new StatusContext(new StatusSourceId("Perk"), caster);
+        }
+
+        private MarkProgressReceiver CreateMarkProgressReceiver()
+        {
+            MarkProgressReceiver receiver = target.AddComponent<MarkProgressReceiver>();
+            SerializedObject serialized = new(receiver);
+            serialized.FindProperty("markDefinition").objectReferenceValue = mark;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return receiver;
+        }
+
+        private void ApplyMark(MarkProgressReceiver receiver)
+        {
+            receiver.RecordSuccessfulSpell(new SpellId("wave"), CreateContext(source));
+            receiver.RecordSuccessfulSpell(new SpellId("orbit"), CreateContext(source));
+            receiver.RecordSuccessfulSpell(new SpellId("fire"), CreateContext(source));
+        }
+
+        private static void TickStatuses(StatusAggregator statusAggregator, float deltaTime)
+        {
+            StatusContainer container = typeof(StatusAggregator)
+                .GetField("statusContainer", BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetValue(statusAggregator) as StatusContainer;
+            container.Tick(deltaTime);
         }
 
         private static StatEffectDefinition CreateStatEffect(EffectStat stat, float percent)

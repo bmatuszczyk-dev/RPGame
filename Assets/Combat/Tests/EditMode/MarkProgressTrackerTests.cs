@@ -57,6 +57,44 @@ namespace RPGame.Combat.Tests
         }
 
         [Test]
+        public void RecordSuccessfulSpell_ExposesUniqueSpellProgressAndComboExpiry()
+        {
+            float time = 10f;
+            tracker = new MarkProgressTracker(statusReceiver, markDefinition, () => time);
+
+            tracker.RecordSuccessfulSpell(new SpellId("wave"), context);
+
+            Assert.AreEqual(1, tracker.CurrentUniqueSpellProgress);
+            Assert.AreEqual(15f, tracker.ComboWindowExpiresAt, 0.0001f);
+
+            tracker.RecordSuccessfulSpell(new SpellId("orbit"), context);
+
+            Assert.AreEqual(2, tracker.CurrentUniqueSpellProgress);
+        }
+
+        [Test]
+        public void ExpireIfNecessary_WhenComboWindowExpires_ClearsProgressAndNotifies()
+        {
+            float time = 0f;
+            tracker = new MarkProgressTracker(statusReceiver, markDefinition, () => time);
+            int changeCount = 0;
+            int expirationCount = 0;
+            tracker.ProgressChanged += () => changeCount++;
+            tracker.ProgressExpired += () => expirationCount++;
+
+            tracker.RecordSuccessfulSpell(new SpellId("wave"), context);
+            time = 5f;
+
+            bool expired = tracker.ExpireIfNecessary(time, source);
+
+            Assert.IsTrue(expired);
+            Assert.AreEqual(0, tracker.CurrentUniqueSpellProgress);
+            Assert.AreEqual(-1f, tracker.ComboWindowExpiresAt);
+            Assert.AreEqual(2, changeCount);
+            Assert.AreEqual(1, expirationCount);
+        }
+
+        [Test]
         public void RecordSuccessfulSpell_WhenSameSpellIdComesFromDifferentValueInstances_CountsOnce()
         {
             tracker.RecordSuccessfulSpell(new SpellId("wave"), context);
