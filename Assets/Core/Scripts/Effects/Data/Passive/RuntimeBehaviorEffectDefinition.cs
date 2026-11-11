@@ -7,19 +7,28 @@ namespace RPGame.Core.Effects
     [CreateAssetMenu(
         fileName = "RuntimeBehaviorEffect",
         menuName = "RPGame/Progression/Effects/Runtime Behavior Effect")]
-    public sealed class RuntimeBehaviorEffectDefinition : PassiveEffectDefinition, IRuntimeSpellBehaviorFactory
+    public sealed class RuntimeBehaviorEffectDefinition : PassiveEffectDefinition
     {
-        [SerializeReference] private RuntimeSpellBehaviorDefinition behavior;
+        [SerializeReference] private IRuntimeSpellBehavior behavior;
+        [SerializeField, Min(0)] private int executionOrder;
 
-        public bool TryCreateRuntimeBehavior(
+        public int ExecutionOrder => executionOrder;
+
+        public IRuntimeSpellBehavior CreateRuntimeBehavior(
             Spell spell,
-            GameObject casterObject,
-            out IRuntimeSpellBehavior runtimeBehavior)
+            GameObject casterObject)
         {
-            runtimeBehavior = null;
-            return behavior != null
-                && behavior.TryCreate(spell, casterObject, out runtimeBehavior)
-                && runtimeBehavior != null;
+            IRuntimeSpellBehavior runtimeBehavior =
+                RuntimeSpellBehaviorCloner.Clone(behavior);
+
+            if (runtimeBehavior is not IInitializableRuntimeSpellBehavior initializable
+                || !initializable.Supports(spell))
+            {
+                return null;
+            }
+
+            initializable.Initialize(casterObject);
+            return runtimeBehavior;
         }
 
         public override string ToString()

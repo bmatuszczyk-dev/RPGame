@@ -1,3 +1,4 @@
+using RPGame.Combat.Spells;
 using RPGame.Core.Damage;
 using RPGame.Core.Spells;
 using UnityEngine;
@@ -173,9 +174,11 @@ namespace RPGame.Combat.Projectiles
 
             if (TryGetDamageable(hitCollider, out IDamageable damageable))
             {
-                damageable.ApplyDamage(new DamageData(
-                    DamageRangeRoller.Roll(CasterData.DamageRanges),
-                    CasterData.CasterObject));
+                GameObject targetObject = ((Component)damageable).gameObject;
+                SpellBehaviorPipelineExecutor.Resolve(
+                    CasterData,
+                    targetObject,
+                    new DamageResolveBehavior(damageable, CasterData));
             }
 
             if (destroyOnHit)

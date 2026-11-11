@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using RPGame.Progression;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -20,8 +19,6 @@ namespace RPGame.UI.Jobs
         [SerializeField] private RectTransform perkNodesParent;
         [SerializeField] private PerkTreeConnectionsGraphic connectionsGraphic;
         [SerializeField] private PerkTooltipUI perkTooltip;
-        [FormerlySerializedAs("startingPerkNodePrefab")]
-        [SerializeField] private RectTransform rootNodePrefab;
         [SerializeField] private RectTransform perkNodePrefab;
         [SerializeField] private Button confirmPerkUnlocksButton;
         [SerializeField] private Button cancelPerkUnlocksButton;
@@ -150,7 +147,6 @@ namespace RPGame.UI.Jobs
                 job,
                 perkNodesParent,
                 connectionsGraphic,
-                rootNodePrefab,
                 perkNodePrefab,
                 spawnedPerkNodes,
                 GetPerkUnlockState,

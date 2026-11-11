@@ -46,8 +46,8 @@ namespace RPGame.Core.Tests.Effects
             aggregator.Add(effect);
             TestSpell otherSpell = ScriptableObject.CreateInstance<TestSpell>();
 
-            Assert.AreEqual(2f, aggregator.CreateSpellPropertyModifiers(spell).GetValue(SpellProperty.Radius));
-            Assert.AreEqual(2f, aggregator.CreateSpellPropertyModifiers(otherSpell).GetValue(SpellProperty.Radius));
+            Assert.AreEqual(2f, aggregator.CreateSpellPropertyModifiers(spell).GetFlatValue(SpellProperty.Radius));
+            Assert.AreEqual(2f, aggregator.CreateSpellPropertyModifiers(otherSpell).GetFlatValue(SpellProperty.Radius));
             Object.DestroyImmediate(effect);
             Object.DestroyImmediate(otherSpell);
         }
@@ -60,8 +60,8 @@ namespace RPGame.Core.Tests.Effects
                 CreateModifier(SpellProperty.Radius, 2f, spell);
             aggregator.Add(effect);
 
-            Assert.AreEqual(2f, aggregator.CreateSpellPropertyModifiers(spell).GetValue(SpellProperty.Radius));
-            Assert.AreEqual(0f, aggregator.CreateSpellPropertyModifiers(otherSpell).GetValue(SpellProperty.Radius));
+            Assert.AreEqual(2f, aggregator.CreateSpellPropertyModifiers(spell).GetFlatValue(SpellProperty.Radius));
+            Assert.AreEqual(0f, aggregator.CreateSpellPropertyModifiers(otherSpell).GetFlatValue(SpellProperty.Radius));
             Object.DestroyImmediate(effect);
             Object.DestroyImmediate(otherSpell);
         }
@@ -74,8 +74,8 @@ namespace RPGame.Core.Tests.Effects
             SpellPropertyModifierEffectDefinition specific = CreateModifier(SpellProperty.Radius, 2f, spell);
             aggregator.AddRange(new[] { generic, specific });
 
-            Assert.AreEqual(3f, aggregator.CreateSpellPropertyModifiers(spell).GetValue(SpellProperty.Radius));
-            Assert.AreEqual(1f, aggregator.CreateSpellPropertyModifiers(otherSpell).GetValue(SpellProperty.Radius));
+            Assert.AreEqual(3f, aggregator.CreateSpellPropertyModifiers(spell).GetFlatValue(SpellProperty.Radius));
+            Assert.AreEqual(1f, aggregator.CreateSpellPropertyModifiers(otherSpell).GetFlatValue(SpellProperty.Radius));
             Object.DestroyImmediate(generic);
             Object.DestroyImmediate(specific);
             Object.DestroyImmediate(otherSpell);
@@ -116,7 +116,7 @@ namespace RPGame.Core.Tests.Effects
 
             SpellPropertyModifiers modifiers = aggregator.CreateSpellPropertyModifiers(spell);
 
-            Assert.AreEqual(3f, modifiers.GetValue(SpellProperty.Radius));
+            Assert.AreEqual(3f, modifiers.GetFlatValue(SpellProperty.Radius));
             Object.DestroyImmediate(first);
             Object.DestroyImmediate(second);
         }
@@ -130,9 +130,9 @@ namespace RPGame.Core.Tests.Effects
 
             SpellPropertyModifiers modifiers = aggregator.CreateSpellPropertyModifiers(spell);
 
-            Assert.AreEqual(1f, modifiers.GetValue(SpellProperty.Radius));
-            Assert.AreEqual(2f, modifiers.GetValue(SpellProperty.Duration));
-            Assert.AreEqual(0f, modifiers.GetValue(SpellProperty.ControlPower));
+            Assert.AreEqual(1f, modifiers.GetFlatValue(SpellProperty.Radius));
+            Assert.AreEqual(2f, modifiers.GetFlatValue(SpellProperty.Duration));
+            Assert.AreEqual(0f, modifiers.GetFlatValue(SpellProperty.ControlPower));
             Object.DestroyImmediate(radius);
             Object.DestroyImmediate(duration);
         }
@@ -143,7 +143,7 @@ namespace RPGame.Core.Tests.Effects
             SpellPropertyModifiers modifiers = aggregator.CreateSpellPropertyModifiers(null);
 
             Assert.AreSame(SpellPropertyModifiers.Empty, modifiers);
-            Assert.AreEqual(0f, modifiers.GetValue(SpellProperty.OrbCount));
+            Assert.AreEqual(0f, modifiers.GetFlatValue(SpellProperty.OrbCount));
         }
 
         [Test]
@@ -156,14 +156,14 @@ namespace RPGame.Core.Tests.Effects
 
             aggregator.Add(second);
 
-            Assert.AreEqual(1f, snapshot.GetValue(SpellProperty.Radius));
-            Assert.AreEqual(3f, aggregator.CreateSpellPropertyModifiers(spell).GetValue(SpellProperty.Radius));
+            Assert.AreEqual(1f, snapshot.GetFlatValue(SpellProperty.Radius));
+            Assert.AreEqual(3f, aggregator.CreateSpellPropertyModifiers(spell).GetFlatValue(SpellProperty.Radius));
             Object.DestroyImmediate(first);
             Object.DestroyImmediate(second);
         }
 
         [Test]
-        public void Resolver_UsesCapabilityValuesAndModifiers()
+        public void Modifiers_ResolveCapabilityValues()
         {
             SpellPropertyModifierEffectDefinition radius = CreateModifier(SpellProperty.Radius, 2.5f);
             SpellPropertyModifierEffectDefinition duration = CreateModifier(SpellProperty.Duration, -2f);
@@ -179,10 +179,11 @@ namespace RPGame.Core.Tests.Effects
 
             SpellPropertyModifiers modifiers = aggregator.CreateSpellPropertyModifiers(spell);
 
-            Assert.AreEqual(3.5f, SpellPropertyModifierResolver.ResolveRadius(spell, modifiers));
-            Assert.AreEqual(0f, SpellPropertyModifierResolver.ResolveDuration(spell, modifiers));
-            Assert.AreEqual(4f, SpellPropertyModifierResolver.ResolveControlPower(spell, modifiers));
-            Assert.AreEqual(3, SpellPropertyModifierResolver.ResolveOrbCount(spell, modifiers));
+            Assert.AreEqual(3.5f, modifiers.Resolve(spell.Radius, SpellProperty.Radius));
+            Assert.AreEqual(0f, modifiers.Resolve(spell.Duration, SpellProperty.Duration));
+            Assert.AreEqual(4f, modifiers.Resolve(spell.ControlPower, SpellProperty.ControlPower));
+            Assert.AreEqual(3, Mathf.Max(1, Mathf.RoundToInt(
+                modifiers.Resolve(spell.OrbCount, SpellProperty.OrbCount))));
             Object.DestroyImmediate(radius);
             Object.DestroyImmediate(duration);
             Object.DestroyImmediate(controlPower);
@@ -227,6 +228,15 @@ namespace RPGame.Core.Tests.Effects
             public float ControlPower => 1f;
             public int OrbCount => 1;
 
+            public override bool SupportsProperty(SpellProperty property)
+            {
+                return property is SpellProperty.Radius
+                    or SpellProperty.Area
+                    or SpellProperty.Duration
+                    or SpellProperty.ControlPower
+                    or SpellProperty.OrbCount;
+            }
+
             public override void OnCast(CasterData casterData)
             {
             }
@@ -234,6 +244,8 @@ namespace RPGame.Core.Tests.Effects
 
         private sealed class NoCapabilitySpell : Spell
         {
+            public override bool SupportsProperty(SpellProperty property) => false;
+
             public override void OnCast(CasterData casterData)
             {
             }

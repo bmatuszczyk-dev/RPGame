@@ -1,11 +1,15 @@
 using System.Collections.Generic;
 using RPGame.Core.Spells;
+using RPGame.Core.Statuses;
+using UnityEngine;
 
 namespace RPGame.Core.Effects
 {
     public sealed class PermanentEffectContainer
     {
         private readonly List<EffectInstance> effects = new();
+        private readonly Dictionary<EffectStat, float> flatEffectValues = new();
+        private readonly Dictionary<EffectStat, float> percentEffectValues = new();
 
         public IReadOnlyList<EffectInstance> Effects => effects;
 
@@ -20,6 +24,10 @@ namespace RPGame.Core.Effects
             if (instance != null)
             {
                 effects.Add(instance);
+                if (definition is StatEffectDefinition statEffect)
+                {
+                    AddEffectValue(statEffect.Stat, statEffect.ModifierType, statEffect.Value);
+                }
             }
         }
 
@@ -38,22 +46,41 @@ namespace RPGame.Core.Effects
 
         public float GetEffectValue(EffectStat stat, EffectModifierType modifierType)
         {
-            float value = 0f;
+            Dictionary<EffectStat, float> values = modifierType == EffectModifierType.Flat
+                ? flatEffectValues
+                : percentEffectValues;
+            return values.TryGetValue(stat, out float value) ? value : 0f;
+        }
 
-            foreach (EffectInstance effect in GetEffects(stat, modifierType))
+        public float ResolveStatusDuration(StatusDefinition status, float duration)
+        {
+            float flat = 0f;
+            float percent = 0f;
+            foreach (EffectInstance effect in effects)
             {
-                value += effect.Value;
+                if (effect.Definition is not StatusDurationModifierEffectDefinition modifier
+                    || !modifier.Supports(status))
+                {
+                    continue;
+                }
+
+                if (modifier.ModifierType == EffectModifierType.Flat)
+                {
+                    flat += modifier.Value;
+                }
+                else
+                {
+                    percent += modifier.Value;
+                }
             }
 
-            return value;
+            return Mathf.Max(0f, (duration + flat) * Mathf.Max(0f, 1f + percent));
         }
 
         public SpellPropertyModifiers CreateSpellPropertyModifiers(Spell spell)
         {
-            float radius = 0f;
-            float duration = 0f;
-            float controlPower = 0f;
-            float orbCount = 0f;
+            Dictionary<SpellProperty, float> flatValues = new();
+            Dictionary<SpellProperty, float> percentValues = new();
 
             foreach (EffectInstance effect in effects)
             {
@@ -62,7 +89,7 @@ namespace RPGame.Core.Effects
                     continue;
                 }
 
-                if (!SpellPropertyModifierResolver.Supports(spell, modifier.Property))
+                if (spell == null || !spell.SupportsProperty(modifier.Property))
                 {
                     continue;
                 }
@@ -72,64 +99,57 @@ namespace RPGame.Core.Effects
                     continue;
                 }
 
-                switch (modifier.Property)
-                {
-                    case SpellProperty.Radius:
-                        radius += modifier.Value;
-                        break;
-                    case SpellProperty.Duration:
-                        duration += modifier.Value;
-                        break;
-                    case SpellProperty.ControlPower:
-                        controlPower += modifier.Value;
-                        break;
-                    case SpellProperty.OrbCount:
-                        orbCount += modifier.Value;
-                        break;
-                }
+                Dictionary<SpellProperty, float> values =
+                    modifier.ModifierType == EffectModifierType.Flat
+                        ? flatValues
+                        : percentValues;
+                values.TryGetValue(modifier.Property, out float currentValue);
+                values[modifier.Property] = currentValue + modifier.Value;
             }
 
-            return radius == 0f
-                && duration == 0f
-                && controlPower == 0f
-                && orbCount == 0f
+            return flatValues.Count == 0 && percentValues.Count == 0
                 ? SpellPropertyModifiers.Empty
-                : new SpellPropertyModifiers(radius, duration, controlPower, orbCount);
+                : new SpellPropertyModifiers(flatValues, percentValues);
         }
 
         public IReadOnlyList<IRuntimeSpellBehavior> CreateRuntimeBehaviors(
             Spell spell,
             UnityEngine.GameObject casterObject)
         {
-            List<IRuntimeSpellBehavior> behaviors = new();
+            List<RuntimeSpellBehaviorOrderEntry> behaviors = new();
             foreach (EffectInstance effect in effects)
             {
-                if (effect.Definition is not IRuntimeSpellBehaviorFactory factory)
+                if (effect.Definition is not RuntimeBehaviorEffectDefinition runtimeBehaviorEffect)
                 {
                     continue;
                 }
 
-                if (factory.TryCreateRuntimeBehavior(spell, casterObject, out IRuntimeSpellBehavior behavior)
-                    && behavior != null)
+                IRuntimeSpellBehavior behavior =
+                    runtimeBehaviorEffect.CreateRuntimeBehavior(spell, casterObject);
+                if (behavior != null)
                 {
-                    behaviors.Add(behavior);
+                    behaviors.Add(new RuntimeSpellBehaviorOrderEntry(
+                        behavior,
+                        runtimeBehaviorEffect.ExecutionOrder));
                 }
             }
 
-            return behaviors;
+            IReadOnlyList<IRuntimeSpellBehavior> orderedBehaviors =
+                RuntimeSpellBehaviorOrderer.Order(behaviors);
+            ApplyRuntimeBehaviorModifiers(spell, casterObject, orderedBehaviors);
+            return orderedBehaviors;
         }
 
-        private IEnumerable<EffectInstance> GetEffects(
+        private void AddEffectValue(
             EffectStat stat,
-            EffectModifierType modifierType)
+            EffectModifierType modifierType,
+            float value)
         {
-            foreach (EffectInstance effect in effects)
-            {
-                if (effect.Stat == stat && effect.ModifierType == modifierType)
-                {
-                    yield return effect;
-                }
-            }
+            Dictionary<EffectStat, float> values = modifierType == EffectModifierType.Flat
+                ? flatEffectValues
+                : percentEffectValues;
+            values.TryGetValue(stat, out float currentValue);
+            values[stat] = currentValue + value;
         }
 
         private static EffectInstance CreateInstance(PassiveEffectDefinition definition)
@@ -144,6 +164,21 @@ namespace RPGame.Core.Effects
             }
 
             return new EffectInstance(definition);
+        }
+
+        private void ApplyRuntimeBehaviorModifiers(
+            Spell spell,
+            UnityEngine.GameObject casterObject,
+            IReadOnlyList<IRuntimeSpellBehavior> behaviors)
+        {
+            foreach (EffectInstance effect in effects)
+            {
+                if (effect.Definition is RuntimeBehaviorModifierEffectDefinition modifier
+                    && modifier.Supports(spell))
+                {
+                    modifier.ModifyRuntimeBehaviors(behaviors, spell, casterObject);
+                }
+            }
         }
     }
 }

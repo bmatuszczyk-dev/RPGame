@@ -14,7 +14,6 @@ namespace RPGame.UI.Jobs
             JobInstance job,
             RectTransform perkNodesParent,
             PerkTreeConnectionsGraphic connectionsGraphic,
-            RectTransform rootNodePrefab,
             RectTransform perkNodePrefab,
             List<GameObject> spawnedPerkNodes,
             Func<PerkDefinition, PerkUnlockState> getUnlockState,
@@ -38,9 +37,8 @@ namespace RPGame.UI.Jobs
 
             List<PerkDefinition> spawnedPerks = new();
             List<PerkTreeConnection> connections = new();
-            GetReachablePerksAndConnections(
+            GetPerksAndConnections(
                 job.Definition.JobPerks,
-                rootNodePrefab,
                 perkNodePrefab,
                 spawnedPerks,
                 connections,
@@ -48,7 +46,6 @@ namespace RPGame.UI.Jobs
                 isPerkPending);
             GetConnectionsGraphic(perkNodesParent, connectionsGraphic)?.SetConnections(connections);
 
-            SpawnRootNode(rootNodePrefab, perkNodesParent, spawnedPerkNodes);
             SpawnPerkNodes(
                 spawnedPerks,
                 perkNodesParent,
@@ -64,31 +61,8 @@ namespace RPGame.UI.Jobs
             return spawnedPerkNodes.Count;
         }
 
-        private static void SpawnRootNode(
-            RectTransform rootNodePrefab,
-            RectTransform perkNodesParent,
-            List<GameObject> spawnedPerkNodes)
-        {
-            if (rootNodePrefab == null)
-            {
-                return;
-            }
-
-            RectTransform rootNode = UnityEngine.Object.Instantiate(rootNodePrefab, perkNodesParent);
-            rootNode.name = rootNodePrefab.name;
-            rootNode.anchoredPosition = Vector2.zero;
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-            {
-                Undo.RegisterCreatedObjectUndo(rootNode.gameObject, "Rebuild Perk Tree");
-            }
-#endif
-            spawnedPerkNodes.Add(rootNode.gameObject);
-        }
-
-        private static void GetReachablePerksAndConnections(
+        private static void GetPerksAndConnections(
             IReadOnlyList<PerkDefinition> jobPerks,
-            RectTransform rootNodePrefab,
             RectTransform perkNodePrefab,
             List<PerkDefinition> spawnedPerks,
             List<PerkTreeConnection> connections,
@@ -96,8 +70,6 @@ namespace RPGame.UI.Jobs
             Func<PerkDefinition, bool> isPerkPending)
         {
             Dictionary<string, PerkDefinition> perksById = new();
-            Queue<PerkDefinition> perksToSpawn = new();
-            HashSet<string> spawnedPerkIds = new();
             HashSet<string> connectionKeys = new();
 
             for (int i = 0; i < jobPerks.Count; i++)
@@ -108,33 +80,19 @@ namespace RPGame.UI.Jobs
                     continue;
                 }
 
-                perksById.TryAdd(perk.PerkId, perk);
-
-                if (perk.IsStartingPerk)
-                {
-                    perksToSpawn.Enqueue(perk);
-                    AddConnection(
-                        connections,
-                        connectionKeys,
-                        string.Empty,
-                        perk.PerkId,
-                        GetNodeCenterPosition(rootNodePrefab, Vector2.zero),
-                        GetNodeCenterPosition(perkNodePrefab, perk.UIPosition),
-                        GetConnectionState(perk, null, getUnlockState, isPerkPending));
-                }
-            }
-
-            while (perksToSpawn.Count > 0)
-            {
-                PerkDefinition perk = perksToSpawn.Dequeue();
-                if (perk == null || !spawnedPerkIds.Add(perk.PerkId))
+                if (!perksById.TryAdd(perk.PerkId, perk))
                 {
                     continue;
                 }
 
                 spawnedPerks.Add(perk);
+            }
 
-                foreach (PerkDefinition connectedPerk in GetConnectedPerks(perk, perksById.Values))
+            for (int i = 0; i < spawnedPerks.Count; i++)
+            {
+                PerkDefinition perk = spawnedPerks[i];
+
+                foreach (PerkDefinition connectedPerk in GetNextPerks(perk, perksById))
                 {
                     AddConnection(
                         connections,
@@ -144,45 +102,23 @@ namespace RPGame.UI.Jobs
                         GetNodeCenterPosition(perkNodePrefab, perk.UIPosition),
                         GetNodeCenterPosition(perkNodePrefab, connectedPerk.UIPosition),
                         GetConnectionState(perk, connectedPerk, getUnlockState, isPerkPending));
-
-                    if (!spawnedPerkIds.Contains(connectedPerk.PerkId))
-                    {
-                        perksToSpawn.Enqueue(connectedPerk);
-                    }
                 }
             }
         }
 
-        private static IEnumerable<PerkDefinition> GetConnectedPerks(
+        private static IEnumerable<PerkDefinition> GetNextPerks(
             PerkDefinition perk,
-            IEnumerable<PerkDefinition> jobPerks)
+            IReadOnlyDictionary<string, PerkDefinition> perksById)
         {
-            foreach (PerkDefinition connectedPerk in jobPerks)
+            for (int i = 0; i < perk.NextPerkIds.Count; i++)
             {
-                if (connectedPerk != null && connectedPerk.PerkId != perk.PerkId && AreConnected(perk, connectedPerk))
+                string nextPerkId = perk.NextPerkIds[i];
+                if (perksById.TryGetValue(nextPerkId, out PerkDefinition nextPerk)
+                    && nextPerk != perk)
                 {
-                    yield return connectedPerk;
+                    yield return nextPerk;
                 }
             }
-        }
-
-        private static bool AreConnected(PerkDefinition firstPerk, PerkDefinition secondPerk)
-        {
-            return ContainsPerkId(firstPerk.ConnectedPerkIds, secondPerk.PerkId)
-                || ContainsPerkId(secondPerk.ConnectedPerkIds, firstPerk.PerkId);
-        }
-
-        private static bool ContainsPerkId(IReadOnlyList<string> perkIds, string perkId)
-        {
-            for (int i = 0; i < perkIds.Count; i++)
-            {
-                if (perkIds[i] == perkId)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         private static void SpawnPerkNodes(

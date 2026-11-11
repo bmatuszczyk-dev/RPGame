@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d15f4e2ee1b14cf2863f7c5c6c1bfd10, type: 3}
   m_Name: MagicMissileSpell
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.ProjectileSpell
+  id: magic_missile
   spellPrefab: {fileID: 8290428544382467781, guid: 0c8e054a61c533048addf69ce119cb66, type: 3}
   manaCost: 10
   baseDamageRange:

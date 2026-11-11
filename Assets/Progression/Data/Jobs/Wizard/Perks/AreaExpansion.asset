@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5145033cfde049c88a0cd28b4579eb12, type: 3}
+  m_Name: AreaExpansion
+  m_EditorClassIdentifier: RPGame.Progression::RPGame.Progression.PerkDefinition
+  perkId: AreaExpansion
+  displayName: Area Expansion
+  description: Zwieksza powierzchnie dzialania zaklec AoE o 20%.
+  connectedPerkIds: []
+  cost: 1
+  isStartingPerk: 0
+  uiPosition: {x: -200, y: 200}
+  effects:
+  - {fileID: 11400000, guid: 33262349cbcf47e58fb86b6b69d45076, type: 2}

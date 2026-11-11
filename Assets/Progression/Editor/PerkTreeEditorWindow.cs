@@ -142,6 +142,7 @@ namespace RPGame.Progression.Editor
         private void DrawConnections(Rect canvasRect)
         {
             Handles.BeginGUI();
+            HashSet<string> drawnConnectionKeys = new();
 
             for (int i = 0; i < perks.Count; i++)
             {
@@ -149,7 +150,7 @@ namespace RPGame.Progression.Editor
                 for (int j = 0; j < from.ConnectedPerkIds.Count; j++)
                 {
                     PerkEditState to = FindPerk(from.ConnectedPerkIds[j]);
-                    if (to == null || string.CompareOrdinal(from.PerkId, to.PerkId) > 0)
+                    if (to == null || !drawnConnectionKeys.Add(GetConnectionKey(from.PerkId, to.PerkId)))
                     {
                         continue;
                     }
@@ -248,7 +249,7 @@ namespace RPGame.Progression.Editor
 
         private void DrawConnectionEditor(PerkEditState perk)
         {
-            GUILayout.Label("Connections", EditorStyles.boldLabel);
+            GUILayout.Label("Next Perks", EditorStyles.boldLabel);
 
             for (int i = perk.ConnectedPerkIds.Count - 1; i >= 0; i--)
             {
@@ -684,27 +685,19 @@ namespace RPGame.Progression.Editor
 
         private void ToggleConnection(PerkEditState first, PerkEditState second)
         {
-            if (AreConnected(first, second))
+            if (first.ConnectedPerkIds.Contains(second.PerkId))
             {
                 RemoveConnection(first, second.PerkId);
                 return;
             }
 
             AddUnique(first.ConnectedPerkIds, second.PerkId);
-            AddUnique(second.ConnectedPerkIds, first.PerkId);
             MarkDirty();
         }
 
         private void RemoveConnection(PerkEditState perk, string connectedPerkId)
         {
-            PerkEditState connectedPerk = FindPerk(connectedPerkId);
             perk.ConnectedPerkIds.Remove(connectedPerkId);
-
-            if (connectedPerk != null)
-            {
-                connectedPerk.ConnectedPerkIds.Remove(perk.PerkId);
-            }
-
             MarkDirty();
         }
 
@@ -716,9 +709,11 @@ namespace RPGame.Progression.Editor
             }
         }
 
-        private bool AreConnected(PerkEditState first, PerkEditState second)
+        private static string GetConnectionKey(string firstPerkId, string secondPerkId)
         {
-            return first.ConnectedPerkIds.Contains(second.PerkId) || second.ConnectedPerkIds.Contains(first.PerkId);
+            return string.CompareOrdinal(firstPerkId, secondPerkId) <= 0
+                ? $"{firstPerkId}:{secondPerkId}"
+                : $"{secondPerkId}:{firstPerkId}";
         }
 
         private void MarkDirty()

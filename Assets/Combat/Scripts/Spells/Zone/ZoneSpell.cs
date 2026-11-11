@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace RPGame.Combat.Spells
 {
-    public abstract class ZoneSpell : Spell, IIndicatorSpell, IAoECapability
+    public abstract class ZoneSpell : Spell, IIndicatorSpell, IZoneCapability
     {
         [SerializeField] private GameObject indicatorPrefab;
         [SerializeField] private float placementRange;
@@ -13,13 +13,20 @@ namespace RPGame.Combat.Spells
 
         public GameObject IndicatorPrefab => indicatorPrefab;
         public float PlacementRange => placementRange;
-        public float PlacementRadius => radius;
         public float Radius => radius;
         protected float ActiveDuration => activeDuration;
 
+        public override bool SupportsProperty(SpellProperty property)
+        {
+            return property is SpellProperty.Radius
+                or SpellProperty.Area
+                or SpellProperty.ZoneRadius;
+        }
+
         public override ISpellActivationHandle OnActivation(CasterData casterData)
         {
-            return new PlacementActivationHandle(this);
+            float effectiveRadius = ResolveEffectiveRadius(casterData.PropertyModifiers);
+            return new PlacementActivationHandle(this, effectiveRadius);
         }
 
         public override void OnCast(CasterData casterData)
@@ -44,13 +51,13 @@ namespace RPGame.Combat.Spells
                 return;
             }
 
-            float effectiveRadius = SpellPropertyModifierResolver.ResolveRadius(this, casterData.PropertyModifiers);
+            float effectiveRadius = ResolveEffectiveRadius(casterData.PropertyModifiers);
             float effectiveDuration = activeDuration;
             if (this is IDurationCapability durationCapability)
             {
-                effectiveDuration = SpellPropertyModifierResolver.ResolveDuration(
-                    durationCapability,
-                    casterData.PropertyModifiers);
+                effectiveDuration = casterData.PropertyModifiers.Resolve(
+                    durationCapability.Duration,
+                    SpellProperty.Duration);
             }
 
             zoneController.Initialize(casterData, effectiveRadius, activationDelay, effectiveDuration);
@@ -63,5 +70,15 @@ namespace RPGame.Combat.Spells
             activationDelay = Mathf.Max(0f, activationDelay);
             activeDuration = Mathf.Max(0f, activeDuration);
         }
+
+        private float ResolveEffectiveRadius(SpellPropertyModifiers modifiers)
+        {
+            return modifiers.Resolve(
+                       Radius,
+                       SpellProperty.Radius,
+                       SpellProperty.ZoneRadius)
+                   * Mathf.Sqrt(modifiers.GetPercentMultiplier(SpellProperty.Area));
+        }
+
     }
 }

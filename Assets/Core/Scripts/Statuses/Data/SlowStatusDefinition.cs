@@ -3,7 +3,7 @@ using UnityEngine.Scripting.APIUpdating;
 
 namespace RPGame.Core.Statuses
 {
-    [CreateAssetMenu(fileName = "SlowEffect", menuName = "RPGame/Progression/Statuses/Slow")]
+    [CreateAssetMenu(fileName = "SlowEffect", menuName = "RPGame/Statuses/Slow")]
     [MovedFrom(true, null, null, "SlowEffectDefinition")]
     public sealed class SlowStatusDefinition : StatusDefinition
     {

@@ -25,7 +25,9 @@ namespace RPGame.Progression
                 return PerkUnlockState.Locked;
             }
 
-            if (perk.IsStartingPerk || HasUnlockedConnectedPerk(job, perk))
+            if (perk.IsStartingPerk
+                || !HasPredecessor(job, perk)
+                || HasUnlockedPredecessor(job, perk))
             {
                 return PerkUnlockState.Available;
             }
@@ -77,16 +79,11 @@ namespace RPGame.Progression
                 && job.Definition.JobPerks.Any(jobPerk => jobPerk != null && jobPerk.PerkId == perk.PerkId);
         }
 
-        private static bool HasUnlockedConnectedPerk(JobInstance job, PerkDefinition perk)
+        private static bool HasPredecessor(JobInstance job, PerkDefinition perk)
         {
             foreach (PerkDefinition jobPerk in job.Definition.JobPerks)
             {
-                if (jobPerk == null || !job.UnlockedPerkIds.Contains(jobPerk.PerkId))
-                {
-                    continue;
-                }
-
-                if (AreConnected(perk, jobPerk))
+                if (jobPerk != null && jobPerk.NextPerkIds.Contains(perk.PerkId))
                 {
                     return true;
                 }
@@ -95,10 +92,19 @@ namespace RPGame.Progression
             return false;
         }
 
-        private static bool AreConnected(PerkDefinition firstPerk, PerkDefinition secondPerk)
+        private static bool HasUnlockedPredecessor(JobInstance job, PerkDefinition perk)
         {
-            return firstPerk.ConnectedPerkIds.Contains(secondPerk.PerkId)
-                || secondPerk.ConnectedPerkIds.Contains(firstPerk.PerkId);
+            foreach (PerkDefinition jobPerk in job.Definition.JobPerks)
+            {
+                if (jobPerk != null
+                    && job.UnlockedPerkIds.Contains(jobPerk.PerkId)
+                    && jobPerk.NextPerkIds.Contains(perk.PerkId))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

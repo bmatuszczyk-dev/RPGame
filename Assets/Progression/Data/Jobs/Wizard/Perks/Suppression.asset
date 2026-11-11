@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5145033cfde049c88a0cd28b4579eb12, type: 3}
+  m_Name: Suppression
+  m_EditorClassIdentifier: RPGame.Progression::RPGame.Progression.PerkDefinition
+  perkId: Suppression
+  displayName: Suppression
+  description: Markowane cele zyskuja czasowa redukcje zadawanych obrazen.
+  connectedPerkIds:
+  - DeepSuppression
+  - LingeringEffects
+  cost: 1
+  isStartingPerk: 0
+  uiPosition: {x: 362, y: 400}
+  effects:
+  - {fileID: 11400000, guid: 0f61e4aab26c4f6199200e14f8c477b4, type: 2}
+  - {fileID: 0}

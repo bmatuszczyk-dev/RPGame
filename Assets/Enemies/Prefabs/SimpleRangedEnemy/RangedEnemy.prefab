@@ -30,6 +30,8 @@ GameObject:
   - component: {fileID: 7314496810227115782}
   - component: {fileID: 7414506123678943209}
   - component: {fileID: 3898606590640357780}
+  - component: {fileID: 9172990148900286399}
+  - component: {fileID: 3168369268159754967}
   m_Layer: 6
   m_Name: RangedEnemy
   m_TagString: Untagged
@@ -166,7 +168,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a228d74ae0d45788e3d884cac2b0c3d, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.StatisticsController
   config: {fileID: 11400000, guid: 0ecd9846d500940459e2592b6b90fa7f, type: 2}
   attributes: {fileID: 0}
@@ -184,7 +186,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 50c141530f8e4fe18dfe0a726096fc96, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.Detection
   detectionRange: 30
   detectionInterval: 0.2
@@ -361,6 +363,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2dbfd3740605de4faf2c301c5ad9c81, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.StatusEffectAggregator
+--- !u!114 &9172990148900286399
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1330688795939094697}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c10d6b62f2f845639483ccd39c3c7f4e, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.DestroyOnDeath
+  deathSource: {fileID: 5997701551370722757}
+--- !u!114 &3168369268159754967
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1330688795939094697}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbaf3e26c8d0429e83a7630284f17e38, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.MarkProgressReceiver
+  markDefinition: {fileID: 11400000, guid: 7f81cd55cb4041cca13fbd9df5de24f6, type: 2}
 --- !u!114 &7314496810227115782
 MonoBehaviour:
   m_ObjectHideFlags: 0

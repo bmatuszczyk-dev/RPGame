@@ -17,6 +17,7 @@ namespace RPGame.Progression
         private readonly JobContainer jobContainer = new();
         private readonly PerkProgression perks = new();
         private JobProgression jobs;
+        private AttributeProgression attributeProgression;
 
         public JobContainer JobContainer => jobContainer;
         public JobProgression Jobs => GetJobs();
@@ -25,6 +26,7 @@ namespace RPGame.Progression
 
         public event Action AvailableExperienceChanged;
         public event Action<int> ExperienceGained;
+        public event Action<JobInstance, PerkDefinition, int> PerkUnlocked;
 
         private void Awake()
         {
@@ -67,6 +69,7 @@ namespace RPGame.Progression
             }
 
             AddPerkEffects(perk);
+            PerkUnlocked?.Invoke(job, perk, job.JobPoints);
             return true;
         }
 
@@ -109,10 +112,11 @@ namespace RPGame.Progression
         private AttributeProgression GetAttributes()
         {
             ResolveAttributes();
-            return new AttributeProgression(
+            attributeProgression ??= new AttributeProgression(
                 attributes,
                 GetAvailableXP,
                 SpendExperience);
+            return attributeProgression;
         }
 
         private void SpendExperience(int amount)

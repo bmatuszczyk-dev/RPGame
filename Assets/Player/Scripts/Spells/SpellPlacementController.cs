@@ -16,7 +16,7 @@ namespace RPGame.Player.Spells
         public bool IsActive => activeSpell != null;
         public bool HasValidPlacement { get; private set; }
 
-        public void Begin(IIndicatorSpell spell, Transform caster)
+        public void Begin(IIndicatorSpell spell, Transform caster, float placementRadius)
         {
             Cancel();
 
@@ -43,7 +43,7 @@ namespace RPGame.Player.Spells
 
             indicator = Instantiate(indicatorPrefab);
             Vector3 scale = indicator.transform.localScale;
-            float diameter = spell.PlacementRadius * 2f;
+            float diameter = Mathf.Max(0f, placementRadius) * 2f;
             indicator.transform.localScale = new Vector3(diameter, scale.y, diameter);
             indicator.SetActive(false);
         }

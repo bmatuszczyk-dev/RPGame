@@ -8,6 +8,7 @@ namespace RPGame.Progression
     public sealed class JobInstance
     {
         private const int StartingLevel = 1;
+        private const int StartingJobPoints = 1;
 
         [SerializeField] private JobDefinition definition;
         [SerializeField] private string jobId;
@@ -20,7 +21,7 @@ namespace RPGame.Progression
         private readonly Action<JobInstance> onAdvanced;
 
         public JobInstance(JobDefinition definition, Action<JobInstance> onAdvanced = null)
-            : this(definition, StartingLevel, 0, 0, 0, onAdvanced)
+            : this(definition, StartingLevel, 0, 0, StartingJobPoints, onAdvanced)
         {
         }
 

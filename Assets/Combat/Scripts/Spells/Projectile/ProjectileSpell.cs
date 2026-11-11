@@ -13,6 +13,11 @@ namespace RPGame.Combat.Spells
         [SerializeField] private PartialDamageRange baseDamageRange = new(10f, 10f, DamageType.Magical, DamageElement.None);
         [SerializeField] private float powerDamageScaling;
 
+        public override bool SupportsProperty(SpellProperty property)
+        {
+            return false;
+        }
+
         public override void OnCast(CasterData casterData)
         {
             if (SpellPrefab == null)
@@ -44,6 +49,7 @@ namespace RPGame.Combat.Spells
                 .WithDamageRanges(GetDamageRanges(casterData))
                 .WithRuntimeBehaviors(casterData.RuntimeBehaviors)
                 .WithPropertyModifiers(casterData.PropertyModifiers)
+                .WithSpellId(casterData.SpellId)
                 .Build();
         }
 

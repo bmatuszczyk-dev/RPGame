@@ -24,6 +24,7 @@ GameObject:
   - component: {fileID: 4576276309095195749}
   - component: {fileID: 3225212865652347049}
   - component: {fileID: 4615631220366247115}
+  - component: {fileID: 913000000000000006}
   - component: {fileID: 6255097007687150846}
   - component: {fileID: 6544313655288021333}
   - component: {fileID: 58043936146931868}
@@ -464,6 +465,19 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2d472bd66c6d5614b826ff12e7dd7215, type: 3}
+--- !u!114 &913000000000000006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8320713333696001733}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbaf3e26c8d0429e83a7630284f17e38, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.MarkProgressReceiver
+  markDefinition: {fileID: 11400000, guid: 7f81cd55cb4041cca13fbd9df5de24f6, type: 2}
 --- !u!224 &1590649706224819131 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7192202156049894103, guid: 2d472bd66c6d5614b826ff12e7dd7215, type: 3}

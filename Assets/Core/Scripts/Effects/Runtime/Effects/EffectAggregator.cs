@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using RPGame.Core.Spells;
 using RPGame.Core.Statistics;
+using RPGame.Core.Statuses;
 using UnityEngine;
 
 namespace RPGame.Core.Effects
@@ -10,6 +12,7 @@ namespace RPGame.Core.Effects
         private readonly PermanentEffectContainer permanentContainer = new();
         private IStatisticsController statisticsController;
 
+        public event Action EffectsChanged;
         public IReadOnlyList<EffectInstance> Effects => permanentContainer.Effects;
         public IStatisticsController StatisticsController => GetStatisticsController();
 
@@ -20,17 +23,48 @@ namespace RPGame.Core.Effects
 
         public void Add(PassiveEffectDefinition definition)
         {
+            if (definition == null)
+            {
+                return;
+            }
+
             permanentContainer.Add(definition);
+            EffectsChanged?.Invoke();
         }
 
         public void AddRange(IEnumerable<PassiveEffectDefinition> definitions)
         {
-            permanentContainer.AddRange(definitions);
+            if (definitions == null)
+            {
+                return;
+            }
+
+            bool addedAny = false;
+            foreach (PassiveEffectDefinition definition in definitions)
+            {
+                if (definition == null)
+                {
+                    continue;
+                }
+
+                permanentContainer.Add(definition);
+                addedAny = true;
+            }
+
+            if (addedAny)
+            {
+                EffectsChanged?.Invoke();
+            }
         }
 
         public float GetEffectValue(EffectStat stat, EffectModifierType modifierType)
         {
             return permanentContainer.GetEffectValue(stat, modifierType);
+        }
+
+        public float ResolveStatusDuration(StatusDefinition status, float duration)
+        {
+            return permanentContainer.ResolveStatusDuration(status, duration);
         }
 
         public IReadOnlyList<IRuntimeSpellBehavior> CreateRuntimeBehaviors(

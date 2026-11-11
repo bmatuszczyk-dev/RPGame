@@ -6,6 +6,7 @@ namespace RPGame.Core.Statuses
         Refreshed,
         Expired,
         Consumed,
-        Cleared
+        Cleared,
+        OwnerDied
     }
 }

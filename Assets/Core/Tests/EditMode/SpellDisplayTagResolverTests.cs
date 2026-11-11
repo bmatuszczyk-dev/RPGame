@@ -49,6 +49,13 @@ namespace RPGame.Core.Tests
             public float Radius => 3f;
             public float ControlPower => 2f;
 
+            public override bool SupportsProperty(SpellProperty property)
+            {
+                return property is SpellProperty.Radius
+                    or SpellProperty.Area
+                    or SpellProperty.ControlPower;
+            }
+
             public override void OnCast(CasterData casterData)
             {
             }

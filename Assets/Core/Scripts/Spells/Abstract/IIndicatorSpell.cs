@@ -6,6 +6,5 @@ namespace RPGame.Core.Spells
     {
         GameObject IndicatorPrefab { get; }
         float PlacementRange { get; }
-        float PlacementRadius { get; }
     }
 }

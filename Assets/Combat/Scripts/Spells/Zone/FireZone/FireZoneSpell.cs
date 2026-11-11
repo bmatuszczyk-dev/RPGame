@@ -7,5 +7,10 @@ namespace RPGame.Combat.Spells
     public sealed class FireZoneSpell : ZoneSpell, IDurationCapability
     {
         public float Duration => ActiveDuration;
+
+        public override bool SupportsProperty(SpellProperty property)
+        {
+            return base.SupportsProperty(property) || property == SpellProperty.Duration;
+        }
     }
 }

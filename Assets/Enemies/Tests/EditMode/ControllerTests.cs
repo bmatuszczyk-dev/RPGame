@@ -9,6 +9,7 @@ using RPGame.Combat.Projectiles;
 using RPGame.Core.Damage;
 using RPGame.Core.Statistics;
 using RPGame.Core.Targeting;
+using RPGame.Core.Statuses;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
@@ -426,6 +427,7 @@ namespace RPGame.Enemies.Tests
             enemy.AddComponent<Attack>();
             enemy.AddComponent<MeleeBehaviourCreator>();
             enemy.AddComponent<RPGame.Enemies.Controller>();
+            InvokeAwake(enemy.GetComponent<StatusAggregator>());
             return enemy;
         }
 
@@ -703,6 +705,12 @@ namespace RPGame.Enemies.Tests
         {
             MethodInfo method = typeof(Movement).GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic);
             method.Invoke(movement, null);
+        }
+
+        private static void InvokeAwake(StatusAggregator statusAggregator)
+        {
+            MethodInfo method = typeof(StatusAggregator).GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic);
+            method.Invoke(statusAggregator, null);
         }
 
         private readonly struct TargetFixture

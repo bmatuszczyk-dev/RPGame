@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
+using RPGame.Core.Effects;
 using RPGame.Core.Statistics;
 using RPGame.Core.Statistics.Attributes;
 using UnityEditor;
@@ -12,6 +15,8 @@ namespace RPGame.Core.Tests
         private StatisticsConfig config;
         private CharacterAttributesConfig attributesConfig;
         private StatisticsController controller;
+        private EffectAggregator effects;
+        private readonly List<StatEffectDefinition> effectDefinitions = new();
 
         [SetUp]
         public void SetUp()
@@ -27,8 +32,10 @@ namespace RPGame.Core.Tests
                 manaRegenerationDelay: 0.5f);
 
             gameObject = new GameObject("StatisticsControllerTests");
+            effects = gameObject.AddComponent<EffectAggregator>();
             controller = gameObject.AddComponent<StatisticsController>();
             SetControllerConfig(controller, config);
+            InvokeAwake(controller);
             controller.ResetToConfig();
         }
 
@@ -40,6 +47,11 @@ namespace RPGame.Core.Tests
             if (attributesConfig != null)
             {
                 Object.DestroyImmediate(attributesConfig);
+            }
+
+            foreach (StatEffectDefinition definition in effectDefinitions)
+            {
+                Object.DestroyImmediate(definition);
             }
         }
 
@@ -82,6 +94,63 @@ namespace RPGame.Core.Tests
 
             Assert.AreEqual(100f, controller.MaxMana);
             Assert.AreEqual(100f, controller.CurrentMana);
+        }
+
+        [Test]
+        public void MaxMana_AddsFlatEffectBonus()
+        {
+            AddEffect(EffectStat.MaxMana, EffectModifierType.Flat, 50f);
+
+            Assert.AreEqual(130f, controller.MaxMana);
+        }
+
+        [Test]
+        public void MaxMana_AppliesPercentEffectBonus()
+        {
+            AddEffect(EffectStat.MaxMana, EffectModifierType.Percent, 0.2f);
+
+            Assert.AreEqual(96f, controller.MaxMana);
+        }
+
+        [Test]
+        public void MaxMana_AppliesIntelligenceFlatAndPercentInOrder()
+        {
+            AddAttributes(vitality: 0, endurance: 0, intelligence: 5);
+            AddEffect(EffectStat.MaxMana, EffectModifierType.Flat, 50f);
+            AddEffect(EffectStat.MaxMana, EffectModifierType.Percent, 0.2f);
+
+            Assert.AreEqual(186f, controller.MaxMana);
+        }
+
+        [Test]
+        public void MaxManaChange_DoesNotRestoreManaAndNotifiesHud()
+        {
+            controller.TrySpendMana(30f);
+            int notificationCount = 0;
+            float currentMana = 0f;
+            float maxMana = 0f;
+            controller.OnManaChanged += (current, max) =>
+            {
+                notificationCount++;
+                currentMana = current;
+                maxMana = max;
+            };
+
+            AddEffect(EffectStat.MaxMana, EffectModifierType.Flat, 50f);
+
+            Assert.AreEqual(1, notificationCount);
+            Assert.AreEqual(50f, currentMana);
+            Assert.AreEqual(130f, maxMana);
+            Assert.AreEqual(50f, controller.CurrentMana);
+        }
+
+        [Test]
+        public void MaxManaChange_ClampsCurrentManaToNewMaximum()
+        {
+            AddEffect(EffectStat.MaxMana, EffectModifierType.Percent, -0.5f);
+
+            Assert.AreEqual(40f, controller.MaxMana);
+            Assert.AreEqual(40f, controller.CurrentMana);
         }
 
         [Test]
@@ -330,12 +399,45 @@ namespace RPGame.Core.Tests
             serializedController.ApplyModifiedPropertiesWithoutUndo();
         }
 
+        private static void InvokeAwake(StatisticsController statisticsController)
+        {
+            typeof(StatisticsController)
+                .GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(statisticsController, null);
+        }
+
         private static void SetRegeneration(StatisticsController statisticsController, bool regenerateHealth, bool regenerateStamina)
         {
             SerializedObject serializedController = new SerializedObject(statisticsController);
             serializedController.FindProperty("regenerateHealth").boolValue = regenerateHealth;
             serializedController.FindProperty("regenerateStamina").boolValue = regenerateStamina;
             serializedController.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static StatEffectDefinition CreateStatEffect(
+            EffectStat stat,
+            EffectModifierType modifierType,
+            float value)
+        {
+            StatEffectDefinition definition = ScriptableObject.CreateInstance<StatEffectDefinition>();
+            SerializedObject serialized = new(definition);
+            serialized.FindProperty("stat").enumValueIndex = GetEffectStatIndex(stat);
+            serialized.FindProperty("modifierType").enumValueIndex = (int)modifierType;
+            serialized.FindProperty("value").floatValue = value;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return definition;
+        }
+
+        private void AddEffect(EffectStat stat, EffectModifierType modifierType, float value)
+        {
+            StatEffectDefinition definition = CreateStatEffect(stat, modifierType, value);
+            effectDefinitions.Add(definition);
+            effects.Add(definition);
+        }
+
+        private static int GetEffectStatIndex(EffectStat stat)
+        {
+            return System.Array.IndexOf((EffectStat[])System.Enum.GetValues(typeof(EffectStat)), stat);
         }
     }
 }

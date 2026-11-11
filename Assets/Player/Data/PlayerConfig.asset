@@ -19,4 +19,4 @@ MonoBehaviour:
   staminaRegenerationPerSecond: 15
   staminaRegenerationDelay: 0.75
   manaRegenerationPerSecond: 5
-  manaRegenerationDelay: 0.75
+  manaRegenerationDelay: 0.2

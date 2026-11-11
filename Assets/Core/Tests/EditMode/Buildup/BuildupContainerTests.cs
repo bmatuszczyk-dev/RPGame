@@ -283,10 +283,11 @@ namespace RPGame.Core.Tests.Buildup
             public HashSet<StatusDefinition> ActiveStatuses { get; } = new();
             public List<AppliedStatus> AppliedStatuses { get; } = new();
 
-            public void ApplyStatus(StatusDefinition status, float duration, StatusContext context)
+            public bool ApplyStatus(StatusDefinition status, float duration, StatusContext context)
             {
                 AppliedStatuses.Add(new AppliedStatus(status, duration, context));
                 ActiveStatuses.Add(status);
+                return true;
             }
 
             public bool HasStatus(StatusDefinition status) => ActiveStatuses.Contains(status);

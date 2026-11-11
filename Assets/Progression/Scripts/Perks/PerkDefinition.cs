@@ -20,7 +20,7 @@ namespace RPGame.Progression
         public string PerkId => perkId;
         public string DisplayName => displayName;
         public string Description => description;
-        public IReadOnlyList<string> ConnectedPerkIds => connectedPerkIds;
+        public IReadOnlyList<string> NextPerkIds => connectedPerkIds;
         public int Cost => cost;
         public bool IsStartingPerk => isStartingPerk;
         public Vector2 UIPosition => uiPosition;

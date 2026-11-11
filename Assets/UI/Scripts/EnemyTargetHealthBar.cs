@@ -10,14 +10,11 @@ namespace RPGame.UI
         [SerializeField] private Image fill;
 
         private StatisticsController statisticsController;
-        private Camera targetCamera;
-        private Transform worldSpaceCanvas;
         private bool isSubscribed;
 
         private void Awake()
         {
             statisticsController = GetComponentInParent<StatisticsController>();
-            worldSpaceCanvas = healthBar != null ? healthBar.GetComponentInParent<Canvas>()?.transform : null;
             Hide();
         }
 
@@ -26,19 +23,8 @@ namespace RPGame.UI
             Hide();
         }
 
-        private void LateUpdate()
+        public void Show()
         {
-            if (healthBar == null || !healthBar.activeSelf || targetCamera == null || worldSpaceCanvas == null)
-            {
-                return;
-            }
-
-            worldSpaceCanvas.rotation = Quaternion.LookRotation(targetCamera.transform.position - worldSpaceCanvas.position);
-        }
-
-        public void Show(Camera camera)
-        {
-            targetCamera = camera;
             if (healthBar != null)
             {
                 healthBar.SetActive(true);
@@ -51,7 +37,6 @@ namespace RPGame.UI
         public void Hide()
         {
             Unsubscribe();
-            targetCamera = null;
             if (healthBar != null)
             {
                 healthBar.SetActive(false);

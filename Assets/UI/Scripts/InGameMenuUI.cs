@@ -38,6 +38,11 @@ namespace RPGame.UI
             settingsPanel.Closed += HandleSettingsClosed;
         }
 
+        private void Start()
+        {
+            CursorController.ShowGameplayCursor();
+        }
+
         private void OnDestroy()
         {
             resumeButton.onClick.RemoveListener(Resume);

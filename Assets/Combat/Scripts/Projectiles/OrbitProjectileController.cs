@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RPGame.Combat.Spells;
 using RPGame.Core.Damage;
 using RPGame.Core.Spells;
 using UnityEngine;
@@ -69,9 +70,10 @@ namespace RPGame.Combat.Projectiles
                 return;
             }
 
-            DamageResult result = damageable.ApplyDamage(new DamageData(
-                DamageRangeRoller.Roll(casterData.DamageRanges),
-                casterData.CasterObject));
+            GameObject targetObject = ((Component)damageable).gameObject;
+            DamageResolveBehavior resolveBehavior = new(damageable, casterData);
+            SpellBehaviorPipelineExecutor.Resolve(casterData, targetObject, resolveBehavior);
+            DamageResult result = resolveBehavior.Result;
             appliedDamage += result.AppliedAmount;
             if (appliedDamage >= damageCapacity)
             {

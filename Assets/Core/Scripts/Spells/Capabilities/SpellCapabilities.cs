@@ -28,4 +28,14 @@ namespace RPGame.Core.Spells
     public interface IProjectileCapability
     {
     }
+
+    public interface IWaveCapability : IAoECapability
+    {
+        float WaveAngle { get; }
+        float WaveRange { get; }
+    }
+
+    public interface IZoneCapability : IAoECapability
+    {
+    }
 }

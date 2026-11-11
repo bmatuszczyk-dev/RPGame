@@ -5,6 +5,7 @@ using RPGame.Combat.Damage;
 using RPGame.Core.Damage;
 using RPGame.Core.Progression;
 using RPGame.Core.Statistics;
+using RPGame.Core.Statuses;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -33,6 +34,7 @@ namespace RPGame.Enemies.Tests
             Controller controller = enemyObject.AddComponent<Controller>();
             SetEnemyConfig(controller, CreateEnemyConfig(10), behaviourCreator);
             InvokeAwake(enemyObject.GetComponent<Movement>());
+            InvokeAwake(enemyObject.GetComponent<StatusAggregator>());
             damageReceiver = enemyObject.GetComponent<DamageReceiver>();
 
             EnemyExperienceReward reward = enemyObject.AddComponent<EnemyExperienceReward>();

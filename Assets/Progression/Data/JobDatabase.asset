@@ -14,4 +14,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: RPGame.Progression::RPGame.Progression.JobDatabase
   jobs:
   - {fileID: 11400000, guid: 60ad5cdcae3b46349027ba31b56306ec, type: 2}
-  - {fileID: 11400000, guid: fc3b41ff177dd964bbb5989d306e8440, type: 2}

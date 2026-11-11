@@ -1,11 +1,17 @@
 using System;
+using RPGame.Core.Effects;
 using RPGame.Core.Pooling;
 using RPGame.Core.Statistics.Attributes;
+using RPGame.Core.Statuses;
 using UnityEngine;
 
 namespace RPGame.Core.Statistics
 {
-    public sealed class StatisticsController : MonoBehaviour, IStatisticsController, IPooledEnemyResettable
+    public sealed class StatisticsController :
+        MonoBehaviour,
+        IStatisticsController,
+        IBeforeDeathNotifier,
+        IPooledEnemyResettable
     {
         private const float AttributeVitalBonus = 5f;
 
@@ -21,6 +27,7 @@ namespace RPGame.Core.Statistics
         public event Action<float, float> HealthChanged;
         public event Action<float, float> StaminaChanged;
         public event Action<float, float> OnManaChanged;
+        public event Action BeforeDied;
         public event Action Died;
 
         public float CurrentHealth { get; private set; }
@@ -28,11 +35,11 @@ namespace RPGame.Core.Statistics
         public float CurrentMana { get; private set; }
         public float MaxHealth => GetBaseMaxHealth() + GetAttributeVitalBonus(CharacterAttributeType.Vitality);
         public float MaxStamina => GetBaseMaxStamina() + GetAttributeVitalBonus(CharacterAttributeType.Endurance);
-        public float MaxMana => GetBaseMaxMana() + GetAttributeVitalBonus(CharacterAttributeType.Intelligence);
+        public float MaxMana => GetFinalMaxMana();
         public float HealthRegenerationPerSecond => config != null ? config.HealthRegenerationPerSecond : 0f;
         public float StaminaRegenerationPerSecond => config != null ? config.StaminaRegenerationPerSecond : 0f;
         public float StaminaRegenerationDelay => config != null ? config.StaminaRegenerationDelay : 0f;
-        public float ManaRegenerationPerSecond => config != null ? config.ManaRegenerationPerSecond : 0f;
+        public float ManaRegenerationPerSecond => GetFinalManaRegeneration();
         public float ManaRegenerationDelay => config != null ? config.ManaRegenerationDelay : 0f;
         public float HealthNormalized => MaxHealth > 0f ? CurrentHealth / MaxHealth : 0f;
         public float StaminaNormalized => MaxStamina > 0f ? CurrentStamina / MaxStamina : 0f;
@@ -44,10 +51,14 @@ namespace RPGame.Core.Statistics
         private float lastKnownMaxHealth;
         private float lastKnownMaxStamina;
         private float lastKnownMaxMana;
+        private EffectAggregator effectAggregator;
+        private StatusAggregator statusAggregator;
 
         private void Awake()
         {
             ResolveAttributes();
+            ResolveModifierSources();
+            SubscribeModifierSources();
 
             if (initializeOnAwake)
             {
@@ -59,16 +70,20 @@ namespace RPGame.Core.Statistics
         {
             ResolveAttributes();
             SubscribeAttributes();
+            ResolveModifierSources();
+            SubscribeModifierSources();
         }
 
         private void OnDisable()
         {
             UnsubscribeAttributes();
+            UnsubscribeModifierSources();
         }
 
         private void OnDestroy()
         {
             UnsubscribeAttributes();
+            UnsubscribeModifierSources();
         }
 
         private void Update()
@@ -217,7 +232,7 @@ namespace RPGame.Core.Statistics
                 }
                 else
                 {
-                    RestoreMana(config.ManaRegenerationPerSecond * deltaTime);
+                    RestoreMana(ManaRegenerationPerSecond * deltaTime);
                 }
             }
         }
@@ -239,6 +254,7 @@ namespace RPGame.Core.Statistics
 
             if (previousHealth > 0f && CurrentHealth <= 0f)
             {
+                BeforeDied?.Invoke();
                 Died?.Invoke();
             }
         }
@@ -307,6 +323,11 @@ namespace RPGame.Core.Statistics
             SetMana(CurrentMana);
         }
 
+        private void OnEffectsChanged()
+        {
+            SetMana(CurrentMana);
+        }
+
         private float GetBaseMaxHealth()
         {
             return config != null ? config.MaxHealth : 0f;
@@ -322,10 +343,69 @@ namespace RPGame.Core.Statistics
             return config != null ? config.MaxMana : 0f;
         }
 
+        private float GetFinalMaxMana()
+        {
+            float baseMana = GetBaseMaxMana()
+                + GetAttributeVitalBonus(CharacterAttributeType.Intelligence);
+            return EffectSourceValueResolver.Resolve(baseMana, gameObject, EffectStat.MaxMana);
+        }
+
         private float GetAttributeVitalBonus(CharacterAttributeType attributeType)
         {
             ResolveAttributes();
             return attributes != null ? attributes.GetValue(attributeType) * AttributeVitalBonus : 0f;
+        }
+
+        private float GetFinalManaRegeneration()
+        {
+            float baseRegeneration = config != null ? config.ManaRegenerationPerSecond : 0f;
+            float flatBonus = GetManaRegenerationEffectValue(EffectModifierType.Flat);
+            float percentBonus = GetManaRegenerationEffectValue(EffectModifierType.Percent);
+            return Mathf.Max(0f, (baseRegeneration + flatBonus) * (1f + percentBonus));
+        }
+
+        private float GetManaRegenerationEffectValue(EffectModifierType modifierType)
+        {
+            ResolveModifierSources();
+            float permanentValue = effectAggregator != null
+                ? effectAggregator.GetEffectValue(EffectStat.ManaRegeneration, modifierType)
+                : 0f;
+            float statusValue = statusAggregator != null
+                ? statusAggregator.GetEffectValue(EffectStat.ManaRegeneration, modifierType)
+                : 0f;
+            return permanentValue + statusValue;
+        }
+
+        private void ResolveModifierSources()
+        {
+            if (effectAggregator == null)
+            {
+                TryGetComponent(out effectAggregator);
+            }
+
+            if (statusAggregator == null)
+            {
+                TryGetComponent(out statusAggregator);
+            }
+        }
+
+        private void SubscribeModifierSources()
+        {
+            if (effectAggregator == null)
+            {
+                return;
+            }
+
+            effectAggregator.EffectsChanged -= OnEffectsChanged;
+            effectAggregator.EffectsChanged += OnEffectsChanged;
+        }
+
+        private void UnsubscribeModifierSources()
+        {
+            if (effectAggregator != null)
+            {
+                effectAggregator.EffectsChanged -= OnEffectsChanged;
+            }
         }
     }
 }

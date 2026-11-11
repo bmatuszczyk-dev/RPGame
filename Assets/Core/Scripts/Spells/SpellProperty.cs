@@ -5,6 +5,10 @@ namespace RPGame.Core.Spells
         Radius,
         Duration,
         ControlPower,
-        OrbCount
+        OrbCount,
+        WaveAngle,
+        WaveRange,
+        ZoneRadius,
+        Area
     }
 }

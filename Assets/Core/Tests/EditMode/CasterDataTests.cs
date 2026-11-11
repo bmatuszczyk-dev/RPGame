@@ -124,6 +124,18 @@ namespace RPGame.Core.Tests
             }
         }
 
+        [Test]
+        public void CasterDataBuilder_WithSpellId_BuildsCasterDataWithSpellId()
+        {
+            SpellId spellId = new("wave");
+
+            CasterData casterData = new CasterDataBuilder(null, null, null)
+                .WithSpellId(spellId)
+                .Build();
+
+            Assert.AreEqual(spellId, casterData.SpellId);
+        }
+
         private sealed class TestRuntimeSpellBehavior : IRuntimeSpellBehavior
         {
         }
@@ -131,6 +143,11 @@ namespace RPGame.Core.Tests
         private sealed class TestAoESpell : Spell, IAoECapability
         {
             public float Radius => 1f;
+
+            public override bool SupportsProperty(SpellProperty property)
+            {
+                return property is SpellProperty.Radius or SpellProperty.Area;
+            }
 
             public override void OnCast(CasterData casterData)
             {

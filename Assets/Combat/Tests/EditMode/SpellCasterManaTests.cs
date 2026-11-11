@@ -13,6 +13,8 @@ namespace RPGame.Combat.Tests
         {
             public int CastCount { get; private set; }
 
+            public override bool SupportsProperty(SpellProperty property) => false;
+
             public override void OnCast(CasterData casterData)
             {
                 CastCount++;

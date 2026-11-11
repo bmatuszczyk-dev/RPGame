@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5145033cfde049c88a0cd28b4579eb12, type: 3}
+  m_Name: Discharge
+  m_EditorClassIdentifier: RPGame.Progression::RPGame.Progression.PerkDefinition
+  perkId: Discharge
+  displayName: Discharge
+  description: Markowane cele otrzymuja dodatkowe obrazenia Lightning.
+  connectedPerkIds:
+  - Overcharge
+  cost: 1
+  isStartingPerk: 0
+  uiPosition: {x: 100, y: 400}
+  effects:
+  - {fileID: 11400000, guid: 0e8981a2b795425ab5ecf6cf9d8f5992, type: 2}

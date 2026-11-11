@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58fbf8eef72921841b9370df56e95851, type: 3}
+  m_Name: ExposureEffect
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.RuntimeBehaviorEffectDefinition
+  behavior:
+    rid: 2009
+  executionOrder: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 2009
+      type: {class: ExposureBehavior, ns: RPGame.Combat.Spells, asm: RPGame.Combat}
+      data:
+        weaknessStatus: {fileID: 11400000, guid: 0c92465c8c8e4dca93d2a69e4c5e6918, type: 2}
+        weaknessDuration: 3

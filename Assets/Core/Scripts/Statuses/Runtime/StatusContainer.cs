@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace RPGame.Core.Statuses
@@ -9,8 +10,14 @@ namespace RPGame.Core.Statuses
         private bool isTicking;
         private bool isClearing;
         private bool clearRequested;
+        private bool isHandlingOwnerDeath;
+        private bool ownerDeathHandled;
+        private StatusLifecycleEvent clearLifecycleEvent = StatusLifecycleEvent.Cleared;
 
         public IReadOnlyList<StatusInstance> Statuses => statuses;
+        public event Action<StatusInstance> StatusAdded;
+        public event Action<StatusInstance> StatusUpdated;
+        public event Action<StatusInstance> StatusRemoved;
 
         public StatusContainer(StatusTarget target)
         {
@@ -32,29 +39,55 @@ namespace RPGame.Core.Statuses
             }
 
             StatusInstance existingInstance = FindMatchingInstance(definition, context);
-            if (existingInstance != null)
-            {
-                ApplyReapplyPolicy(definition, existingInstance, duration);
-                return true;
-            }
-
-            if (definition.ConcurrentStatusPolicy == ConcurrentStatusPolicy.SingleInstance)
+            bool hasMatchingIdentity = existingInstance != null;
+            if (existingInstance == null
+                && definition.ConcurrentStatusPolicy == ConcurrentStatusPolicy.SingleInstance)
             {
                 existingInstance = FindInstance(definition);
-                if (existingInstance != null)
-                {
-                    definition.ApplySingleInstanceReapply(target, existingInstance, duration, context);
-                    return true;
-                }
+            }
+
+            if (existingInstance != null)
+            {
+                ReapplyExisting(definition, existingInstance, duration, context, hasMatchingIdentity);
+                StatusUpdated?.Invoke(existingInstance);
+                return true;
             }
 
             if (!instance.IsFinished)
             {
                 statuses.Add(instance);
                 instance.Apply(target);
+                StatusAdded?.Invoke(instance);
             }
 
             return true;
+        }
+
+        private void ReapplyExisting(
+            StatusDefinition definition,
+            StatusInstance existingInstance,
+            float duration,
+            StatusContext context,
+            bool hasMatchingIdentity)
+        {
+            if (!hasMatchingIdentity
+                && definition.ConcurrentStatusPolicy == ConcurrentStatusPolicy.SingleInstance
+                && !context.ReapplyPolicyOverride.HasValue
+                && definition.UsesCustomSingleInstanceReapply)
+            {
+                definition.ApplySingleInstanceReapply(target, existingInstance, duration, context);
+                return;
+            }
+
+            ReapplyPolicy reapplyPolicy =
+                context.ReapplyPolicyOverride ?? definition.ReapplyPolicy;
+            if (reapplyPolicy != ReapplyPolicy.Ignore)
+            {
+                existingInstance.ApplyValueOverride(context);
+                existingInstance.UpdateLastApplicationContext(context);
+            }
+
+            ApplyReapplyPolicy(reapplyPolicy, existingInstance, duration, context);
         }
 
         public bool HasStatus(StatusDefinition definition)
@@ -70,6 +103,7 @@ namespace RPGame.Core.Statuses
                 if (!status.IsFinished && status.HasDefinition(definition))
                 {
                     status.Remove(target, StatusLifecycleEvent.Consumed);
+                    StatusRemoved?.Invoke(status);
                     statuses.RemoveAt(i);
                     return true;
                 }
@@ -114,6 +148,7 @@ namespace RPGame.Core.Statuses
                 if (status.IsFinished)
                 {
                     status.Remove(target, StatusLifecycleEvent.Expired);
+                    StatusRemoved?.Invoke(status);
                     statuses.RemoveAt(i);
                 }
             }
@@ -123,44 +158,85 @@ namespace RPGame.Core.Statuses
             if (clearRequested)
             {
                 clearRequested = false;
-                ClearImmediately();
+                StatusLifecycleEvent lifecycleEvent = clearLifecycleEvent;
+                clearLifecycleEvent = StatusLifecycleEvent.Cleared;
+                ClearImmediately(lifecycleEvent);
             }
         }
 
-        public void Clear()
+        public void Clear(StatusLifecycleEvent lifecycleEvent = StatusLifecycleEvent.Cleared)
         {
             if (isTicking || isClearing)
             {
                 clearRequested = true;
+                clearLifecycleEvent = lifecycleEvent;
                 return;
             }
 
-            ClearImmediately();
+            ClearImmediately(lifecycleEvent);
+        }
+
+        public void HandleOwnerDeath()
+        {
+            if (isHandlingOwnerDeath || ownerDeathHandled)
+            {
+                return;
+            }
+
+            ownerDeathHandled = true;
+            isHandlingOwnerDeath = true;
+            try
+            {
+                List<StatusInstance> statusSnapshot = new(statuses);
+                for (int i = 0; i < statusSnapshot.Count; i++)
+                {
+                    StatusInstance status = statusSnapshot[i];
+                    if (status == null
+                        || status.IsFinished
+                        || !statuses.Contains(status)
+                        || status.LastApplicationContext.ApplicationData
+                            is not IStatusOwnerDeathHandler handler)
+                    {
+                        continue;
+                    }
+
+                    handler.HandleOwnerDied(target, status);
+                }
+            }
+            finally
+            {
+                isHandlingOwnerDeath = false;
+            }
         }
 
         private void ApplyReapplyPolicy(
-            StatusDefinition definition,
+            ReapplyPolicy reapplyPolicy,
             StatusInstance existingInstance,
-            float duration)
+            float duration,
+            StatusContext context)
         {
-            switch (definition.ReapplyPolicy)
+            switch (reapplyPolicy)
             {
                 case ReapplyPolicy.Refresh:
-                    existingInstance.Refresh(target, duration);
+                    existingInstance.Refresh(target, duration, context);
                     break;
                 case ReapplyPolicy.Ignore:
                     break;
-                case ReapplyPolicy.Stack:
-                    existingInstance.Stack(target, duration);
+                case ReapplyPolicy.Accumulate:
+                    existingInstance.Accumulate(target, duration, context);
+                    break;
+                case ReapplyPolicy.StackAndRefresh:
+                    existingInstance.StackAndRefresh(target, duration, context);
                     break;
             }
         }
 
-        private void ClearImmediately()
+        private void ClearImmediately(StatusLifecycleEvent lifecycleEvent)
         {
             if (isClearing)
             {
                 clearRequested = true;
+                clearLifecycleEvent = lifecycleEvent;
                 return;
             }
 
@@ -169,10 +245,15 @@ namespace RPGame.Core.Statuses
 
             for (int i = statuses.Count - 1; i >= 0; i--)
             {
-                statuses[i].Remove(target, StatusLifecycleEvent.Cleared);
+                statuses[i].Remove(target, lifecycleEvent);
+                StatusRemoved?.Invoke(statuses[i]);
             }
 
             statuses.Clear();
+            if (!isHandlingOwnerDeath)
+            {
+                ownerDeathHandled = false;
+            }
             clearRequested = false;
             isClearing = false;
         }

@@ -1,21 +1,29 @@
 using RPGame.Core.Damage;
 using UnityEngine;
 using UnityEngine.Scripting.APIUpdating;
+using UnityEngine.Serialization;
 
 namespace RPGame.Core.Statuses
 {
-    [CreateAssetMenu(fileName = "BurningEffect", menuName = "RPGame/Progression/Statuses/Burning")]
+    [CreateAssetMenu(fileName = "BurningEffect", menuName = "RPGame/Statuses/Burning")]
     [MovedFrom(true, null, null, "BurningEffectDefinition")]
-    public sealed class BurningStatusDefinition : StatusDefinition, IPeriodicStatus
+    public sealed class BurningStatusDefinition :
+        StatusDefinition,
+        IStackablePeriodicStatus,
+        IStackableStatus
     {
         private const float MinimumTickInterval = 0.0001f;
 
-        [SerializeField] private float amountPerInterval = 1.5f;
+        [FormerlySerializedAs("amountPerInterval")]
+        [SerializeField, Min(0f)] private float baseDamagePerSecond = 1.5f;
         [SerializeField] private float tickInterval = 1f;
+        [SerializeField, Min(1)] private int maxIntensity = 5;
 
         public override ReapplyPolicy ReapplyPolicy => ReapplyPolicy.Refresh;
-        public override ConcurrentStatusPolicy ConcurrentStatusPolicy => ConcurrentStatusPolicy.Independent;
-        public float Amount => Mathf.Max(0f, amountPerInterval);
+        public override ConcurrentStatusPolicy ConcurrentStatusPolicy => ConcurrentStatusPolicy.SingleInstance;
+        public float BaseDamagePerSecond => Mathf.Max(0f, baseDamagePerSecond);
+        public int MaxStacks => Mathf.Max(1, maxIntensity);
+        public int MaxIntensity => MaxStacks;
         public float TickInterval => Mathf.Max(MinimumTickInterval, tickInterval);
 
         public override bool CanApply(StatusTarget target)
@@ -23,29 +31,31 @@ namespace RPGame.Core.Statuses
             return target.Damageable != null;
         }
 
-        public void Tick(StatusTarget target)
+        public void Tick(StatusTarget target, int currentStacks, GameObject source)
         {
             IDamageable damageable = target.Damageable;
-            if (damageable == null || !damageable.CanReceiveDamage || Amount <= 0f)
+            float damage = BaseDamagePerSecond * TickInterval * Mathf.Max(1, currentStacks);
+            if (damageable == null || !damageable.CanReceiveDamage || damage <= 0f)
             {
                 return;
             }
 
             damageable.ApplyDamage(new DamageData(new[]
             {
-                new PartialDamage(Amount, DamageType.Magical, DamageElement.Fire)
-            }));
+                new PartialDamage(damage, DamageType.Magical, DamageElement.Fire)
+            }, source, DamageApplicationType.Periodic, DamageOrigin.Spell));
         }
 
         public override string ToString()
         {
-            return $"Burning {Amount:0.##}";
+            return $"Burning {BaseDamagePerSecond:0.##}/s x{MaxIntensity}";
         }
 
         private void OnValidate()
         {
-            amountPerInterval = Mathf.Max(0f, amountPerInterval);
+            baseDamagePerSecond = Mathf.Max(0f, baseDamagePerSecond);
             tickInterval = Mathf.Max(MinimumTickInterval, tickInterval);
+            maxIntensity = Mathf.Max(1, maxIntensity);
         }
     }
 }

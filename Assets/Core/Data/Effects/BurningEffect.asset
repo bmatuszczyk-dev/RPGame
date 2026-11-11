@@ -12,5 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b4d02cbfe98d43244a2a6fb003451c25, type: 3}
   m_Name: BurningEffect
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.BurningEffectDefinition
+  icon: {fileID: 21300000, guid: c97efdb781614b546a07d3d1900eb753, type: 3}
   amountPerInterval: 1.5
   tickInterval: 1

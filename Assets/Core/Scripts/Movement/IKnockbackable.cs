@@ -9,6 +9,6 @@ namespace RPGame.Core.Movement
             Vector3 direction,
             float distance,
             float duration,
-            Action<Collider, Vector3> onCollision = null);
+            Action<KnockbackEndContext> onEnded = null);
     }
 }

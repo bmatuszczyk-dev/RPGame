@@ -21,6 +21,11 @@ namespace RPGame.Combat.Spells
         public int OrbCount => projectileCount;
         public float Duration => lifetime;
 
+        public override bool SupportsProperty(SpellProperty property)
+        {
+            return property is SpellProperty.Duration or SpellProperty.OrbCount;
+        }
+
         public override void OnCast(CasterData casterData)
         {
             if (SpellPrefab == null)
@@ -46,12 +51,14 @@ namespace RPGame.Combat.Spells
                 return;
             }
 
-            int effectiveProjectileCount = SpellPropertyModifierResolver.ResolveOrbCount(
-                this,
-                casterData.PropertyModifiers);
-            float effectiveLifetime = SpellPropertyModifierResolver.ResolveDuration(
-                this,
-                casterData.PropertyModifiers);
+            int effectiveProjectileCount = Mathf.Max(
+                1,
+                Mathf.RoundToInt(casterData.PropertyModifiers.Resolve(
+                    OrbCount,
+                    SpellProperty.OrbCount)));
+            float effectiveLifetime = casterData.PropertyModifiers.Resolve(
+                Duration,
+                SpellProperty.Duration);
             orbitController.Initialize(
                 casterData.CasterObject.transform,
                 orbPrefab,
@@ -85,6 +92,7 @@ namespace RPGame.Combat.Spells
                 .WithDamageRanges(GetDamageRanges(casterData))
                 .WithRuntimeBehaviors(casterData.RuntimeBehaviors)
                 .WithPropertyModifiers(casterData.PropertyModifiers)
+                .WithSpellId(casterData.SpellId)
                 .Build();
         }
 

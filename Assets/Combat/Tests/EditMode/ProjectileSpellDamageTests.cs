@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using RPGame.Core.Damage;
 using RPGame.Core.Spells;
@@ -44,6 +45,44 @@ namespace RPGame.Combat.Tests
             }
         }
 
+        [Test]
+        public void DerivedCasterData_PreservesSpellId()
+        {
+            SpellId spellId = new("wave");
+            CasterData casterData = new CasterDataBuilder(null, null, null)
+                .WithSpellId(spellId)
+                .Build();
+            ProjectileSpell projectileSpell = ScriptableObject.CreateInstance<ProjectileSpell>();
+            OrbitSpell orbitSpell = ScriptableObject.CreateInstance<OrbitSpell>();
+            WaveSpell waveSpell = ScriptableObject.CreateInstance<WaveSpell>();
+
+            try
+            {
+                CasterData projectileCasterData = InvokeCreateCasterData(
+                    projectileSpell,
+                    "CreateProjectileCasterData",
+                    casterData);
+                CasterData orbitCasterData = InvokeCreateCasterData(
+                    orbitSpell,
+                    "CreateOrbitCasterData",
+                    casterData);
+                CasterData waveCasterData = InvokeCreateCasterData(
+                    waveSpell,
+                    "CreateWaveCasterData",
+                    casterData);
+
+                Assert.AreEqual(spellId, projectileCasterData.SpellId);
+                Assert.AreEqual(spellId, orbitCasterData.SpellId);
+                Assert.AreEqual(spellId, waveCasterData.SpellId);
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectileSpell);
+                Object.DestroyImmediate(orbitSpell);
+                Object.DestroyImmediate(waveSpell);
+            }
+        }
+
         private static void SetProjectileSpellDamage(
             ProjectileSpell spell,
             float minDamage,
@@ -60,6 +99,17 @@ namespace RPGame.Combat.Tests
             baseDamageRange.FindPropertyRelative("damageElement").enumValueIndex = (int)damageElement;
             serializedSpell.FindProperty("powerDamageScaling").floatValue = powerDamageScaling;
             serializedSpell.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static CasterData InvokeCreateCasterData(
+            Spell spell,
+            string methodName,
+            CasterData casterData)
+        {
+            MethodInfo method = spell.GetType().GetMethod(
+                methodName,
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            return (CasterData)method.Invoke(spell, new object[] { casterData });
         }
 
         private sealed class TestCharacterAttributes : ICharacterAttributes

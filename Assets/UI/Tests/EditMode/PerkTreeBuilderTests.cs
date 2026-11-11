@@ -35,7 +35,6 @@ namespace RPGame.UI.Tests
             JobInstance job = new JobInstance(jobDefinition);
             RectTransform parent = CreateRectTransform("Parent");
             PerkTreeConnectionsGraphic connectionsGraphic = parent.gameObject.AddComponent<PerkTreeConnectionsGraphic>();
-            RectTransform rootPrefab = CreateRectTransform("RootPrefab", "RootMarker");
             RectTransform normalPrefab = CreateRectTransform("NormalPrefab", "NormalMarker");
             List<GameObject> spawnedNodes = new();
 
@@ -43,7 +42,6 @@ namespace RPGame.UI.Tests
                 job,
                 parent,
                 connectionsGraphic,
-                rootPrefab,
                 normalPrefab,
                 spawnedNodes,
                 perk => perk == startingPerk ? PerkUnlockState.Available : PerkUnlockState.Locked,
@@ -55,28 +53,57 @@ namespace RPGame.UI.Tests
 
             Assert.AreEqual(3, spawnedNodes.Count);
             Assert.AreEqual(3, parent.childCount);
-            Assert.AreEqual(2, connectionsGraphic.Connections.Count);
-            Assert.AreEqual(Vector2.zero, connectionsGraphic.Connections[0].From);
-            Assert.AreEqual(startingPerk.UIPosition, connectionsGraphic.Connections[0].To);
+            Assert.AreEqual(1, connectionsGraphic.Connections.Count);
+            Assert.AreEqual(startingPerk.UIPosition, connectionsGraphic.Connections[0].From);
+            Assert.AreEqual(normalPerk.UIPosition, connectionsGraphic.Connections[0].To);
             Assert.AreEqual(PerkTreeConnectionState.Available, connectionsGraphic.Connections[0].State);
-            Assert.AreEqual(startingPerk.UIPosition, connectionsGraphic.Connections[1].From);
-            Assert.AreEqual(normalPerk.UIPosition, connectionsGraphic.Connections[1].To);
-            Assert.AreEqual(PerkTreeConnectionState.Available, connectionsGraphic.Connections[1].State);
-            Assert.AreEqual("RootPrefab", spawnedNodes[0].name);
-            Assert.AreEqual("start", spawnedNodes[1].name);
-            Assert.AreEqual("normal", spawnedNodes[2].name);
+            Assert.AreEqual("start", spawnedNodes[0].name);
+            Assert.AreEqual("normal", spawnedNodes[1].name);
             Assert.AreSame(parent, spawnedNodes[0].transform.parent);
             Assert.AreSame(parent, spawnedNodes[1].transform.parent);
             Assert.AreSame(parent, spawnedNodes[2].transform.parent);
-            Assert.AreEqual(Vector2.zero, spawnedNodes[0].GetComponent<RectTransform>().anchoredPosition);
-            Assert.AreEqual(startingPerk.UIPosition, spawnedNodes[1].GetComponent<RectTransform>().anchoredPosition);
-            Assert.AreEqual(normalPerk.UIPosition, spawnedNodes[2].GetComponent<RectTransform>().anchoredPosition);
-            Assert.IsNotNull(spawnedNodes[0].transform.Find("RootMarker"));
+            Assert.AreEqual(startingPerk.UIPosition, spawnedNodes[0].GetComponent<RectTransform>().anchoredPosition);
+            Assert.AreEqual(normalPerk.UIPosition, spawnedNodes[1].GetComponent<RectTransform>().anchoredPosition);
+            Assert.AreEqual(disconnectedPerk.UIPosition, spawnedNodes[2].GetComponent<RectTransform>().anchoredPosition);
+            Assert.IsNotNull(spawnedNodes[0].transform.Find("NormalMarker"));
             Assert.IsNotNull(spawnedNodes[1].transform.Find("NormalMarker"));
-            Assert.IsNotNull(spawnedNodes[2].transform.Find("NormalMarker"));
+            Assert.IsNotNull(spawnedNodes[0].GetComponent<PerkNodeUI>());
             Assert.IsNotNull(spawnedNodes[1].GetComponent<PerkNodeUI>());
             Assert.IsNotNull(spawnedNodes[2].GetComponent<PerkNodeUI>());
-            Assert.IsNull(parent.Find("disconnected"));
+            Assert.IsNotNull(parent.Find("disconnected"));
+        }
+
+        [Test]
+        public void Rebuild_WithoutStartingPerk_CreatesEveryJobPerkAndItsConnections()
+        {
+            PerkDefinition firstPerk = CreatePerk("first", isStartingPerk: false, new Vector2(10f, 20f));
+            PerkDefinition secondPerk = CreatePerk("second", isStartingPerk: false, new Vector2(120f, -35f), "first");
+            JobDefinition jobDefinition = CreateJobDefinition("Wizard", firstPerk, secondPerk);
+            JobInstance job = new JobInstance(jobDefinition);
+            RectTransform parent = CreateRectTransform("Parent");
+            PerkTreeConnectionsGraphic connectionsGraphic = parent.gameObject.AddComponent<PerkTreeConnectionsGraphic>();
+            RectTransform normalPrefab = CreateRectTransform("NormalPrefab");
+            List<GameObject> spawnedNodes = new();
+
+            PerkTreeBuilder.Rebuild(
+                job,
+                parent,
+                connectionsGraphic,
+                normalPrefab,
+                spawnedNodes,
+                perk => PerkUnlockState.Locked,
+                perk => false,
+                perk => { },
+                (perk, position) => { },
+                () => { },
+                refreshRequested: null);
+
+            Assert.AreEqual(2, spawnedNodes.Count);
+            Assert.IsNotNull(parent.Find("first"));
+            Assert.IsNotNull(parent.Find("second"));
+            Assert.AreEqual(1, connectionsGraphic.Connections.Count);
+            Assert.AreEqual(secondPerk.UIPosition, connectionsGraphic.Connections[0].From);
+            Assert.AreEqual(firstPerk.UIPosition, connectionsGraphic.Connections[0].To);
         }
 
         [Test]
@@ -87,7 +114,6 @@ namespace RPGame.UI.Tests
             JobInstance job = new JobInstance(jobDefinition);
             RectTransform parent = CreateRectTransform("Parent");
             PerkTreeConnectionsGraphic connectionsGraphic = parent.gameObject.AddComponent<PerkTreeConnectionsGraphic>();
-            RectTransform rootPrefab = CreateRectTransform("RootPrefab");
             RectTransform normalPrefab = CreateRectTransform("NormalPrefab");
             List<GameObject> spawnedNodes = new();
 
@@ -95,7 +121,6 @@ namespace RPGame.UI.Tests
                 job,
                 parent,
                 connectionsGraphic,
-                rootPrefab,
                 normalPrefab,
                 spawnedNodes,
                 perk => PerkUnlockState.Locked,
@@ -109,7 +134,6 @@ namespace RPGame.UI.Tests
                 job,
                 parent,
                 connectionsGraphic,
-                rootPrefab,
                 normalPrefab,
                 spawnedNodes,
                 perk => PerkUnlockState.Locked,
@@ -120,9 +144,9 @@ namespace RPGame.UI.Tests
                 refreshRequested: null);
 
             Assert.IsTrue(firstNode == null);
-            Assert.AreEqual(2, spawnedNodes.Count);
-            Assert.AreEqual(2, parent.childCount);
-            Assert.AreEqual(1, connectionsGraphic.Connections.Count);
+            Assert.AreEqual(1, spawnedNodes.Count);
+            Assert.AreEqual(1, parent.childCount);
+            Assert.AreEqual(0, connectionsGraphic.Connections.Count);
         }
 
         private PerkDefinition CreatePerk(
