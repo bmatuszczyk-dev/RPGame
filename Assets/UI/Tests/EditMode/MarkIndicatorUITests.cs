@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using NUnit.Framework;
 using RPGame.Core.Statuses;
 using UnityEditor;
@@ -36,7 +37,9 @@ namespace RPGame.UI.Tests
             serialized.FindProperty("right").objectReferenceValue = right;
             serialized.FindProperty("fadeDuration").floatValue = 0f;
             serialized.ApplyModifiedPropertiesWithoutUndo();
+            InvokeLifecycleMethod(indicator, "Awake");
             root.SetActive(true);
+            InvokeLifecycleMethod(indicator, "OnEnable");
         }
 
         [TearDown]
@@ -88,13 +91,23 @@ namespace RPGame.UI.Tests
             Assert.AreEqual(0f, right.color.a);
         }
 
+        private static void InvokeLifecycleMethod(MarkIndicatorUI indicator, string methodName)
+        {
+            typeof(MarkIndicatorUI).GetMethod(
+                    methodName,
+                    BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(indicator, null);
+        }
+
         private sealed class TestMarkProgressReader : MonoBehaviour, IMarkProgressReader
         {
             public int CurrentUniqueSpellProgress { get; private set; }
             public float ComboWindowExpiresAt { get; private set; } = -1f;
             public bool IsMarkActive { get; private set; }
             public event Action ProgressChanged;
+#pragma warning disable CS0067
             public event Action ProgressExpired;
+#pragma warning restore CS0067
 
             public void SetState(int progress, bool isMarkActive)
             {

@@ -101,6 +101,7 @@ namespace RPGame.Progression.Tests
         [Test]
         public void Destroy_WritesFinalSnapshot()
         {
+            Invoke(telemetry, "OnDestroy");
             Object.DestroyImmediate(gameObject);
             gameObject = null;
 

@@ -106,7 +106,7 @@ namespace RPGame.UI
             }
 
             indicator.gameObject.SetActive(false);
-            Destroy(indicator.gameObject);
+            DestroyIndicator(indicator.gameObject);
         }
 
         private void AddIndicator(StatusInstance status)
@@ -131,7 +131,7 @@ namespace RPGame.UI
                 }
 
                 indicator.gameObject.SetActive(false);
-                Destroy(indicator.gameObject);
+                DestroyIndicator(indicator.gameObject);
             }
 
             indicators.Clear();
@@ -143,6 +143,17 @@ namespace RPGame.UI
                 && status.Definition is not MarkStatusDefinition
                 && status.Definition?.Icon != null
                 && statusIndicatorPrefab != null;
+        }
+
+        private static void DestroyIndicator(GameObject indicator)
+        {
+            if (Application.isPlaying)
+            {
+                Destroy(indicator);
+                return;
+            }
+
+            DestroyImmediate(indicator);
         }
     }
 }

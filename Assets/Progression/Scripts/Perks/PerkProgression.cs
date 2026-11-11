@@ -25,7 +25,9 @@ namespace RPGame.Progression
                 return PerkUnlockState.Locked;
             }
 
-            if (!HasPredecessor(job, perk) || HasUnlockedPredecessor(job, perk))
+            if (perk.IsStartingPerk
+                || !HasPredecessor(job, perk)
+                || HasUnlockedPredecessor(job, perk))
             {
                 return PerkUnlockState.Available;
             }
