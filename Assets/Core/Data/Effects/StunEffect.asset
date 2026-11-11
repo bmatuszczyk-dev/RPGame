@@ -12,3 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8686519375005cf4f97727caadbde04f, type: 3}
   m_Name: StunEffect
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.StunEffectDefinition
+  icon: {fileID: 21300000, guid: 84543ce5d47d1b74587dedc29f97626c, type: 3}

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 5453496735512058590}
   - component: {fileID: 724626803109377560}
   - component: {fileID: 7108291284392187643}
+  - component: {fileID: 812300000000000003}
   m_Layer: 6
   m_Name: EnemyUI
   m_TagString: Untagged
@@ -104,6 +105,19 @@ MonoBehaviour:
   left: {fileID: 1423395876759948580}
   right: {fileID: 8584242417686358836}
   fadeDuration: 0.15
+--- !u!114 &812300000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1527502093360373053}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 985ae5028096485eb8e38c395f915b6d, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RPGame.UI::RPGame.UI.EnemyUIBillboard
+  playerCamera: {fileID: 0}
 --- !u!1 &2286619470352416253
 GameObject:
   m_ObjectHideFlags: 0
@@ -265,6 +279,7 @@ GameObject:
   - component: {fileID: 2392749075238668532}
   - component: {fileID: 3198769035173085481}
   - component: {fileID: 6608436699988027584}
+  - component: {fileID: 812300000000000002}
   m_Layer: 6
   m_Name: StatusPool
   m_TagString: Untagged
@@ -331,6 +346,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
   m_HorizontalFit: 1
   m_VerticalFit: 1
+--- !u!114 &812300000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4047560670797407701}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e05e48b390e4c31a0bc93a15d8b2c4b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RPGame.UI::RPGame.UI.StatusPoolUI
+  statusAggregator: {fileID: 0}
+  statusIndicatorPrefab: {fileID: 812300000000000001, guid: 59409d3301867b34c9d96e3dd858f5d7, type: 3}
+  container: {fileID: 2392749075238668532}
 --- !u!1 &4948359316836523253
 GameObject:
   m_ObjectHideFlags: 0

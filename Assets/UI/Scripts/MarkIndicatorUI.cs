@@ -17,15 +17,12 @@ namespace RPGame.UI
         private readonly Coroutine[] fadeRoutines = new Coroutine[3];
         private readonly bool[] visibleParts = new bool[3];
         private IMarkProgressReader markProgress;
-        private Transform worldSpaceCanvas;
-        private Camera playerCamera;
 
         private void Awake()
         {
             parts[0] = center;
             parts[1] = left;
             parts[2] = right;
-            worldSpaceCanvas = GetComponentInParent<Canvas>()?.transform;
         }
 
         private void OnEnable()
@@ -43,32 +40,6 @@ namespace RPGame.UI
             }
 
             StopFades();
-        }
-
-        private void LateUpdate()
-        {
-            if (markProgress == null)
-            {
-                TryBindMarkProgress();
-                Refresh();
-            }
-
-            if (!HasVisiblePart() || worldSpaceCanvas == null)
-            {
-                return;
-            }
-
-            playerCamera ??= Camera.main;
-            if (playerCamera == null)
-            {
-                return;
-            }
-
-            Vector3 direction = playerCamera.transform.position - worldSpaceCanvas.position;
-            if (direction.sqrMagnitude > 0f)
-            {
-                worldSpaceCanvas.rotation = Quaternion.LookRotation(direction);
-            }
         }
 
         public void ResetForSpawn()
@@ -145,19 +116,6 @@ namespace RPGame.UI
             {
                 SetPartVisible(i, false);
             }
-        }
-
-        private bool HasVisiblePart()
-        {
-            for (int i = 0; i < visibleParts.Length; i++)
-            {
-                if (visibleParts[i])
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         private void StopFades()

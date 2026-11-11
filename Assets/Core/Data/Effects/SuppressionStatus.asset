@@ -12,4 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55be9a20d3a54063b3a2c2f0a1d4e8f7, type: 3}
   m_Name: SuppressionStatus
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statuses.SuppressionStatusDefinition
+  icon: {fileID: 21300000, guid: 8b0ede246aa36e24692edb96d3806448, type: 3}
   damageReductionPercent: 0.25

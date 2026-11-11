@@ -6,6 +6,9 @@ namespace RPGame.Core.Statuses
     [MovedFrom(true, null, null, "StatusEffectDefinition")]
     public abstract class StatusDefinition : ScriptableObject
     {
+        [SerializeField] private Sprite icon;
+
+        public Sprite Icon => icon;
         public virtual ReapplyPolicy ReapplyPolicy => ReapplyPolicy.Refresh;
         public virtual ConcurrentStatusPolicy ConcurrentStatusPolicy => ConcurrentStatusPolicy.SingleInstance;
         public virtual bool UsesCustomSingleInstanceReapply => false;

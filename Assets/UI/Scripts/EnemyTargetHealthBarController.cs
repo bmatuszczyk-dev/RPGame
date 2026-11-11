@@ -7,7 +7,6 @@ namespace RPGame.UI
     public sealed class EnemyTargetHealthBarController : MonoBehaviour
     {
         [SerializeField] private TargetingController targetingController;
-        [SerializeField] private Camera playerCamera;
 
         private EnemyTargetHealthBar currentHealthBar;
 
@@ -41,7 +40,7 @@ namespace RPGame.UI
             }
 
             currentHealthBar = target.TargetPoint.GetComponentInParent<EnemyTargetHealthBar>();
-            currentHealthBar?.Show(playerCamera);
+            currentHealthBar?.Show();
         }
 
         private void HideCurrentHealthBar()
